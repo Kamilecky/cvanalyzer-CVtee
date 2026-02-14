@@ -1,0 +1,131 @@
+{% extends "base_app.html" %}
+
+{% block title %}Dashboard - CV Analyzer{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="bi bi-grid me-2"></i>Dashboard</h1>
+    <p>Welcome back, {{ request.user.username }}!</p>
+</div>
+
+<!-- Stat cards -->
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <div class="stat-value">{{ request.user.analyses_used_this_month }}</div>
+                    <div class="stat-label">Analyses This Month</div>
+                </div>
+                <div class="stat-icon"><i class="bi bi-graph-up"></i></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <div class="stat-value">{{ cv_count }}</div>
+                    <div class="stat-label">CVs Uploaded</div>
+                </div>
+                <div class="stat-icon"><i class="bi bi-file-earmark-text"></i></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between">
+                <div>
+                    <div class="stat-value">
+                        {% with remaining=request.user.remaining_analyses %}
+                        {% if remaining >= 999 %}&#8734;{% else %}{{ remaining }}{% endif %}
+                        {% endwith %}
+                    </div>
+                    <div class="stat-label">Remaining Analyses</div>
+                </div>
+                <div class="stat-icon"><i class="bi bi-lightning"></i></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Recent analyses or empty state -->
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                {% if recent_analyses %}
+                <h5 class="mb-3">Recent Analyses</h5>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>CV</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for a in recent_analyses %}
+                            <tr>
+                                <td>{{ a.cv_document.original_filename|truncatechars:30 }}</td>
+                                <td>
+                                    <span class="status-badge status-{{ a.status }}">{{ a.get_status_display }}</span>
+                                </td>
+                                <td>{{ a.created_at|date:"M d, Y" }}</td>
+                                <td><a href="{% url 'analysis_result' a.id %}" class="btn btn-sm btn-outline-primary">View</a></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <a href="{% url 'analysis_history' %}" class="btn btn-outline-secondary btn-sm">View All History</a>
+                {% else %}
+                <div class="empty-state">
+                    <div class="empty-icon"><i class="bi bi-file-earmark-person"></i></div>
+                    <div class="empty-text">Upload your first CV to get started</div>
+                    <p class="text-muted mb-4">Get AI-powered analysis and recommendations</p>
+                    <a href="{% url 'cv_upload' %}" class="btn btn-accent">
+                        <i class="bi bi-cloud-upload me-1"></i> Upload CV
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card mb-3">
+            <div class="card-header">Quick Links</div>
+            <div class="card-body">
+                <a href="{% url 'cv_upload' %}" class="sidebar-link">
+                    <span class="icon"><i class="bi bi-cloud-upload"></i></span> Upload CV
+                </a>
+                <a href="{% url 'analysis_history' %}" class="sidebar-link">
+                    <span class="icon"><i class="bi bi-clock-history"></i></span> Analysis History
+                </a>
+                <a href="{% url 'cv_list' %}" class="sidebar-link">
+                    <span class="icon"><i class="bi bi-folder"></i></span> My CVs
+                </a>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header"><i class="bi bi-people-fill me-1"></i> Recruitment</div>
+            <div class="card-body">
+                <a href="{% url 'recruitment_dashboard' %}" class="sidebar-link">
+                    <span class="icon"><i class="bi bi-kanban"></i></span> Recruitment Dashboard
+                </a>
+                <a href="{% url 'recruitment_position_list' %}" class="sidebar-link">
+                    <span class="icon"><i class="bi bi-briefcase"></i></span> Job Positions
+                </a>
+                <a href="{% url 'recruitment_position_create' %}" class="sidebar-link">
+                    <span class="icon"><i class="bi bi-plus-circle"></i></span> Add Position
+                </a>
+                <a href="{% url 'recruitment_candidate_upload' %}" class="sidebar-link">
+                    <span class="icon"><i class="bi bi-file-earmark-person"></i></span> Upload Candidate CV
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

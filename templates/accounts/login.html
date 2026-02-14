@@ -1,0 +1,23 @@
+{% extends "base_auth.html" %}
+
+{% block title %}Login - CV Analyzer{% endblock %}
+{% block auth_subtitle %}Sign in to your account{% endblock %}
+
+{% block auth_content %}
+<form method="post">
+    {% csrf_token %}
+    <div class="mb-3">
+        <label for="id_username" class="form-label">Email</label>
+        {{ form.username }}
+    </div>
+    <div class="mb-4">
+        <label for="id_password" class="form-label">Password</label>
+        {{ form.password }}
+    </div>
+    <button type="submit" class="btn btn-primary w-100 mb-3">Sign In</button>
+    <div class="d-flex justify-content-between">
+        <a href="{% url 'register' %}" class="small">Create account</a>
+        <a href="{% url 'password_reset' %}" class="small">Forgot password?</a>
+    </div>
+</form>
+{% endblock %}

@@ -1,0 +1,63 @@
+{% extends "base_app.html" %}
+
+{% block title %}Matching CV{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <div class="spinner-border text-primary mb-4" role="status" style="width: 4rem; height: 4rem;">
+                        <span class="visually-hidden">Processing...</span>
+                    </div>
+                    <h3>Matching to Positions</h3>
+                    <p class="text-muted mb-4">Analyzing {{ profile.name }} against selected positions...</p>
+
+                    <div class="progress mb-3" style="height: 30px;">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 100%">
+                            Matching...
+                        </div>
+                    </div>
+
+                    <div id="statusMessage" class="alert alert-info">
+                        Comparing skills, experience and education...
+                    </div>
+
+                    <div id="errorMessage" class="alert alert-danger" style="display: none;">
+                        <span id="errorText"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const statusUrl = "{% url 'recruitment_selective_match_status' profile.id %}";
+    const summaryUrl = "{% url 'recruitment_match_summary' profile.id %}";
+    let pollInterval;
+
+    function checkStatus() {
+        fetch(statusUrl)
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'done') {
+                    clearInterval(pollInterval);
+                    window.location.href = summaryUrl;
+                } else if (data.status === 'failed') {
+                    clearInterval(pollInterval);
+                    document.getElementById('statusMessage').style.display = 'none';
+                    document.getElementById('errorMessage').style.display = 'block';
+                    document.getElementById('errorText').textContent = data.error || 'Matching failed.';
+                }
+            })
+            .catch(error => {
+                console.error('Error checking status:', error);
+            });
+    }
+
+    pollInterval = setInterval(checkStatus, 2000);
+    checkStatus();
+</script>
+{% endblock %}

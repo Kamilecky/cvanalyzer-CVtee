@@ -1,0 +1,90 @@
+{% extends "base_app.html" %}
+
+{% block title %}Job Matching - CV Analyzer{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="bi bi-briefcase me-2"></i>Job Matching</h1>
+    <p>Compare your CV against a job posting to see how well you match.</p>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="post" id="matchForm">
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Select CV</label>
+                        <select name="cv_id" class="form-select" required>
+                            {% for cv in cvs %}
+                            <option value="{{ cv.id }}" {% if forloop.first %}selected{% endif %}>
+                                {{ cv.original_filename }} ({{ cv.uploaded_at|date:"M d, Y" }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Job Source</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="source_type" value="text" id="srcText" checked onchange="toggleSource()">
+                            <label class="form-check-label" for="srcText">Paste Job Description</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="source_type" value="url" id="srcUrl" onchange="toggleSource()">
+                            <label class="form-check-label" for="srcUrl">Enter Job URL</label>
+                        </div>
+                    </div>
+
+                    <div id="textSection" class="mb-3">
+                        <label class="form-label">Job Description</label>
+                        {{ form.job_text }}
+                    </div>
+
+                    <div id="urlSection" class="mb-3" style="display:none;">
+                        <label class="form-label">Job Posting URL</label>
+                        {{ form.job_url }}
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Job Title (optional)</label>
+                            {{ form.job_title }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Company (optional)</label>
+                            {{ form.company }}
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-accent">
+                        <i class="bi bi-search me-1"></i> Start Matching
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">Tips</div>
+            <div class="card-body">
+                <ul class="list-unstyled mb-0">
+                    <li class="mb-2"><i class="bi bi-check-circle text-success me-1"></i> Paste the full job description for best results</li>
+                    <li class="mb-2"><i class="bi bi-check-circle text-success me-1"></i> Include requirements and responsibilities</li>
+                    <li><i class="bi bi-check-circle text-success me-1"></i> Use the latest version of your CV</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleSource() {
+    var isText = document.getElementById('srcText').checked;
+    document.getElementById('textSection').style.display = isText ? 'block' : 'none';
+    document.getElementById('urlSection').style.display = isText ? 'none' : 'block';
+}
+</script>
+{% endblock %}

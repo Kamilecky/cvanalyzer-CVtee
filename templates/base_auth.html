@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block layout %}
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-title">
+            <i class="bi bi-file-earmark-person"></i> CV Analyzer
+        </div>
+        <p class="auth-subtitle">{% block auth_subtitle %}{% endblock %}</p>
+
+        {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message|safe }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+        {% endif %}
+
+        {% block auth_content %}{% endblock %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,51 @@
+{% extends "base_app.html" %}
+
+{% block title %}Subscription - CV Analyzer{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="bi bi-credit-card me-2"></i>My Subscription</h1>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-body">
+                <h5>Current Plan: <span class="text-primary">{{ request.user.get_plan_display }}</span></h5>
+
+                {% if subscription %}
+                <div class="mt-3">
+                    <p><strong>Status:</strong> <span class="status-badge status-{{ subscription.status }}">{{ subscription.get_status_display }}</span></p>
+                    {% if subscription.current_period_end %}
+                    <p><strong>Current period ends:</strong> {{ subscription.current_period_end|date:"M d, Y" }}</p>
+                    {% endif %}
+                    {% if subscription.cancel_at_period_end %}
+                    <p class="text-warning"><i class="bi bi-exclamation-triangle me-1"></i>Your subscription will cancel at the end of the current period.</p>
+                    {% endif %}
+                </div>
+
+                <a href="{% url 'billing_portal' %}" class="btn btn-outline-primary mt-3">
+                    <i class="bi bi-gear me-1"></i> Manage in Stripe
+                </a>
+                {% else %}
+                <p class="text-muted mt-3">You are on the Free plan. Upgrade to unlock more features.</p>
+                <a href="{% url 'pricing' %}" class="btn btn-accent mt-2">
+                    <i class="bi bi-arrow-up-circle me-1"></i> View Plans
+                </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card mt-4">
+            <div class="card-header">Usage This Month</div>
+            <div class="card-body">
+                <p>Analyses used: <strong>{{ request.user.analyses_used_this_month }}</strong>
+                    {% with limit=request.user.get_plan_limit %}
+                    {% if limit %}/ {{ limit }}{% else %}/ Unlimited{% endif %}
+                    {% endwith %}
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

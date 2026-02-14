@@ -1,0 +1,53 @@
+{% extends "base_app.html" %}
+
+{% block title %}{{ cv.original_filename }} - CV Analyzer{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="bi bi-file-earmark-text me-2"></i>{{ cv.title|default:cv.original_filename }}</h1>
+    <p>Uploaded {{ cv.uploaded_at|date:"M d, Y H:i" }} &middot; {{ cv.get_file_size_display }} &middot; {{ cv.get_file_format_display }}</p>
+</div>
+
+<!-- Actions -->
+<div class="mb-4">
+    <a href="{% url 'start_analysis' cv_id=cv.id %}" class="btn btn-accent me-2"
+       onclick="event.preventDefault(); document.getElementById('startAnalysisForm').submit();">
+        <i class="bi bi-graph-up me-1"></i> Analyze CV
+    </a>
+    <form id="startAnalysisForm" method="post" action="{% url 'start_analysis' cv_id=cv.id %}" style="display:none;">
+        {% csrf_token %}
+    </form>
+    <a href="{% url 'cv_list' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i> Back to CVs
+    </a>
+</div>
+
+<div class="row g-4">
+    <!-- Detected sections -->
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">Detected Sections ({{ sections|length }})</div>
+            <div class="card-body p-0">
+                {% for section in sections %}
+                <div class="px-3 py-2 border-bottom">
+                    <small class="text-muted text-uppercase" style="font-size: 0.7rem;">{{ section.get_section_type_display }}</small>
+                    <div class="fw-semibold small">{{ section.title|truncatechars:50 }}</div>
+                </div>
+                {% empty %}
+                <div class="p-3 text-muted small">No sections detected</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Extracted text -->
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">Extracted Text</div>
+            <div class="card-body">
+                <pre style="white-space: pre-wrap; font-size: 0.85rem; max-height: 600px; overflow-y: auto; color: var(--text-primary);">{{ cv.extracted_text }}</pre>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

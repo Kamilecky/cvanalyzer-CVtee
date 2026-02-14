@@ -1,0 +1,37 @@
+{% extends "base_app.html" %}
+
+{% block title %}Upload CV - CV Analyzer{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="bi bi-cloud-upload me-2"></i>Upload CV</h1>
+    <p>Upload your CV in PDF, DOCX, or TXT format</p>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <form method="post" enctype="multipart/form-data" id="uploadForm">
+            {% csrf_token %}
+            <div class="upload-zone" id="uploadZone">
+                <div class="upload-icon"><i class="bi bi-cloud-arrow-up"></i></div>
+                <div class="upload-text">Drag & drop your CV here or click to browse</div>
+                <div class="upload-hint">Supported formats: PDF, DOCX, TXT (max 10 MB)</div>
+                <input type="file" name="file" id="cvFileInput" accept=".pdf,.docx,.txt" style="display: none;">
+            </div>
+        </form>
+    </div>
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">Tips</div>
+            <div class="card-body">
+                <ul class="list-unstyled mb-0">
+                    <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>Use PDF for best results</li>
+                    <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>Ensure text is selectable</li>
+                    <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>Include clear section headings</li>
+                    <li><i class="bi bi-x-circle text-danger me-2"></i>Scanned images won't parse</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

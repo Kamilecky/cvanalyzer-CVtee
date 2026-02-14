@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block layout %}
+<!-- Topbar -->
+<nav class="topbar">
+    <div class="d-flex align-items-center">
+        <button class="sidebar-toggle me-2" id="sidebarToggle">
+            <i class="bi bi-list"></i>
+        </button>
+        <a href="{% url 'dashboard' %}" class="topbar-brand">
+            <i class="bi bi-file-earmark-person"></i>
+            CV <span>Analyzer</span>
+        </a>
+    </div>
+
+    <div class="topbar-nav d-none d-md-flex">
+        <a href="{% url 'dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+            <i class="bi bi-grid me-1"></i> Dashboard
+        </a>
+        <a href="{% url 'cv_upload' %}" class="{% if request.resolver_match.url_name == 'cv_upload' %}active{% endif %}">
+            <i class="bi bi-cloud-upload me-1"></i> Upload CV
+        </a>
+        <a href="{% url 'analysis_history' %}" class="{% if request.resolver_match.url_name == 'analysis_history' %}active{% endif %}">
+            <i class="bi bi-clock-history me-1"></i> History
+        </a>
+    </div>
+
+    <div class="topbar-right">
+        <button class="theme-toggle" id="themeToggle" title="Toggle theme">
+            <i class="bi bi-moon"></i>
+        </button>
+        <div class="dropdown">
+            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                <i class="bi bi-person-circle me-1"></i>
+                {{ request.user.username }}
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item" href="{% url 'profile' %}"><i class="bi bi-person me-2"></i>Profile</a></li>
+                <li><a class="dropdown-item" href="{% url 'subscription' %}"><i class="bi bi-credit-card me-2"></i>Subscription</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item text-danger" href="{% url 'logout' %}"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- Sidebar -->
+<aside class="sidebar" id="sidebar">
+    <div class="sidebar-section">
+        <div class="sidebar-label">Main</div>
+        <a href="{% url 'dashboard' %}" class="sidebar-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+            <span class="icon"><i class="bi bi-grid"></i></span> Dashboard
+        </a>
+        <a href="{% url 'cv_upload' %}" class="sidebar-link {% if request.resolver_match.url_name == 'cv_upload' %}active{% endif %}">
+            <span class="icon"><i class="bi bi-cloud-upload"></i></span> Upload CV
+        </a>
+    </div>
+
+    <div class="sidebar-section">
+        <div class="sidebar-label">Analysis</div>
+        <a href="{% url 'analysis_history' %}" class="sidebar-link {% if request.resolver_match.url_name == 'analysis_history' %}active{% endif %}">
+            <span class="icon"><i class="bi bi-clock-history"></i></span> Analysis History
+        </a>
+        <a href="{% url 'cv_list' %}" class="sidebar-link {% if request.resolver_match.url_name == 'cv_list' %}active{% endif %}">
+            <span class="icon"><i class="bi bi-folder"></i></span> My CVs
+        </a>
+    </div>
+
+    <div class="sidebar-section">
+        <div class="sidebar-label">Recruitment</div>
+        <a href="{% url 'recruitment_dashboard' %}" class="sidebar-link {% if 'recruitment' in request.path %}active{% endif %}">
+            <span class="icon"><i class="bi bi-people-fill"></i></span> HR Dashboard
+        </a>
+        <a href="{% url 'recruitment_position_list' %}" class="sidebar-link">
+            <span class="icon"><i class="bi bi-briefcase"></i></span> Positions
+        </a>
+        <a href="{% url 'recruitment_candidate_list' %}" class="sidebar-link">
+            <span class="icon"><i class="bi bi-person-lines-fill"></i></span> Candidates
+        </a>
+        <a href="{% url 'recruitment_candidate_upload' %}" class="sidebar-link">
+            <span class="icon"><i class="bi bi-cloud-upload"></i></span> Upload CV
+        </a>
+        <a href="{% url 'recruitment_position_ranks' %}" class="sidebar-link">
+            <span class="icon"><i class="bi bi-trophy"></i></span> Position Ranks
+        </a>
+    </div>
+
+    <div class="sidebar-section">
+        <div class="sidebar-label">Account</div>
+        <a href="{% url 'profile' %}" class="sidebar-link {% if request.resolver_match.url_name == 'profile' %}active{% endif %}">
+            <span class="icon"><i class="bi bi-person"></i></span> Profile
+        </a>
+        <a href="{% url 'subscription' %}" class="sidebar-link {% if request.resolver_match.url_name == 'subscription' %}active{% endif %}">
+            <span class="icon"><i class="bi bi-credit-card"></i></span> Plan & Billing
+        </a>
+    </div>
+
+    <div class="sidebar-section mt-auto">
+        <div class="px-3">
+            <div class="d-flex align-items-center justify-content-between mb-1">
+                <small class="text-muted">Usage</small>
+                <span class="plan-badge {{ request.user.plan }}">{{ request.user.plan }}</span>
+            </div>
+            <div class="usage-bar">
+                {% with limit=request.user.get_plan_limit %}
+                {% if limit %}
+                <div class="fill" style="width: {% widthratio request.user.analyses_used_this_month limit 100 %}%"></div>
+                {% else %}
+                <div class="fill" style="width: 5%"></div>
+                {% endif %}
+                {% endwith %}
+            </div>
+            <small class="text-muted d-block mt-1">
+                {{ request.user.analyses_used_this_month }}
+                {% with limit=request.user.get_plan_limit %}
+                {% if limit %}/ {{ limit }}{% else %}/ Unlimited{% endif %}
+                {% endwith %}
+                analyses
+            </small>
+        </div>
+    </div>
+</aside>
+
+<!-- Main Content -->
+<main class="main-content">
+    <div id="alertContainer">
+        {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {% if message.tags == 'error' %}
+            <i class="bi bi-exclamation-circle me-2"></i>
+            {% elif message.tags == 'success' %}
+            <i class="bi bi-check-circle me-2"></i>
+            {% elif message.tags == 'warning' %}
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            {% else %}
+            <i class="bi bi-info-circle me-2"></i>
+            {% endif %}
+            {{ message|safe }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+        {% endif %}
+    </div>
+
+    {% block content %}{% endblock %}
+</main>
+{% endblock %}

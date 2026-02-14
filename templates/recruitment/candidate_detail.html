@@ -1,0 +1,303 @@
+{% extends "base_app.html" %}
+
+{% block title %}{{ profile.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2>{{ profile.name }}</h2>
+            <p class="text-muted mb-0">
+                {% if profile.current_role %}{{ profile.current_role }}{% endif %}
+                {% if profile.location %} | <i class="bi bi-geo-alt"></i> {{ profile.location }}{% endif %}
+            </p>
+        </div>
+        <div>
+            <a href="{% url 'recruitment_select_positions' profile.id %}" class="btn btn-outline-primary me-2">
+                <i class="bi bi-check2-square"></i> Select Positions
+            </a>
+            <form method="post" action="{% url 'recruitment_match_all' profile.id %}" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-arrow-repeat"></i> Match to All Positions
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Profile Card -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-person"></i> Profile Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Email:</strong>
+                            <p>{{ profile.email|default:"Not provided" }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Phone:</strong>
+                            <p>{{ profile.phone|default:"Not provided" }}</p>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Seniority Level:</strong>
+                            <p>{{ profile.seniority_level|default:"Not specified" }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Years of Experience:</strong>
+                            <p>{{ profile.years_of_experience|default:"Not specified" }}</p>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <strong>Tags:</strong>
+                        <div class="mt-2">
+                            {% if profile.tags %}
+                                {% for tag in profile.tags %}
+                                    <span class="badge bg-info me-1 mb-1">{{ tag }}</span>
+                                {% endfor %}
+                            {% else %}
+                                <span class="text-muted">None</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Skills Section -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-tools"></i> Skills</h5>
+                </div>
+                <div class="card-body">
+                    {% if profile.skills %}
+                        <div class="mb-3">
+                            {% for skill in profile.skills %}
+                                <span class="badge bg-primary me-1 mb-1">{{ skill }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+
+                    {% if profile.skill_levels %}
+                        <strong>Skill Levels:</strong>
+                        <ul class="list-unstyled mt-2">
+                            {% for skill, level in profile.skill_levels.items %}
+                                <li><strong>{{ skill }}:</strong> {{ level }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+
+                    {% if not profile.skills and not profile.skill_levels %}
+                        <p class="text-muted">No skills listed</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Education -->
+            {% if profile.education %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-mortarboard"></i> Education</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        {% for edu in profile.education %}
+                            <li class="mb-2">
+                                <strong>{{ edu.degree|default:"Degree" }}</strong>
+                                {% if edu.institution %} at {{ edu.institution }}{% endif %}
+                                {% if edu.year %} ({{ edu.year }}){% endif %}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Work History -->
+            {% if profile.companies %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-briefcase"></i> Work History</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        {% for job in profile.companies %}
+                            <li class="mb-2">
+                                <strong>{{ job.role|default:"Position" }}</strong>
+                                {% if job.company %} at {{ job.company }}{% endif %}
+                                {% if job.duration %} - {{ job.duration }}{% endif %}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Languages and Certifications -->
+            <div class="row mb-4">
+                {% if profile.languages %}
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-translate"></i> Languages</h5>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-unstyled">
+                                {% for lang in profile.languages %}
+                                    <li>{{ lang }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if profile.certifications %}
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="bi bi-award"></i> Certifications</h5>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-unstyled">
+                                {% for cert in profile.certifications %}
+                                    <li>{{ cert }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- HR Summary -->
+            {% if profile.hr_summary %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-file-text"></i> HR Summary</h5>
+                </div>
+                <div class="card-body">
+                    <p>{{ profile.hr_summary|linebreaks }}</p>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Red Flags -->
+            {% if profile.red_flags %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Red Flags</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        {% for flag in profile.red_flags %}
+                            <li class="mb-2">
+                                <span class="badge {% if flag.severity == 'critical' %}bg-danger{% elif flag.severity == 'warning' %}bg-warning{% else %}bg-info{% endif %} me-2">
+                                    {{ flag.severity|upper }}
+                                </span>
+                                {{ flag.description }}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Position Matches -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-graph-up"></i> Position Matches</h5>
+                </div>
+                <div class="card-body">
+                    {% if fit_results %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Position</th>
+                                        <th>Overall Match</th>
+                                        <th>Skill Match</th>
+                                        <th>Recommendation</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for fit in fit_results %}
+                                        <tr>
+                                            <td>
+                                                <a href="{% url 'recruitment_position_detail' fit.position.id %}">
+                                                    {{ fit.position.title }}
+                                                </a>
+                                            </td>
+                                            <td>
+                                                <span class="badge {% if fit.overall_match >= 80 %}bg-success{% elif fit.overall_match >= 60 %}bg-warning{% else %}bg-danger{% endif %}">
+                                                    {{ fit.overall_match|floatformat:0 }}%
+                                                </span>
+                                            </td>
+                                            <td>{{ fit.skill_match|floatformat:0 }}%</td>
+                                            <td>
+                                                <span class="badge {% if fit.fit_recommendation == 'strong_fit' %}bg-success{% elif fit.fit_recommendation == 'good_fit' %}bg-primary{% elif fit.fit_recommendation == 'moderate_fit' %}bg-warning{% elif fit.fit_recommendation == 'weak_fit' %}bg-secondary{% else %}bg-danger{% endif %}">
+                                                    {{ fit.get_fit_recommendation_display }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <a href="{% url 'recruitment_fit_result' fit.id %}" class="btn btn-sm btn-outline-primary">
+                                                    <i class="bi bi-eye"></i> Details
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center py-3">No position matches yet. Click "Match to All Positions" above to analyze fit.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-info-circle"></i> Quick Stats</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h6 class="text-muted">Total Skills</h6>
+                        <h3>{{ profile.skills|length|default:0 }}</h3>
+                    </div>
+                    <div class="mb-3">
+                        <h6 class="text-muted">Position Matches</h6>
+                        <h3>{{ fit_results|length|default:0 }}</h3>
+                    </div>
+                    <div>
+                        <h6 class="text-muted">Red Flags</h6>
+                        <h3 class="{% if profile.red_flags %}text-danger{% endif %}">
+                            {{ profile.red_flags|length|default:0 }}
+                        </h3>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-calendar"></i> Timeline</h5>
+                </div>
+                <div class="card-body">
+                    <small class="text-muted">
+                        <strong>Created:</strong> {{ profile.created_at|date:"M d, Y H:i" }}<br>
+                        <strong>Updated:</strong> {{ profile.updated_at|date:"M d, Y H:i" }}
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,87 @@
+{% extends "base_app.html" %}
+
+{% block title %}Processing CV{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <div class="spinner-border text-primary mb-4" role="status" style="width: 4rem; height: 4rem;">
+                        <span class="visually-hidden">Processing...</span>
+                    </div>
+                    <h3>Processing CV</h3>
+                    <p class="text-muted mb-4">{{ message|default:"Please wait while we analyze the CV..." }}</p>
+
+                    <div class="progress mb-3" style="height: 30px;">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 100%">
+                            Analyzing...
+                        </div>
+                    </div>
+
+                    <div id="statusMessage" class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> Extracting information from CV...
+                    </div>
+
+                    <div id="errorMessage" class="alert alert-danger" style="display: none;">
+                        <i class="bi bi-exclamation-triangle"></i> <span id="errorText"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-info-circle"></i> What's Happening</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="mb-0">
+                        <li>Extracting text from CV document</li>
+                        <li>Analyzing candidate profile and experience</li>
+                        <li>Identifying skills and qualifications</li>
+                        <li>Matching against open positions</li>
+                        <li>Generating HR summary and insights</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const cvDocId = {{ cv_doc.id }};
+    const statusUrl = "{% url 'recruitment_candidate_status' cv_doc.id %}";
+    let pollInterval;
+
+    function checkStatus() {
+        fetch(statusUrl)
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'done') {
+                    clearInterval(pollInterval);
+                    if (data.redirect_url) {
+                        window.location.href = data.redirect_url;
+                    }
+                } else if (data.status === 'failed') {
+                    clearInterval(pollInterval);
+                    document.getElementById('statusMessage').style.display = 'none';
+                    document.getElementById('errorMessage').style.display = 'block';
+                    document.getElementById('errorText').textContent = data.error || 'An error occurred while processing the CV.';
+                } else if (data.status === 'processing') {
+                    if (data.message) {
+                        document.getElementById('statusMessage').innerHTML = '<i class="bi bi-info-circle"></i> ' + data.message;
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error checking status:', error);
+            });
+    }
+
+    // Poll every 2 seconds
+    pollInterval = setInterval(checkStatus, 2000);
+
+    // Check immediately on load
+    checkStatus();
+</script>
+{% endblock %}

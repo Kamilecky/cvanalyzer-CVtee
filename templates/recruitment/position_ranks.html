@@ -1,0 +1,135 @@
+{% extends "base_app.html" %}
+
+{% block title %}Position Ranks - CV Analyzer{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="bi bi-trophy me-2"></i>Position Ranks</h2>
+            <p class="text-muted mb-0">Top 3 candidates per position, sorted by match score</p>
+        </div>
+        <a href="{% url 'recruitment_dashboard' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
+        </a>
+    </div>
+
+    {% for pr in position_ranks %}
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                <a href="{% url 'recruitment_position_detail' pr.position.id %}">
+                    <i class="bi bi-briefcase me-1"></i> {{ pr.position.title }}
+                </a>
+                <small class="text-muted ms-2">
+                    {{ pr.position.get_seniority_level_display }}
+                    {% if pr.position.department %} | {{ pr.position.department }}{% endif %}
+                </small>
+            </h5>
+            {% if pr.position.required_skills %}
+            <div>
+                {% for skill in pr.position.required_skills|slice:":4" %}
+                    <span class="badge bg-primary bg-opacity-75" style="font-size: 0.7rem;">{{ skill }}</span>
+                {% endfor %}
+                {% if pr.position.required_skills|length > 4 %}
+                    <span class="badge bg-secondary" style="font-size: 0.7rem;">+{{ pr.position.required_skills|length|add:"-4" }}</span>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+        <div class="card-body">
+            {% if pr.candidates %}
+            <div class="row">
+                {% for c in pr.candidates %}
+                <div class="col-md-4 mb-3">
+                    <div class="rank-card">
+                        <div class="rank-card-header">
+                            <span class="rank-badge rank-{{ c.rank }}">
+                                {% if c.rank == 1 %}<i class="bi bi-trophy-fill"></i>{% elif c.rank == 2 %}<i class="bi bi-award-fill"></i>{% else %}<i class="bi bi-award"></i>{% endif %}
+                                #{{ c.rank }}
+                            </span>
+                            <span class="rank-match {% if c.fit.overall_match >= 75 %}score-high{% elif c.fit.overall_match >= 50 %}score-mid{% else %}score-low{% endif %}">
+                                {{ c.fit.overall_match|default:"0" }}%
+                            </span>
+                        </div>
+
+                        <h6 class="mb-1">
+                            <a href="{% url 'recruitment_candidate_detail' c.profile.id %}">{{ c.profile.name }}</a>
+                        </h6>
+                        <small class="text-muted d-block mb-3">{{ c.profile.current_role|default:"" }}</small>
+
+                        <!-- Experience -->
+                        {% if c.profile.companies %}
+                        <div class="rank-section">
+                            <small class="rank-section-label"><i class="bi bi-briefcase me-1"></i>Experience</small>
+                            <ul class="rank-list">
+                                {% for job in c.profile.companies|slice:":3" %}
+                                <li>
+                                    <strong>{{ job.role|default:"Position" }}</strong>
+                                    {% if job.company %} at {{ job.company }}{% endif %}
+                                    {% if job.duration %}<span class="text-muted"> - {{ job.duration }}</span>{% endif %}
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
+
+                        <!-- Education -->
+                        {% if c.profile.education %}
+                        <div class="rank-section">
+                            <small class="rank-section-label"><i class="bi bi-mortarboard me-1"></i>Education</small>
+                            <ul class="rank-list">
+                                {% for edu in c.profile.education|slice:":2" %}
+                                <li>
+                                    <strong>{{ edu.degree|default:"Degree" }}</strong>
+                                    {% if edu.institution %} at {{ edu.institution }}{% endif %}
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
+
+                        <!-- Skills with highlighting -->
+                        {% if c.highlighted_skills %}
+                        <div class="rank-section">
+                            <small class="rank-section-label"><i class="bi bi-tools me-1"></i>Skills</small>
+                            <div class="mt-1">
+                                {% for skill in c.highlighted_skills|slice:":12" %}
+                                    <span class="badge {% if skill.is_match %}skill-match{% else %}skill-other{% endif %} me-1 mb-1">
+                                        {% if skill.is_match %}<i class="bi bi-check-lg me-1"></i>{% endif %}{{ skill.name }}
+                                    </span>
+                                {% endfor %}
+                                {% if c.highlighted_skills|length > 12 %}
+                                    <span class="badge bg-secondary" style="font-size: 0.7rem;">+{{ c.highlighted_skills|length|add:"-12" }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <div class="mt-3">
+                            <a href="{% url 'recruitment_fit_result' c.fit.id %}" class="btn btn-sm btn-outline-primary w-100">
+                                <i class="bi bi-eye me-1"></i> View Full Analysis
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-muted text-center py-3 mb-0">No candidates matched to this position yet.</p>
+            {% endif %}
+        </div>
+    </div>
+    {% empty %}
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <i class="bi bi-briefcase text-muted" style="font-size: 3rem;"></i>
+            <p class="text-muted mt-3">No active positions. Create a position to start ranking candidates.</p>
+            <a href="{% url 'recruitment_position_create' %}" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-1"></i> Create Position
+            </a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

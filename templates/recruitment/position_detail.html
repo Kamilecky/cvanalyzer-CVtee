@@ -1,0 +1,235 @@
+{% extends "base_app.html" %}
+
+{% block title %}{{ position.title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2>{{ position.title }}</h2>
+            <p class="text-muted mb-0">
+                <i class="bi bi-building"></i> {{ position.department|default:"N/A" }} |
+                <i class="bi bi-geo-alt"></i> {{ position.location|default:"N/A" }}
+            </p>
+        </div>
+        <div>
+            <a href="{% url 'recruitment_position_edit' position.id %}" class="btn btn-outline-primary">
+                <i class="bi bi-pencil"></i> Edit
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Position Details Card -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-info-circle"></i> Position Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Seniority Level:</strong>
+                            <p>{{ position.seniority_level }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Employment Type:</strong>
+                            <p>{{ position.employment_type }}</p>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <strong>Experience Required:</strong>
+                            <p>{{ position.years_of_experience_required|default:"N/A" }} years</p>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Industry:</strong>
+                            <p>{{ position.industry|default:"N/A" }}</p>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <strong>Required Skills:</strong>
+                        <div class="mt-2">
+                            {% if position.required_skills %}
+                                {% for skill in position.required_skills %}
+                                    <span class="badge bg-primary me-1 mb-1">{{ skill }}</span>
+                                {% endfor %}
+                            {% else %}
+                                <p class="text-muted">None specified</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <strong>Optional Skills:</strong>
+                        <div class="mt-2">
+                            {% if position.optional_skills %}
+                                {% for skill in position.optional_skills %}
+                                    <span class="badge bg-secondary me-1 mb-1">{{ skill }}</span>
+                                {% endfor %}
+                            {% else %}
+                                <p class="text-muted">None specified</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <strong>Languages Required:</strong>
+                        <div class="mt-2">
+                            {% if position.languages_required %}
+                                {% for lang in position.languages_required %}
+                                    <span class="badge bg-info me-1 mb-1">{{ lang }}</span>
+                                {% endfor %}
+                            {% else %}
+                                <p class="text-muted">None specified</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    {% if position.responsibilities %}
+                        <div class="mb-3">
+                            <strong>Responsibilities:</strong>
+                            <p>{{ position.responsibilities|linebreaks }}</p>
+                        </div>
+                    {% endif %}
+
+                    {% if position.requirements_description %}
+                        <div class="mb-3">
+                            <strong>Requirements:</strong>
+                            <p>{{ position.requirements_description|linebreaks }}</p>
+                        </div>
+                    {% endif %}
+
+                    {% if position.nice_to_have %}
+                        <div>
+                            <strong>Nice to Have:</strong>
+                            <p>{{ position.nice_to_have|linebreaks }}</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Ranked Candidates -->
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-people"></i> Ranked Candidates</h5>
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-sort-down"></i> Sort by
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item {% if current_sort == 'overall_match' %}active{% endif %}" href="?sort=overall_match">Overall Match</a></li>
+                            <li><a class="dropdown-item {% if current_sort == 'skill_match' %}active{% endif %}" href="?sort=skill_match">Skill Match</a></li>
+                            <li><a class="dropdown-item {% if current_sort == 'experience_match' %}active{% endif %}" href="?sort=experience_match">Experience Match</a></li>
+                            <li><a class="dropdown-item {% if current_sort == 'seniority_match' %}active{% endif %}" href="?sort=seniority_match">Seniority Match</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if fit_results %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Rank</th>
+                                        <th>Name</th>
+                                        <th>Current Role</th>
+                                        <th>Overall Match</th>
+                                        <th>Skill Match</th>
+                                        <th>Red Flags</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for fit in fit_results %}
+                                        <tr>
+                                            <td><strong>#{{ forloop.counter }}</strong></td>
+                                            <td>
+                                                <a href="{% url 'recruitment_candidate_detail' fit.candidate.id %}">
+                                                    {{ fit.candidate.name }}
+                                                </a>
+                                            </td>
+                                            <td>{{ fit.candidate.current_role|default:"N/A" }}</td>
+                                            <td>
+                                                <span class="badge {% if fit.overall_match_score >= 80 %}bg-success{% elif fit.overall_match_score >= 60 %}bg-warning{% else %}bg-danger{% endif %}">
+                                                    {{ fit.overall_match_score|floatformat:0 }}%
+                                                </span>
+                                            </td>
+                                            <td>{{ fit.skill_match_score|floatformat:0 }}%</td>
+                                            <td>
+                                                {% if fit.candidate.red_flags %}
+                                                    <span class="badge bg-danger">{{ fit.candidate.red_flags|length }}</span>
+                                                {% else %}
+                                                    <span class="text-muted">0</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <a href="{% url 'recruitment_fit_result' fit.id %}" class="btn btn-sm btn-outline-primary">
+                                                    <i class="bi bi-eye"></i> View Details
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="bi bi-people text-muted" style="font-size: 3rem;"></i>
+                            <p class="text-muted mt-3">No candidates matched yet. Upload CVs to see rankings.</p>
+                            <a href="{% url 'recruitment_candidate_upload' %}" class="btn btn-primary">
+                                <i class="bi bi-file-earmark-arrow-up"></i> Upload CV
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Sidebar -->
+        <div class="col-lg-4">
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-graph-up"></i> Statistics</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h6 class="text-muted">Total Candidates</h6>
+                        <h3>{{ candidate_count }}</h3>
+                    </div>
+                    <div>
+                        <h6 class="text-muted">Average Match Score</h6>
+                        <h3>
+                            {% if avg_match_score %}
+                                {{ avg_match_score|floatformat:0 }}%
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </h3>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-gear"></i> Status</h5>
+                </div>
+                <div class="card-body">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" disabled {% if position.is_active %}checked{% endif %}>
+                        <label class="form-check-label">
+                            Position is {% if position.is_active %}Active{% else %}Inactive{% endif %}
+                        </label>
+                    </div>
+                    <div class="mt-3">
+                        <small class="text-muted">
+                            Created: {{ position.created_at|date:"M d, Y" }}
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

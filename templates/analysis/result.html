@@ -1,0 +1,233 @@
+{% extends "base_app.html" %}
+
+{% block title %}Analysis Result - CV Analyzer{% endblock %}
+
+{% block content %}
+<div class="page-header d-flex justify-content-between align-items-center">
+    <div>
+        <h1><i class="bi bi-file-earmark-text me-2"></i>Analysis Result</h1>
+        <p class="text-muted mb-0">{{ analysis.cv_document.original_filename }} &mdash; {{ analysis.created_at|date:"M d, Y H:i" }}</p>
+    </div>
+    <div>
+        {% if request.user.has_feature.pdf_export %}
+        <a href="{% url 'report_generate' analysis.id %}" class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-file-pdf me-1"></i> Export PDF
+        </a>
+        {% endif %}
+        <a href="{% url 'analysis_history' %}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left me-1"></i> Back to History
+        </a>
+    </div>
+</div>
+
+<!-- Summary -->
+{% if analysis.summary %}
+<div class="card mb-4">
+    <div class="card-body">
+        <h5 class="mb-3"><i class="bi bi-chat-text me-2"></i>Summary</h5>
+        <p class="mb-0" style="font-size: 1.05rem; line-height: 1.7;">{{ analysis.summary }}</p>
+    </div>
+</div>
+{% endif %}
+
+<!-- Section-by-Section Analysis -->
+{% if section_analyses %}
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-layers me-2"></i>Section-by-Section Analysis</h5>
+    </div>
+    <div class="card-body">
+        {% for sa in section_analyses %}
+        <div class="section-analysis-card">
+            <div class="section-analysis-header">
+                <span class="section-analysis-name">{{ sa.section|title }}</span>
+                <span class="badge {% if sa.status == 'present' %}bg-success{% elif sa.status == 'weak' %}bg-warning text-dark{% else %}bg-danger{% endif %}">
+                    {% if sa.status == 'present' %}Present{% elif sa.status == 'weak' %}Weak{% else %}Missing{% endif %}
+                </span>
+            </div>
+            <div class="section-analysis-text">
+                {{ sa.analysis_text }}
+            </div>
+            {% if sa.suggestions %}
+            <div class="section-analysis-suggestions">
+                <strong><i class="bi bi-lightbulb me-1"></i>Suggestions:</strong>
+                <ul class="mb-0 mt-1">
+                    {% for suggestion in sa.suggestions %}
+                    <li>{{ suggestion }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Tabs -->
+<ul class="nav nav-tabs mb-3" role="tablist">
+    <li class="nav-item">
+        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#problems-tab">
+            <i class="bi bi-exclamation-triangle me-1"></i> Problems ({{ problems.count }})
+        </button>
+    </li>
+    {% if has_recommendations %}
+    <li class="nav-item">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#recommendations-tab">
+            <i class="bi bi-lightbulb me-1"></i> Recommendations ({{ recommendations.count }})
+        </button>
+    </li>
+    {% endif %}
+    {% if has_skill_gap %}
+    <li class="nav-item">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#skills-tab">
+            <i class="bi bi-puzzle me-1"></i> Skill Gaps ({{ skill_gaps.count }})
+        </button>
+    </li>
+    {% endif %}
+    {% if has_rewriting %}
+    <li class="nav-item">
+        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#rewrite-tab">
+            <i class="bi bi-pencil-square me-1"></i> AI Rewrite ({{ rewrites.count }})
+        </button>
+    </li>
+    {% endif %}
+</ul>
+
+<div class="tab-content">
+    <!-- Problems -->
+    <div class="tab-pane fade show active" id="problems-tab">
+        {% for p in problems %}
+        <div class="card mb-3">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h6 class="mb-1">
+                            <span class="severity-badge severity-{{ p.severity }}">{{ p.get_severity_display }}</span>
+                            {{ p.title }}
+                        </h6>
+                        <p class="mb-1">{{ p.description }}</p>
+                        {% if p.affected_text %}
+                        <small class="text-muted"><strong>Affected:</strong> "{{ p.affected_text|truncatechars:120 }}"</small>
+                        {% endif %}
+                    </div>
+                    <span class="badge bg-secondary">{{ p.get_category_display }}</span>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <p class="text-muted">No problems detected.</p>
+        {% endfor %}
+    </div>
+
+    <!-- Recommendations -->
+    {% if has_recommendations %}
+    <div class="tab-pane fade" id="recommendations-tab">
+        {% for r in recommendations %}
+        <div class="card mb-3">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h6 class="mb-1">
+                            <span class="badge {% if r.priority == 'high' %}bg-danger{% elif r.priority == 'medium' %}bg-warning text-dark{% else %}bg-info{% endif %}">{{ r.get_priority_display }}</span>
+                            {{ r.title }}
+                        </h6>
+                        <p class="mb-1">{{ r.description }}</p>
+                        {% if r.suggested_text %}
+                        <div class="mt-2 p-2 bg-light rounded">
+                            <small class="text-muted"><strong>Suggested:</strong></small>
+                            <p class="mb-0 small">{{ r.suggested_text }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <span class="badge bg-secondary">{{ r.get_recommendation_type_display }}</span>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <p class="text-muted">No recommendations.</p>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Skill Gaps -->
+    {% if has_skill_gap %}
+    <div class="tab-pane fade" id="skills-tab">
+        {% for sg in skill_gaps %}
+        <div class="card mb-3">
+            <div class="card-body">
+                <h6>{{ sg.skill_name }}</h6>
+                <div class="row">
+                    <div class="col-md-4">
+                        <small class="text-muted">Current: {{ sg.current_level|default:"Not detected" }}</small>
+                    </div>
+                    <div class="col-md-4">
+                        <small class="text-muted">Recommended: {{ sg.recommended_level|default:"-" }}</small>
+                    </div>
+                    <div class="col-md-4">
+                        <span class="badge {% if sg.importance == 'high' %}bg-danger{% elif sg.importance == 'medium' %}bg-warning text-dark{% else %}bg-info{% endif %}">{{ sg.importance }}</span>
+                    </div>
+                </div>
+                {% if sg.learning_resources %}
+                <small class="text-muted mt-1 d-block">{{ sg.learning_resources }}</small>
+                {% endif %}
+            </div>
+        </div>
+        {% empty %}
+        <p class="text-muted">No skill gaps detected.</p>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Rewrites -->
+    {% if has_rewriting %}
+    <div class="tab-pane fade" id="rewrite-tab">
+        {% for rw in rewrites %}
+        <div class="card mb-3">
+            <div class="card-body">
+                <h6>{{ rw.section_type|title }}</h6>
+                <div class="row">
+                    <div class="col-md-6">
+                        <small class="text-muted">Original</small>
+                        <div class="p-2 bg-light rounded mt-1">{{ rw.original_text|linebreaksbr }}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <small class="text-success">Improved</small>
+                        <div class="p-2 bg-light rounded mt-1 border-start border-success border-3">{{ rw.rewritten_text|linebreaksbr }}</div>
+                    </div>
+                </div>
+                {% if rw.improvement_notes %}
+                <small class="text-muted mt-2 d-block">{{ rw.improvement_notes }}</small>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+
+        {% if sections %}
+        <h6 class="mt-4 mb-3">Rewrite a Section</h6>
+        {% for s in sections %}
+        <form method="post" action="{% url 'analysis_rewrite' analysis.id %}" class="d-inline">
+            {% csrf_token %}
+            <input type="hidden" name="section_type" value="{{ s.section_type }}">
+            <input type="hidden" name="original_text" value="{{ s.content }}">
+            <button type="submit" class="btn btn-sm btn-outline-accent me-2 mb-2">
+                <i class="bi bi-pencil me-1"></i> Rewrite {{ s.get_section_type_display }}
+            </button>
+        </form>
+        {% endfor %}
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+<!-- Metadata -->
+<div class="card mt-4">
+    <div class="card-body">
+        <small class="text-muted">
+            Processing time: {{ analysis.processing_time_seconds|floatformat:1 }}s
+            &bull; Tokens used: {{ analysis.openai_tokens_used }}
+            &bull; Sections detected: {{ analysis.sections_detected|join:", " }}
+        </small>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,166 @@
+================================================================================
+                        CV ANALYZER - OPIS FUNKCJONALNOSCI
+================================================================================
+
+Aplikacja webowa Django do analizy CV z wykorzystaniem sztucznej inteligencji
+(OpenAI GPT-4o-mini) oraz modulem rekrutacyjnym HR.
+
+================================================================================
+1. ANALIZA CV (modul: analysis)
+================================================================================
+
+- Upload CV w formacie PDF, DOCX lub TXT
+- Automatyczna ekstrakcja tekstu (pdfplumber / python-docx)
+- Detekcja sekcji CV (doswiadczenie, edukacja, umiejetnosci, itp.)
+- Analiza AI w 2 krokach:
+  * Krok 1: Ekstrakcja danych (imie, umiejetnosci, doswiadczenie)
+  * Krok 2: Scoring (ocena 0-100 w kategoriach)
+- Wynik analizy: overall score, strengths, weaknesses, recommendations
+- Historia analiz z mozliwoscia przegladania wynikow
+- Hash-based caching: identyczne pliki nie sa analizowane ponownie
+- Przetwarzanie w tle (threading.Thread) z paskiem postepu (polling co 2s)
+- Limit tekstu: 4000 znakow (optymalizacja kosztow AI)
+
+================================================================================
+2. MODUL REKRUTACYJNY HR (modul: recruitment)
+================================================================================
+
+DOSTEPNY DLA WSZYSTKICH PLANOW (w tym Free).
+
+2.1 Stanowiska pracy (JobPosition)
+- Tworzenie, edycja, usuwanie (deaktywacja) stanowisk
+- Pola: tytul, dzial, lokalizacja, typ zatrudnienia, poziom senioralnosci
+- Wymagane umiejetnosci (lista), opcjonalne umiejetnosci
+- Wymagane lata doswiadczenia, opis wymagan
+- Kazdy uzytkownik widzi tylko SWOJE stanowiska (bezpieczenstwo)
+
+2.2 Profil kandydata (CandidateProfile)
+- Automatyczna ekstrakcja z CV przez AI:
+  * Dane osobowe (imie, email, telefon, lokalizacja)
+  * Umiejetnosci + poziomy (np. Python: Advanced, SQL: Intermediate)
+  * Doswiadczenie zawodowe (firmy, role, czas trwania)
+  * Edukacja, certyfikaty, jezyki
+  * Podsumowanie HR (1-2 akapity dla rekrutera)
+  * Red flags (luki w zatrudnieniu, job hopping, brak progresji)
+  * Auto-tagi (np. "senior", "backend", "remote-ready")
+
+2.3 Dopasowanie do stanowisk (JobFitResult)
+- Porownanie kandydata do KAZDEGO aktywnego stanowiska
+- OPTYMALIZACJA: 1 zapytanie AI = do 10 stanowisk naraz (batch matching)
+- Wyniki dopasowania (0-100%):
+  * Overall match (ogolne dopasowanie)
+  * Skill match (dopasowanie umiejetnosci)
+  * Experience match (dopasowanie doswiadczenia)
+  * Seniority match (dopasowanie poziomu)
+  * Education match (dopasowanie edukacji)
+- Lista umiejetnosci pasujacych i brakujacych
+- Rekomendacja: strong_fit / good_fit / moderate_fit / weak_fit / not_recommended
+- Wyniki posortowane malejaco wg % dopasowania
+
+2.4 Ranking kandydatow
+- Na stronie stanowiska: tabela kandydatow posortowanych wg dopasowania
+- Sortowanie po roznych kryteriach (overall, skill, experience, seniority)
+- Top kandydaci widoczni na dashboardzie rekrutacyjnym
+
+2.5 Pytania rekrutacyjne (Premium)
+- AI generuje 5-8 pytan do rozmowy kwalifikacyjnej
+- Kategorie: technical, behavioral, situational, cultural
+- Dostosowane do profilu kandydata i stanowiska
+
+2.6 Dopasowanie requirement-by-requirement
+- Kazde wymaganie z pozycji analizowane osobno wzgledem CV
+- Typy wymagan: required_skill (1.5x), optional_skill (0.7x), responsibility (1.2x),
+  experience (2.0x), language (1.5x)
+- Wazony overall_match = sum(% * waga) / sum(100 * waga)
+- Klasyfikacja: Excellent (>=90%) / Strong (>=75%) / Moderate (>=60%) / Weak (>=40%) / Poor (<40%)
+- Tabela z % dopasowania i wyjasnieniem AI dla kazdego wymagania
+
+2.7 Scoring sekcji CV
+- 5 sekcji: Doswiadczenie (2.0x), Umiejetnosci (2.0x), Jezyki (1.5x),
+  Wyksztalcenie (1.2x), Zainteresowania (0.3x)
+- AI ocenia kazda sekcje osobno wzgledem stanowiska (0-100%)
+- Analiza tekstowa (2-4 zdania) pod kazdym wynikiem
+- Optymalizacja: sekcje <300 znakow nie sa wysylane do AI (auto-score 10-30%)
+- Brakujaca sekcja = 0% z komunikatem
+- Wynik koncowy = suma wazona sekcji
+- UI: karty sekcji z progress bar i analiza, dark/light mode
+
+2.8 Dashboard rekrutacyjny
+- Statystyki: liczba stanowisk, kandydatow, dopasowan
+- Ostatnie stanowiska
+- Top kandydaci (wg sredniej oceny dopasowan)
+
+================================================================================
+3. ZARZADZANIE CV (modul: cv)
+================================================================================
+
+- Lista uploadowanych CV
+- Podglad szczegulow dokumentu
+- Detekcja sekcji (experience, education, skills, summary, itp.)
+- Walidacja plikow (format, rozmiar)
+
+================================================================================
+4. SYSTEM KONT I PLANOW (modul: accounts + billing)
+================================================================================
+
+4.1 Konta uzytkownikow
+- Rejestracja, logowanie, wylogowanie
+- Profil uzytkownika
+- Custom User model (email jako USERNAME_FIELD)
+
+4.2 Plany subskrypcyjne
+- Free: 5 analiz/miesiac, pelny dostep do rekrutacji
+- Pro: unlimited analiz, rekomendacje, PDF export, AI rewriting
+- Premium: wszystko z Pro + pytania rekrutacyjne, market benchmark
+
+4.3 Platnosci (Stripe)
+- Checkout session do zakupu planu
+- Webhooks do automatycznej aktywacji
+- Billing portal do zarzadzania subskrypcja
+
+================================================================================
+5. ARCHITEKTURA TECHNICZNA
+================================================================================
+
+- Django 5.2
+- 7 aplikacji: accounts, cv, analysis, jobs, billing, reports, recruitment
+- AI: OpenAI GPT-4o-mini (temperature=0, json_object format)
+- Async: threading.Thread (bez Celery)
+- Frontend: Bootstrap 5 + Bootstrap Icons
+- Baza: SQLite (dev), PostgreSQL (prod)
+- Zmienne srodowiskowe: python-dotenv (.env)
+- Optymalizacja AI:
+  * 2-step pipeline (ekstrakcja + scoring)
+  * Batch matching (1 request = do 10 stanowisk)
+  * TextCleaner (limit 4000 znakow)
+  * Hash caching (MD5 na plikach)
+
+================================================================================
+6. BEZPIECZENSTWO
+================================================================================
+
+- @login_required na wszystkich widokach
+- Kazdy uzytkownik widzi tylko swoje dane (filter user=request.user)
+- Klucze API w .env (nie w kodzie)
+- .gitignore chroni .env, db.sqlite3, media/
+- CSRF protection (Django default)
+- Walidacja plikow przed przetwarzaniem
+
+================================================================================
+7. FLOW UZYTKOWNIKA
+================================================================================
+
+Flow 1: Analiza CV
+  1. Upload CV -> parsing -> ekstrakcja tekstu
+  2. AI analiza (2 kroki) -> scoring
+  3. Wynik: ocena, mocne/slabe strony, rekomendacje
+
+Flow 2: Rekrutacja
+  1. Rekruter tworzy stanowiska pracy (tytul, umiejetnosci, wymagania)
+  2. Upload CV kandydata -> AI ekstrakcja profilu (~5s)
+  3. Klik "Match to all positions" -> AI porownuje do KAZDEGO stanowiska
+  4. Wyniki: ranking kandydatow na stanowisku, % dopasowania
+  5. Szczegoly: umiejetnosci pasujace/brakujace, red flags, podsumowanie HR
+  6. (Premium) Generowanie pytan na rozmowe kwalifikacyjna
+
+================================================================================

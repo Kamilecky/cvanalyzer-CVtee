@@ -1,0 +1,303 @@
+{% extends "base_app.html" %}
+
+{% block title %}Match Result: {{ fit.candidate.name }} - {{ fit.position.title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="mb-4">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'recruitment_dashboard' %}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'recruitment_candidate_detail' fit.candidate.id %}">{{ fit.candidate.name }}</a></li>
+                <li class="breadcrumb-item active">Match Result</li>
+            </ol>
+        </nav>
+        <h2>
+            <a href="{% url 'recruitment_candidate_detail' fit.candidate.id %}">{{ fit.candidate.name }}</a>
+            <i class="bi bi-arrow-right mx-2"></i>
+            <a href="{% url 'recruitment_position_detail' fit.position.id %}">{{ fit.position.title }}</a>
+        </h2>
+    </div>
+
+    <!-- Overall Match Score + Classification -->
+    <div class="card mb-4">
+        <div class="card-body text-center py-5">
+            <h3 class="text-muted mb-3">Overall Match Score</h3>
+            <div class="display-1 mb-3">
+                {% with classification=fit.get_classification %}
+                <span class="badge {% if fit.overall_match >= 75 %}bg-success{% elif fit.overall_match >= 60 %}bg-warning{% elif fit.overall_match >= 40 %}bg-secondary{% else %}bg-danger{% endif %}" style="font-size: 4rem;">
+                    {{ fit.overall_match|default:"0" }}%
+                </span>
+            </div>
+            <h4>
+                <span class="badge {% if classification == 'Excellent' %}bg-success{% elif classification == 'Strong' %}bg-primary{% elif classification == 'Moderate' %}bg-warning text-dark{% elif classification == 'Weak' %}bg-secondary{% else %}bg-danger{% endif %}">
+                    {{ classification }}
+                </span>
+                {% endwith %}
+            </h4>
+        </div>
+    </div>
+
+    <!-- Requirement-by-Requirement Breakdown -->
+    {% if requirement_matches %}
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="bi bi-list-check"></i> Requirement-by-Requirement Analysis</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 5%;">#</th>
+                            <th style="width: 30%;">Requirement</th>
+                            <th style="width: 15%;">Type</th>
+                            <th style="width: 12%;">Match %</th>
+                            <th style="width: 8%;">Weight</th>
+                            <th style="width: 30%;">Explanation</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for rm in requirement_matches %}
+                        <tr>
+                            <td class="text-muted">{{ forloop.counter }}</td>
+                            <td><strong>{{ rm.requirement_text }}</strong></td>
+                            <td>
+                                <span class="badge {% if rm.requirement_type == 'skill_required' %}bg-primary{% elif rm.requirement_type == 'skill_optional' %}bg-info{% elif rm.requirement_type == 'responsibility' %}bg-secondary{% elif rm.requirement_type == 'experience' %}bg-dark{% elif rm.requirement_type == 'language' %}bg-success{% endif %}">
+                                    {{ rm.get_requirement_type_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="progress flex-grow-1 me-2" style="height: 10px;">
+                                        <div class="progress-bar {% if rm.match_percentage >= 75 %}bg-success{% elif rm.match_percentage >= 60 %}bg-warning{% elif rm.match_percentage >= 40 %}bg-secondary{% else %}bg-danger{% endif %}"
+                                             role="progressbar" style="width: {{ rm.match_percentage }}%"></div>
+                                    </div>
+                                    <strong>{{ rm.match_percentage|floatformat:0 }}%</strong>
+                                </div>
+                            </td>
+                            <td class="text-muted">{{ rm.weight }}x</td>
+                            <td><small>{{ rm.explanation }}</small></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Section-by-Section Scoring -->
+    {% if section_scores %}
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="bi bi-layers"></i> Section-by-Section Analysis</h5>
+        </div>
+        <div class="card-body">
+            {% for ss in section_scores %}
+            <div class="section-score-card">
+                <div class="section-header">
+                    <span class="section-name">{{ ss.get_section_name_display }}</span>
+                    <span class="section-badge {% if ss.score >= 75 %}score-high{% elif ss.score >= 40 %}score-mid{% else %}score-low{% endif %}">
+                        {{ ss.score|floatformat:0 }}%
+                    </span>
+                </div>
+                <div class="score-bar">
+                    <div class="fill {% if ss.score >= 75 %}high{% elif ss.score >= 40 %}medium{% else %}low{% endif %}"
+                         style="width: {{ ss.score }}%"></div>
+                </div>
+                {% if ss.analysis %}
+                <div class="section-analysis">
+                    {{ ss.analysis }}
+                </div>
+                {% endif %}
+                <div class="section-weight">
+                    <i class="bi bi-speedometer2"></i> Weight: {{ ss.weight }}x
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Score Breakdown (aggregate) -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="bi bi-tools text-primary" style="font-size: 2rem;"></i>
+                    <h6 class="text-muted mt-2 mb-1">Skill Match</h6>
+                    <div class="progress mb-2" style="height: 20px;">
+                        <div class="progress-bar bg-primary" role="progressbar" style="width: {{ fit.skill_match|default:0 }}%">
+                            {{ fit.skill_match|default:"—" }}{% if fit.skill_match %}%{% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="bi bi-briefcase text-success" style="font-size: 2rem;"></i>
+                    <h6 class="text-muted mt-2 mb-1">Experience Match</h6>
+                    <div class="progress mb-2" style="height: 20px;">
+                        <div class="progress-bar bg-success" role="progressbar" style="width: {{ fit.experience_match|default:0 }}%">
+                            {{ fit.experience_match|default:"—" }}{% if fit.experience_match %}%{% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="bi bi-bar-chart text-warning" style="font-size: 2rem;"></i>
+                    <h6 class="text-muted mt-2 mb-1">Seniority Match</h6>
+                    <div class="progress mb-2" style="height: 20px;">
+                        <div class="progress-bar bg-warning" role="progressbar" style="width: {{ fit.seniority_match|default:0 }}%">
+                            {{ fit.seniority_match|default:"—" }}{% if fit.seniority_match %}%{% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="bi bi-mortarboard text-info" style="font-size: 2rem;"></i>
+                    <h6 class="text-muted mt-2 mb-1">Education Match</h6>
+                    <div class="progress mb-2" style="height: 20px;">
+                        <div class="progress-bar bg-info" role="progressbar" style="width: {{ fit.education_match|default:0 }}%">
+                            {{ fit.education_match|default:"—" }}{% if fit.education_match %}%{% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Skills Analysis -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="bi bi-check-circle"></i> Matching Skills</h5>
+                </div>
+                <div class="card-body">
+                    {% if fit.matching_skills %}
+                        <div>
+                            {% for skill in fit.matching_skills %}
+                                <span class="badge bg-success me-1 mb-2">{{ skill }}</span>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted">No matching skills found</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0"><i class="bi bi-x-circle"></i> Missing Skills</h5>
+                </div>
+                <div class="card-body">
+                    {% if fit.missing_skills %}
+                        <div>
+                            {% for skill in fit.missing_skills %}
+                                <span class="badge bg-danger me-1 mb-2">{{ skill }}</span>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-success">No missing skills - perfect match!</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- HR Summary -->
+    {% if fit.candidate.hr_summary %}
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="bi bi-file-text"></i> HR Summary</h5>
+        </div>
+        <div class="card-body">
+            <p>{{ fit.candidate.hr_summary|linebreaks }}</p>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Red Flags -->
+    {% if fit.candidate.red_flags %}
+    <div class="card mb-4">
+        <div class="card-header bg-warning">
+            <h5 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Red Flags</h5>
+        </div>
+        <div class="card-body">
+            <ul class="list-unstyled mb-0">
+                {% for flag in fit.candidate.red_flags %}
+                    <li class="mb-2">
+                        <span class="badge {% if flag.severity == 'critical' %}bg-danger{% elif flag.severity == 'warning' %}bg-warning{% else %}bg-info{% endif %} me-2">
+                            {{ flag.severity|upper }}
+                        </span>
+                        {{ flag.description }}
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Interview Questions -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-question-circle"></i> Interview Questions</h5>
+            {% if not fit.interview_questions %}
+                {% if request.user.subscription_tier == 'premium' %}
+                    <form method="post" action="{% url 'recruitment_generate_questions' fit.id %}" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm btn-primary">
+                            <i class="bi bi-stars"></i> Generate AI Questions
+                        </button>
+                    </form>
+                {% endif %}
+            {% endif %}
+        </div>
+        <div class="card-body">
+            {% if fit.interview_questions %}
+                <div class="accordion" id="questionsAccordion">
+                    {% for question in fit.interview_questions %}
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="heading{{ forloop.counter }}">
+                                <button class="accordion-button {% if not forloop.first %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ forloop.counter }}">
+                                    <span class="badge bg-primary me-2">{{ question.category }}</span>
+                                    {{ question.question }}
+                                </button>
+                            </h2>
+                            <div id="collapse{{ forloop.counter }}" class="accordion-collapse collapse {% if forloop.first %}show{% endif %}" data-bs-parent="#questionsAccordion">
+                                <div class="accordion-body">
+                                    <strong>Why ask this:</strong>
+                                    <p>{{ question.why_ask }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-question-circle text-muted" style="font-size: 3rem;"></i>
+                    {% if request.user.subscription_tier == 'premium' %}
+                        <p class="text-muted mt-3">No interview questions generated yet. Click the button above to generate AI-powered questions.</p>
+                    {% else %}
+                        <p class="text-muted mt-3">Interview questions are available with Premium subscription.</p>
+                        <a href="#" class="btn btn-primary">
+                            <i class="bi bi-star"></i> Upgrade to Premium
+                        </a>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

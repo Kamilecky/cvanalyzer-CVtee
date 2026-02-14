@@ -1,0 +1,181 @@
+{% extends "base_app.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0"><i class="bi bi-briefcase"></i> {{ title }}</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="row mb-3">
+                            <div class="col-md-8">
+                                <label for="{{ form.title.id_for_label }}" class="form-label">Position Title *</label>
+                                {{ form.title }}
+                                {% if form.title.errors %}
+                                    <div class="text-danger small">{{ form.title.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4">
+                                <label for="{{ form.is_active.id_for_label }}" class="form-label">Active</label>
+                                <div class="form-check form-switch mt-2">
+                                    {{ form.is_active }}
+                                    <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                                        Position is active
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="{{ form.department.id_for_label }}" class="form-label">Department</label>
+                                {{ form.department }}
+                                {% if form.department.errors %}
+                                    <div class="text-danger small">{{ form.department.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.location.id_for_label }}" class="form-label">Location</label>
+                                {{ form.location }}
+                                {% if form.location.errors %}
+                                    <div class="text-danger small">{{ form.location.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label for="{{ form.employment_type.id_for_label }}" class="form-label">Employment Type</label>
+                                {{ form.employment_type }}
+                                {% if form.employment_type.errors %}
+                                    <div class="text-danger small">{{ form.employment_type.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4">
+                                <label for="{{ form.seniority_level.id_for_label }}" class="form-label">Seniority Level</label>
+                                {{ form.seniority_level }}
+                                {% if form.seniority_level.errors %}
+                                    <div class="text-danger small">{{ form.seniority_level.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4">
+                                <label for="{{ form.years_of_experience_required.id_for_label }}" class="form-label">Years of Experience</label>
+                                {{ form.years_of_experience_required }}
+                                {% if form.years_of_experience_required.errors %}
+                                    <div class="text-danger small">{{ form.years_of_experience_required.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.industry.id_for_label }}" class="form-label">Industry</label>
+                            {{ form.industry }}
+                            {% if form.industry.errors %}
+                                <div class="text-danger small">{{ form.industry.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.required_skills_text.id_for_label }}" class="form-label">Required Skills</label>
+                            {{ form.required_skills_text }}
+                            <small class="form-text text-muted">Comma-separated list of required skills</small>
+                            {% if form.required_skills_text.errors %}
+                                <div class="text-danger small">{{ form.required_skills_text.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.optional_skills_text.id_for_label }}" class="form-label">Optional Skills</label>
+                            {{ form.optional_skills_text }}
+                            <small class="form-text text-muted">Comma-separated list of nice-to-have skills</small>
+                            {% if form.optional_skills_text.errors %}
+                                <div class="text-danger small">{{ form.optional_skills_text.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.languages_required_text.id_for_label }}" class="form-label">Languages Required</label>
+                            {{ form.languages_required_text }}
+                            <small class="form-text text-muted">Comma-separated list of required languages</small>
+                            {% if form.languages_required_text.errors %}
+                                <div class="text-danger small">{{ form.languages_required_text.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.responsibilities.id_for_label }}" class="form-label">Responsibilities</label>
+                            {{ form.responsibilities }}
+                            {% if form.responsibilities.errors %}
+                                <div class="text-danger small">{{ form.responsibilities.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.requirements_description.id_for_label }}" class="form-label">Requirements Description</label>
+                            {{ form.requirements_description }}
+                            {% if form.requirements_description.errors %}
+                                <div class="text-danger small">{{ form.requirements_description.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.nice_to_have.id_for_label }}" class="form-label">Nice to Have</label>
+                            {{ form.nice_to_have }}
+                            {% if form.nice_to_have.errors %}
+                                <div class="text-danger small">{{ form.nice_to_have.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{% url 'recruitment_position_list' %}" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> Cancel
+                            </a>
+                            <div>
+                                {% if position %}
+                                    <button type="button" class="btn btn-danger me-2" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                                        <i class="bi bi-trash"></i> Delete
+                                    </button>
+                                {% endif %}
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-check-circle"></i> Save Position
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if position %}
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to delete this position? This action cannot be undone.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="post" action="{% url 'recruitment_position_delete' position.id %}" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Delete Position</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

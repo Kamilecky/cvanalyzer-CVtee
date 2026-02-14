@@ -1,0 +1,54 @@
+{% extends "base_app.html" %}
+
+{% block title %}Generating Report... - CV Analyzer{% endblock %}
+
+{% block content %}
+<div class="text-center py-5">
+    <div class="processing-spinner mb-4">
+        <div class="spinner-border text-primary" style="width: 4rem; height: 4rem;" role="status">
+            <span class="visually-hidden">Generating...</span>
+        </div>
+    </div>
+    <h2 id="processingTitle">Generating PDF Report...</h2>
+    <p class="text-muted">Your report is being generated. It will download automatically when ready.</p>
+
+    <div class="progress mt-4 mx-auto" style="max-width: 400px;">
+        <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated" style="width: 20%"></div>
+    </div>
+    <p class="text-muted mt-2" id="statusText">Creating PDF...</p>
+</div>
+
+<script>
+(function() {
+    var statusUrl = '{% url "report_status" report.id %}';
+    var progressBar = document.getElementById('progressBar');
+    var statusText = document.getElementById('statusText');
+    var progress = 20;
+
+    function poll() {
+        fetch(statusUrl)
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.status === 'done' && data.download_url) {
+                    progressBar.style.width = '100%';
+                    statusText.textContent = 'Report ready! Downloading...';
+                    setTimeout(function() { window.location.href = data.download_url; }, 500);
+                } else if (data.status === 'failed') {
+                    progressBar.classList.remove('progress-bar-animated');
+                    progressBar.classList.add('bg-danger');
+                    statusText.textContent = 'Generation failed: ' + (data.error || 'Unknown error');
+                } else {
+                    if (progress < 90) {
+                        progress += Math.random() * 20;
+                        progressBar.style.width = Math.min(progress, 90) + '%';
+                    }
+                    setTimeout(poll, 1500);
+                }
+            })
+            .catch(function() { setTimeout(poll, 2000); });
+    }
+
+    setTimeout(poll, 1000);
+})();
+</script>
+{% endblock %}

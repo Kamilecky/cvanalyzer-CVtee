@@ -1,0 +1,122 @@
+{% extends "base_app.html" %}
+
+{% block title %}Candidates{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-people"></i> Candidates</h2>
+        <div>
+            <a href="{% url 'recruitment_bulk_upload' %}" class="btn btn-outline-primary me-2">
+                <i class="bi bi-files"></i> Bulk Upload
+            </a>
+            <a href="{% url 'recruitment_candidate_upload' %}" class="btn btn-primary">
+                <i class="bi bi-file-earmark-arrow-up"></i> Upload CV
+            </a>
+        </div>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-10">
+                    <input type="text" name="q" class="form-control" placeholder="Search by name, role, skills..." value="{{ query|default:'' }}">
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-search"></i> Search
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Candidates Table -->
+    <div class="card">
+        <div class="card-body">
+            {% if profiles %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Current Role</th>
+                                <th>Seniority</th>
+                                <th>Experience</th>
+                                <th>Skills</th>
+                                <th>Tags</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for profile in profiles %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ profile.name }}</strong><br>
+                                        {% if profile.email %}
+                                            <small class="text-muted"><i class="bi bi-envelope"></i> {{ profile.email }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ profile.current_role|default:"N/A" }}</td>
+                                    <td>{{ profile.seniority_level|default:"N/A" }}</td>
+                                    <td>
+                                        {% if profile.years_of_experience %}
+                                            {{ profile.years_of_experience }} years
+                                        {% else %}
+                                            N/A
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if profile.skills %}
+                                            {% for skill in profile.skills|slice:":5" %}
+                                                <span class="badge bg-primary me-1 mb-1">{{ skill }}</span>
+                                            {% endfor %}
+                                            {% if profile.skills|length > 5 %}
+                                                <span class="badge bg-secondary">+{{ profile.skills|length|add:"-5" }}</span>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="text-muted">None</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if profile.tags %}
+                                            {% for tag in profile.tags %}
+                                                <span class="badge bg-info me-1 mb-1">{{ tag }}</span>
+                                            {% endfor %}
+                                        {% else %}
+                                            <span class="text-muted">None</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ profile.created_at|date:"M d, Y" }}</td>
+                                    <td>
+                                        <a href="{% url 'recruitment_candidate_detail' profile.id %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-eye"></i> View
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-people text-muted" style="font-size: 4rem;"></i>
+                    {% if query %}
+                        <p class="text-muted mt-3">No candidates found matching "{{ query }}".</p>
+                        <a href="{% url 'recruitment_candidate_list' %}" class="btn btn-secondary">
+                            <i class="bi bi-x-circle"></i> Clear Search
+                        </a>
+                    {% else %}
+                        <p class="text-muted mt-3">No candidates uploaded yet.</p>
+                        <a href="{% url 'recruitment_candidate_upload' %}" class="btn btn-primary">
+                            <i class="bi bi-file-earmark-arrow-up"></i> Upload Your First CV
+                        </a>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

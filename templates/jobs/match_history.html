@@ -1,0 +1,62 @@
+{% extends "base_app.html" %}
+
+{% block title %}Match History - CV Analyzer{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="bi bi-clock-history me-2"></i>Match History</h1>
+</div>
+
+{% if matches %}
+<div class="card">
+    <div class="table-responsive">
+        <table class="table mb-0">
+            <thead>
+                <tr>
+                    <th>CV</th>
+                    <th>Job</th>
+                    <th>Match %</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for m in matches %}
+                <tr>
+                    <td>{{ m.cv_document.original_filename|truncatechars:25 }}</td>
+                    <td>{{ m.job_posting.title|default:"Untitled"|truncatechars:25 }}</td>
+                    <td>
+                        {% if m.match_percentage is not None %}
+                        <span class="{% if m.match_percentage >= 70 %}text-success{% elif m.match_percentage >= 40 %}text-warning{% else %}text-danger{% endif %} fw-bold">
+                            {{ m.match_percentage }}%
+                        </span>
+                        {% else %}--{% endif %}
+                    </td>
+                    <td><span class="status-badge status-{{ m.status }}">{{ m.get_status_display }}</span></td>
+                    <td>{{ m.created_at|date:"M d, Y" }}</td>
+                    <td>
+                        {% if m.status == 'done' %}
+                        <a href="{% url 'job_match_result' m.id %}" class="btn btn-sm btn-outline-primary">View</a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="card">
+    <div class="card-body">
+        <div class="empty-state">
+            <div class="empty-icon"><i class="bi bi-briefcase"></i></div>
+            <div class="empty-text">No job matches yet</div>
+            <a href="{% url 'job_match_input' %}" class="btn btn-accent mt-3">
+                <i class="bi bi-search me-1"></i> Start Matching
+            </a>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

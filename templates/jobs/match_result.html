@@ -1,0 +1,137 @@
+{% extends "base_app.html" %}
+
+{% block title %}Match Result - CV Analyzer{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="bi bi-briefcase me-2"></i>Match Result</h1>
+    <p class="text-muted">{{ match.cv_document.original_filename }} vs {{ match.job_posting.title|default:"Job Posting" }}</p>
+</div>
+
+<!-- Match score -->
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="stat-card text-center">
+            <div class="match-circle mx-auto mb-2 {% if match.match_percentage >= 70 %}match-high{% elif match.match_percentage >= 40 %}match-mid{% else %}match-low{% endif %}">
+                {{ match.match_percentage }}%
+            </div>
+            <div class="stat-label">Match Score</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card">
+            <h6 class="text-success"><i class="bi bi-check-circle me-1"></i>Matching Skills ({{ match.matching_skills|length }})</h6>
+            <div>
+                {% for skill in match.matching_skills %}
+                <span class="badge bg-success me-1 mb-1">{{ skill }}</span>
+                {% empty %}
+                <span class="text-muted">None detected</span>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card">
+            <h6 class="text-danger"><i class="bi bi-x-circle me-1"></i>Missing Skills ({{ match.missing_skills|length }})</h6>
+            <div>
+                {% for skill in match.missing_skills %}
+                <span class="badge bg-danger me-1 mb-1">{{ skill }}</span>
+                {% empty %}
+                <span class="text-muted">None</span>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Summary -->
+{% if match.summary %}
+<div class="card mb-4">
+    <div class="card-header">Summary</div>
+    <div class="card-body">{{ match.summary }}</div>
+</div>
+{% endif %}
+
+<div class="row g-4">
+    <!-- Strengths & Weaknesses -->
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header text-success"><i class="bi bi-arrow-up-circle me-1"></i>Strengths</div>
+            <div class="card-body">
+                <ul class="mb-0">
+                    {% for s in match.strengths %}
+                    <li>{{ s }}</li>
+                    {% empty %}
+                    <li class="text-muted">No specific strengths highlighted</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header text-danger"><i class="bi bi-arrow-down-circle me-1"></i>Weaknesses</div>
+            <div class="card-body">
+                <ul class="mb-0">
+                    {% for w in match.weaknesses %}
+                    <li>{{ w }}</li>
+                    {% empty %}
+                    <li class="text-muted">No weaknesses found</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recommendations -->
+{% if match.recommendations %}
+<div class="card mt-4">
+    <div class="card-header"><i class="bi bi-lightbulb me-1"></i>Recommendations to Improve Match</div>
+    <div class="card-body">
+        <ul class="mb-0">
+            {% for r in match.recommendations %}
+            <li>{{ r }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endif %}
+
+<!-- Keywords -->
+<div class="row g-4 mt-2">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">Keyword Matches</div>
+            <div class="card-body">
+                {% for kw in match.keyword_matches %}
+                <span class="badge bg-success me-1 mb-1">{{ kw }}</span>
+                {% empty %}
+                <span class="text-muted">No keyword matches</span>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">Missing Keywords</div>
+            <div class="card-body">
+                {% for kw in match.missing_keywords %}
+                <span class="badge bg-warning text-dark me-1 mb-1">{{ kw }}</span>
+                {% empty %}
+                <span class="text-muted">No missing keywords</span>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mt-4">
+    <a href="{% url 'job_match_input' %}" class="btn btn-outline-primary">
+        <i class="bi bi-arrow-repeat me-1"></i> New Match
+    </a>
+    <a href="{% url 'job_match_history' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-clock-history me-1"></i> Match History
+    </a>
+</div>
+{% endblock %}
