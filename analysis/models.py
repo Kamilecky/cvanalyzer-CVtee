@@ -16,6 +16,8 @@ class AnalysisResult(models.Model):
         ('pending', 'Pending'),
         ('processing', 'Processing'),
         ('done', 'Done'),
+        ('partial', 'Partial Results'),
+        ('pending_ai', 'Pending AI'),
         ('failed', 'Failed'),
     ]
 

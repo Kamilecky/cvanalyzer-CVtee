@@ -14,6 +14,8 @@ from recruitment.services.prompts import SYSTEM_PROMPT, REQUIREMENT_MATCH_PROMPT
 
 logger = logging.getLogger(__name__)
 
+MAX_REQUIREMENTS = 25
+
 
 def split_text_to_items(text):
     """Rozbija tekst (responsibilities/requirements) na atomiczne pozycje."""
@@ -91,6 +93,12 @@ def analyze_cv_against_position(cv_text, position, fit_result):
     start_time = time.time()
 
     requirements = extract_requirements(position)
+    if len(requirements) > MAX_REQUIREMENTS:
+        logger.warning(
+            f"Position {position.title}: {len(requirements)} requirements, "
+            f"truncating to {MAX_REQUIREMENTS}"
+        )
+        requirements = requirements[:MAX_REQUIREMENTS]
     if not requirements:
         fit_result.overall_match = 0
         fit_result.fit_recommendation = 'poor'

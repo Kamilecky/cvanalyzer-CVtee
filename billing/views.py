@@ -5,6 +5,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import HttpResponse
+from django.utils.translation import gettext as _
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
@@ -26,7 +27,7 @@ def checkout_view(request, plan_id):
     plan = Plan.objects.get(id=plan_id, is_active=True)
 
     if not plan.stripe_price_id:
-        messages.error(request, 'This plan is not available for purchase.')
+        messages.error(request, _('This plan is not available for purchase.'))
         return redirect('pricing')
 
     success_url = request.build_absolute_uri('/billing/success/')
@@ -39,7 +40,7 @@ def checkout_view(request, plan_id):
         return redirect(session.url)
     except Exception as e:
         logger.error(f"Checkout failed: {e}")
-        messages.error(request, 'Could not initiate checkout. Please try again.')
+        messages.error(request, _('Could not initiate checkout. Please try again.'))
         return redirect('pricing')
 
 
@@ -71,8 +72,40 @@ def billing_portal_view(request):
         return redirect(session.url)
     except Exception as e:
         logger.error(f"Billing portal failed: {e}")
-        messages.error(request, 'Could not open billing portal. Please try again.')
+        messages.error(request, _('Could not open billing portal. Please try again.'))
         return redirect('subscription')
+
+
+ADMIN_EMAIL = 'kamil3c2@onet.pl'
+
+
+@login_required
+@require_POST
+def reset_usage_view(request):
+    """Resetuje licznik analiz do 0 — tylko dla admina."""
+    if request.user.email != ADMIN_EMAIL:
+        return HttpResponse(status=403)
+    request.user.analyses_used_this_month = 0
+    request.user.save(update_fields=['analyses_used_this_month'])
+    messages.success(request, _('Usage counter has been reset to 0.'))
+    return redirect('subscription')
+
+
+@login_required
+@require_POST
+def change_plan_view(request):
+    """Zmienia plan bez pobierania opłat — tylko dla admina."""
+    if request.user.email != ADMIN_EMAIL:
+        return HttpResponse(status=403)
+    new_plan = request.POST.get('plan', '')
+    valid_plans = [c[0] for c in request.user.PLAN_CHOICES]
+    if new_plan not in valid_plans:
+        messages.error(request, _('Invalid plan selected.'))
+        return redirect('subscription')
+    request.user.plan = new_plan
+    request.user.save(update_fields=['plan'])
+    messages.success(request, _('Plan changed to %(plan)s.') % {'plan': request.user.get_plan_display()})
+    return redirect('subscription')
 
 
 @csrf_exempt

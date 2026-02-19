@@ -47,6 +47,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -64,6 +65,7 @@ TEMPLATES = [
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.request',
+                'django.template.context_processors.i18n',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
             ],
@@ -113,6 +115,15 @@ TIME_ZONE = 'Europe/Warsaw'
 USE_I18N = True
 USE_TZ = True
 
+LANGUAGES = [
+    ('en', 'English'),
+    ('pl', 'Polski'),
+]
+
+LOCALE_PATHS = [
+    BASE_DIR / 'locale',
+]
+
 # ---------------------------------------------------------------------------
 # Pliki statyczne i media
 # ---------------------------------------------------------------------------
@@ -151,9 +162,18 @@ EMAIL_VERIFICATION_TOKEN_EXPIRY_HOURS = 24
 # Plany subskrypcyjne - limity miesięcznych analiz
 # ---------------------------------------------------------------------------
 PLAN_LIMITS = {
-    'free': 15,
-    'pro': None,      # unlimited
-    'premium': None,   # unlimited
+    'free': 5,
+    'basic': 50,
+    'premium': 300,
+    'enterprise': None,   # unlimited
+}
+
+# Limity aktywnych stanowisk pracy
+JOB_POSITION_LIMITS = {
+    'free': 3,
+    'basic': 10,
+    'premium': 50,
+    'enterprise': None,   # unlimited
 }
 
 # Macierz funkcji dostępnych w poszczególnych planach
@@ -175,16 +195,21 @@ PLAN_FEATURES = {
         'red_flags': True,
         'interview_questions': False,
         'market_benchmark': False,
+        'requirement_scoring': False,
+        'priority_processing': False,
+        'sla_flag': False,
+        'custom_prompts': False,
+        'api_access': False,
     },
-    'pro': {
+    'basic': {
         'basic_scoring': True,
         'section_detection': True,
         'problem_detection': True,
         'recommendations': True,
         'job_matching': True,
-        'pdf_export': True,
-        'skill_gap': True,
+        'pdf_export': False,
         'ai_rewriting': False,
+        'skill_gap': True,
         'benchmarking': False,
         'career_advisor': False,
         'cv_versioning': True,
@@ -193,6 +218,11 @@ PLAN_FEATURES = {
         'red_flags': True,
         'interview_questions': False,
         'market_benchmark': False,
+        'requirement_scoring': False,
+        'priority_processing': False,
+        'sla_flag': False,
+        'custom_prompts': False,
+        'api_access': False,
     },
     'premium': {
         'basic_scoring': True,
@@ -201,8 +231,8 @@ PLAN_FEATURES = {
         'recommendations': True,
         'job_matching': True,
         'pdf_export': True,
-        'skill_gap': True,
         'ai_rewriting': True,
+        'skill_gap': True,
         'benchmarking': True,
         'career_advisor': True,
         'cv_versioning': True,
@@ -211,6 +241,34 @@ PLAN_FEATURES = {
         'red_flags': True,
         'interview_questions': True,
         'market_benchmark': True,
+        'requirement_scoring': True,
+        'priority_processing': False,
+        'sla_flag': False,
+        'custom_prompts': False,
+        'api_access': False,
+    },
+    'enterprise': {
+        'basic_scoring': True,
+        'section_detection': True,
+        'problem_detection': True,
+        'recommendations': True,
+        'job_matching': True,
+        'pdf_export': True,
+        'ai_rewriting': True,
+        'skill_gap': True,
+        'benchmarking': True,
+        'career_advisor': True,
+        'cv_versioning': True,
+        'recruitment': True,
+        'candidate_ranking': True,
+        'red_flags': True,
+        'interview_questions': True,
+        'market_benchmark': True,
+        'requirement_scoring': True,
+        'priority_processing': True,
+        'sla_flag': True,
+        'custom_prompts': True,
+        'api_access': True,
     },
 }
 

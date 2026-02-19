@@ -1,6 +1,7 @@
 """recruitment/services/profile_extractor.py - CV → CandidateProfile extraction."""
 
 import logging
+import re
 import time
 
 from recruitment.models import CandidateProfile
@@ -70,6 +71,16 @@ class ProfileExtractor:
             profile.tags = data.get('tags', [])
             profile.raw_extraction = data
 
+            # Fill missing name/email from regex if AI didn't provide them
+            if not profile.name or not profile.email:
+                basic = self._extract_basic_info(cv_text)
+                if not profile.name and basic['name']:
+                    profile.name = basic['name']
+                if not profile.email and basic['email']:
+                    profile.email = basic['email']
+                if not profile.phone and basic['phone']:
+                    profile.phone = basic['phone']
+
             profile.status = 'done'
             profile.error_message = ''
             profile.save()
@@ -82,7 +93,43 @@ class ProfileExtractor:
 
         except Exception as e:
             logger.error(f"Profile extraction failed for CV {cv_document.id}: {e}")
-            profile.status = 'failed'
-            profile.error_message = str(e)
-            profile.save(update_fields=['status', 'error_message'])
+            # Regex fallback — partial profile
+            cv_text = cv_document.extracted_text or ''
+            if cv_text:
+                basic = self._extract_basic_info(cv_text)
+                profile.name = basic.get('name', '')[:255]
+                profile.email = basic.get('email', '')[:254]
+                profile.phone = basic.get('phone', '')[:50]
+                profile.status = 'partial'
+                profile.error_message = f'AI failed, regex fallback used: {e}'
+                profile.save()
+                logger.info(f"Profile {cv_document.id}: partial via regex fallback")
+            else:
+                profile.status = 'failed'
+                profile.error_message = str(e)
+                profile.save(update_fields=['status', 'error_message'])
             return profile
+
+    @staticmethod
+    def _extract_basic_info(text):
+        """Regex fallback: wyciąga email, phone, name z surowego tekstu CV."""
+        result = {'email': '', 'phone': '', 'name': ''}
+
+        email_match = re.search(r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}', text)
+        if email_match:
+            result['email'] = email_match.group()
+
+        phone_match = re.search(r'[\+]?[\d\s\-\(\)]{7,15}', text)
+        if phone_match:
+            candidate = phone_match.group().strip()
+            digits = re.sub(r'\D', '', candidate)
+            if 7 <= len(digits) <= 15:
+                result['phone'] = candidate
+
+        for line in text.split('\n'):
+            line = line.strip()
+            if line and len(line) < 60 and not re.search(r'[@\d]', line):
+                result['name'] = line
+                break
+
+        return result

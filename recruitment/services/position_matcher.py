@@ -201,6 +201,21 @@ class PositionMatcher:
                         f"Section scoring failed for {fit.position.title}: {sec_err}"
                     )
 
+            # Fill missing results — positions AI didn't return scores for
+            updated_ids = {str(f.position_id) for f in updated}
+            for p in positions:
+                pid = str(p.id)
+                if pid in fits and pid not in updated_ids:
+                    fit = fits[pid]
+                    fit.overall_match = 0
+                    fit.status = 'failed'
+                    fit.error_message = 'AI matching did not return results for this position.'
+                    fit.processing_time_seconds = time.time() - start_time
+                    fit.completed_at = timezone.now()
+                    fit.progress = 100
+                    fit.save()
+                    logger.warning(f"Batch match: no AI result for {p.title}, set to 0%")
+
             for p in positions:
                 self._update_position_stats(p)
 

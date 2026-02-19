@@ -12,6 +12,7 @@ Docelowy czas: ~4-10s dla 1-stronicowego CV.
 import hashlib
 import json
 import logging
+import re
 import time
 from django.utils import timezone
 
@@ -35,6 +36,7 @@ class CVAnalyzer:
         """Uruchamia pelna analize CV z progress tracking.
 
         Progress: 10% -> 30% -> 60% -> 90% -> 100%
+        Partial failure: jeśli 1 z 2 promptów się uda → status='partial'.
         """
         analysis = AnalysisResult.objects.select_related('cv_document').get(id=analysis_id)
         analysis.status = 'processing'
@@ -43,6 +45,7 @@ class CVAnalyzer:
 
         start_time = time.time()
         total_tokens = 0
+        is_partial = False
 
         try:
             # --- Krok 1: Czyszczenie tekstu -> 30% ---
@@ -52,80 +55,112 @@ class CVAnalyzer:
 
             cleaned_text = TextCleaner.clean(cv_text, max_length=4000)
 
+            # Short text warning
+            metadata = {}
+            if len(cleaned_text) < 200:
+                metadata['short_text_warning'] = True
+                logger.warning(
+                    f"Analysis {analysis_id}: short CV text ({len(cleaned_text)} chars)"
+                )
+
             analysis.progress = 30
             analysis.save(update_fields=['progress'])
 
             # --- Krok 2: Prompt 1 - Ekstrakcja + problemy -> 60% ---
-            extraction_prompt = EXTRACTION_PROMPT.format(cv_text=cleaned_text)
+            extraction_data = None
+            extracted = {}
 
-            extraction_result = self.client.chat(SYSTEM_PROMPT, extraction_prompt)
-            if extraction_result['error']:
-                raise Exception(f"Extraction API error: {extraction_result['error']}")
+            try:
+                extraction_prompt = EXTRACTION_PROMPT.format(cv_text=cleaned_text)
+                extraction_result = self.client.chat(SYSTEM_PROMPT, extraction_prompt)
+                if extraction_result['error']:
+                    raise Exception(f"Extraction API error: {extraction_result['error']}")
 
-            extraction_data = self.client.parse_json_response(extraction_result['content'])
-            if not extraction_data:
-                raise Exception("Failed to parse extraction response")
+                extraction_data = self.client.parse_json_response(extraction_result['content'])
+                if not extraction_data:
+                    raise Exception("Failed to parse extraction response")
 
-            total_tokens += extraction_result['tokens_used']
+                total_tokens += extraction_result['tokens_used']
+                self._save_problems(analysis, extraction_data.get('problems', []))
+                extracted = extraction_data.get('extracted', {})
+                analysis.sections_detected = extracted.get('sections_detected', [])
 
-            self._save_problems(analysis, extraction_data.get('problems', []))
+            except Exception as ext_err:
+                logger.error(f"Analysis {analysis_id} extraction failed: {ext_err}")
+                is_partial = True
+                # Regex fallback for basic info
+                fallback = self._regex_fallback(cv_text)
+                extracted = {'regex_fallback': fallback}
 
-            extracted = extraction_data.get('extracted', {})
-            analysis.sections_detected = extracted.get('sections_detected', [])
             analysis.progress = 60
             analysis.save(update_fields=['progress', 'sections_detected'])
 
             # --- Krok 3: Prompt 2 - Jakosciowa analiza sekcji -> 90% ---
-            problems_summary = ", ".join(
-                p.get('title', '') for p in extraction_data.get('problems', [])
-            ) or "None"
+            analysis_data = None
 
-            sections_content = self._build_sections_content(analysis.cv_document)
-            sections_list = ", ".join(analysis.sections_detected) if analysis.sections_detected else "None detected"
+            try:
+                problems_summary = "None"
+                if extraction_data:
+                    problems_summary = ", ".join(
+                        p.get('title', '') for p in extraction_data.get('problems', [])
+                    ) or "None"
 
-            analysis_prompt = SECTION_ANALYSIS_PROMPT.format(
-                extracted_json=json.dumps(extracted, indent=2),
-                sections_list=sections_list,
-                problems_summary=problems_summary,
-                sections_content=sections_content,
-            )
+                sections_content = self._build_sections_content(analysis.cv_document)
+                sections_list = ", ".join(analysis.sections_detected) if analysis.sections_detected else "None detected"
 
-            analysis_result = self.client.chat(SYSTEM_PROMPT, analysis_prompt)
-            if analysis_result['error']:
-                raise Exception(f"Section analysis API error: {analysis_result['error']}")
+                analysis_prompt = SECTION_ANALYSIS_PROMPT.format(
+                    extracted_json=json.dumps(extracted, indent=2),
+                    sections_list=sections_list,
+                    problems_summary=problems_summary,
+                    sections_content=sections_content,
+                )
 
-            analysis_data = self.client.parse_json_response(analysis_result['content'])
-            if not analysis_data:
-                raise Exception("Failed to parse section analysis response")
+                analysis_result = self.client.chat(SYSTEM_PROMPT, analysis_prompt)
+                if analysis_result['error']:
+                    raise Exception(f"Section analysis API error: {analysis_result['error']}")
 
-            total_tokens += analysis_result['tokens_used']
+                analysis_data = self.client.parse_json_response(analysis_result['content'])
+                if not analysis_data:
+                    raise Exception("Failed to parse section analysis response")
+
+                total_tokens += analysis_result['tokens_used']
+
+            except Exception as sec_err:
+                logger.error(f"Analysis {analysis_id} section analysis failed: {sec_err}")
+                is_partial = True
 
             analysis.progress = 90
             analysis.save(update_fields=['progress'])
 
             # --- Krok 4: Zapis wynikow -> 100% ---
-            analysis.summary = analysis_data.get('summary', '')
-            self._save_section_analyses(analysis, analysis_data.get('section_analyses', []))
-            self._save_recommendations(analysis, analysis_data.get('recommendations', []))
-            self._save_skill_gaps(analysis, analysis_data.get('skill_gaps', []))
+            if analysis_data:
+                analysis.summary = analysis_data.get('summary', '')
+                self._save_section_analyses(analysis, analysis_data.get('section_analyses', []))
+                self._save_recommendations(analysis, analysis_data.get('recommendations', []))
+                self._save_skill_gaps(analysis, analysis_data.get('skill_gaps', []))
 
-            analysis.raw_ai_response = {
-                'extraction': extraction_data,
-                'section_analysis': analysis_data,
-            }
+            raw_response = {}
+            if extraction_data:
+                raw_response['extraction'] = extraction_data
+            if analysis_data:
+                raw_response['section_analysis'] = analysis_data
+            if metadata:
+                raw_response['metadata'] = metadata
+
+            analysis.raw_ai_response = raw_response
             analysis.openai_tokens_used = total_tokens
             analysis.processing_time_seconds = time.time() - start_time
-            analysis.status = 'done'
+            analysis.status = 'partial' if is_partial else 'done'
             analysis.progress = 100
             analysis.completed_at = timezone.now()
-            analysis.error_message = ''
+            analysis.error_message = 'Partial results — some AI prompts failed.' if is_partial else ''
             analysis.save()
 
-            if analysis.user:
+            if analysis.user and not is_partial:
                 analysis.user.use_analysis()
 
             logger.info(
-                f"Analysis {analysis_id} completed in "
+                f"Analysis {analysis_id} {'partial' if is_partial else 'completed'} in "
                 f"{analysis.processing_time_seconds:.1f}s, "
                 f"{total_tokens} tokens"
             )
@@ -219,9 +254,7 @@ class CVAnalyzer:
                 learning_resources=sg.learning_resources,
             )
 
-        if user:
-            user.use_analysis()
-
+        # Cache hit — don't increment usage counter
         return new_analysis
 
     @staticmethod
@@ -320,3 +353,30 @@ class CVAnalyzer:
                 importance=sg.get('importance', 'medium')[:20],
                 learning_resources=sg.get('learning_resources', ''),
             )
+
+    @staticmethod
+    def _regex_fallback(text):
+        """Fallback: wyciąga email, phone, name z surowego tekstu CV przy pomocy regex."""
+        result = {'email': '', 'phone': '', 'name': ''}
+
+        # Email
+        email_match = re.search(r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}', text)
+        if email_match:
+            result['email'] = email_match.group()
+
+        # Phone (international + local formats)
+        phone_match = re.search(r'[\+]?[\d\s\-\(\)]{7,15}', text)
+        if phone_match:
+            candidate = phone_match.group().strip()
+            digits = re.sub(r'\D', '', candidate)
+            if 7 <= len(digits) <= 15:
+                result['phone'] = candidate
+
+        # Name (first non-empty line heuristic)
+        for line in text.split('\n'):
+            line = line.strip()
+            if line and len(line) < 60 and not re.search(r'[@\d]', line):
+                result['name'] = line
+                break
+
+        return result

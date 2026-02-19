@@ -12,6 +12,7 @@ Zawiera:
 import uuid
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.db.models import F
 from django.conf import settings
 from django.utils import timezone
 
@@ -26,8 +27,9 @@ class User(AbstractUser):
 
     PLAN_CHOICES = [
         ('free', 'Free'),
-        ('pro', 'Pro'),
+        ('basic', 'Basic'),
         ('premium', 'Premium'),
+        ('enterprise', 'Enterprise'),
     ]
     ROLE_CHOICES = [
         ('user', 'User'),
@@ -56,10 +58,11 @@ class User(AbstractUser):
         return settings.PLAN_LIMITS.get(self.plan)
 
     def can_analyze(self):
-        """Sprawdza czy użytkownik może wykonać kolejną analizę."""
+        """Sprawdza czy użytkownik może wykonać kolejną analizę (fresh z DB)."""
         limit = self.get_plan_limit()
         if limit is None:
             return True
+        self.refresh_from_db(fields=['analyses_used_this_month'])
         return self.analyses_used_this_month < limit
 
     def remaining_analyses(self):
@@ -70,9 +73,11 @@ class User(AbstractUser):
         return max(0, limit - self.analyses_used_this_month)
 
     def use_analysis(self, count=1):
-        """Zwiększa licznik użytych analiz."""
-        self.analyses_used_this_month += count
-        self.save(update_fields=['analyses_used_this_month'])
+        """Zwiększa licznik użytych analiz (atomowy UPDATE, thread-safe)."""
+        type(self).objects.filter(pk=self.pk).update(
+            analyses_used_this_month=F('analyses_used_this_month') + count,
+        )
+        self.refresh_from_db(fields=['analyses_used_this_month'])
 
     def reset_monthly_usage(self):
         """Resetuje miesięczny licznik analiz (wywoływane przez Celery Beat)."""
@@ -83,6 +88,11 @@ class User(AbstractUser):
         """Sprawdza czy plan użytkownika zawiera daną funkcję."""
         plan_features = settings.PLAN_FEATURES.get(self.plan, {})
         return plan_features.get(feature_name, False)
+
+    @property
+    def plan_features(self):
+        """Dict cech planu — do użycia w szablonach (np. user.plan_features.pdf_export)."""
+        return settings.PLAN_FEATURES.get(self.plan, {})
 
 
 class EmailVerificationToken(models.Model):

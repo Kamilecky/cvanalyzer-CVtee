@@ -1,4 +1,5 @@
 {% extends "base_app.html" %}
+{% load i18n %}
 
 {% block title %}Match Result: {{ fit.candidate.name }} - {{ fit.position.title }}{% endblock %}
 
@@ -19,10 +20,17 @@
         </h2>
     </div>
 
+    {% if is_partial %}
+    <div class="alert alert-warning mb-4">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        <strong>{% trans "Partial results" %}</strong> — some data may be incomplete due to AI processing issues.
+    </div>
+    {% endif %}
+
     <!-- Overall Match Score + Classification -->
     <div class="card mb-4">
         <div class="card-body text-center py-5">
-            <h3 class="text-muted mb-3">Overall Match Score</h3>
+            <h3 class="text-muted mb-3">{% trans "Overall Match Score" %}</h3>
             <div class="display-1 mb-3">
                 {% with classification=fit.get_classification %}
                 <span class="badge {% if fit.overall_match >= 75 %}bg-success{% elif fit.overall_match >= 60 %}bg-warning{% elif fit.overall_match >= 40 %}bg-secondary{% else %}bg-danger{% endif %}" style="font-size: 4rem;">
@@ -50,11 +58,11 @@
                     <thead class="table-light">
                         <tr>
                             <th style="width: 5%;">#</th>
-                            <th style="width: 30%;">Requirement</th>
-                            <th style="width: 15%;">Type</th>
+                            <th style="width: 30%;">{% trans "Requirement" %}</th>
+                            <th style="width: 15%;">{% trans "Type" %}</th>
                             <th style="width: 12%;">Match %</th>
-                            <th style="width: 8%;">Weight</th>
-                            <th style="width: 30%;">Explanation</th>
+                            <th style="width: 8%;">{% trans "Weight" %}</th>
+                            <th style="width: 30%;">{% trans "Explanation" %}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -126,7 +134,7 @@
             <div class="card">
                 <div class="card-body text-center">
                     <i class="bi bi-tools text-primary" style="font-size: 2rem;"></i>
-                    <h6 class="text-muted mt-2 mb-1">Skill Match</h6>
+                    <h6 class="text-muted mt-2 mb-1">{% trans "Skill Match" %}</h6>
                     <div class="progress mb-2" style="height: 20px;">
                         <div class="progress-bar bg-primary" role="progressbar" style="width: {{ fit.skill_match|default:0 }}%">
                             {{ fit.skill_match|default:"—" }}{% if fit.skill_match %}%{% endif %}
@@ -139,7 +147,7 @@
             <div class="card">
                 <div class="card-body text-center">
                     <i class="bi bi-briefcase text-success" style="font-size: 2rem;"></i>
-                    <h6 class="text-muted mt-2 mb-1">Experience Match</h6>
+                    <h6 class="text-muted mt-2 mb-1">{% trans "Experience Match" %}</h6>
                     <div class="progress mb-2" style="height: 20px;">
                         <div class="progress-bar bg-success" role="progressbar" style="width: {{ fit.experience_match|default:0 }}%">
                             {{ fit.experience_match|default:"—" }}{% if fit.experience_match %}%{% endif %}
@@ -152,7 +160,7 @@
             <div class="card">
                 <div class="card-body text-center">
                     <i class="bi bi-bar-chart text-warning" style="font-size: 2rem;"></i>
-                    <h6 class="text-muted mt-2 mb-1">Seniority Match</h6>
+                    <h6 class="text-muted mt-2 mb-1">{% trans "Seniority Match" %}</h6>
                     <div class="progress mb-2" style="height: 20px;">
                         <div class="progress-bar bg-warning" role="progressbar" style="width: {{ fit.seniority_match|default:0 }}%">
                             {{ fit.seniority_match|default:"—" }}{% if fit.seniority_match %}%{% endif %}
@@ -165,7 +173,7 @@
             <div class="card">
                 <div class="card-body text-center">
                     <i class="bi bi-mortarboard text-info" style="font-size: 2rem;"></i>
-                    <h6 class="text-muted mt-2 mb-1">Education Match</h6>
+                    <h6 class="text-muted mt-2 mb-1">{% trans "Education Match" %}</h6>
                     <div class="progress mb-2" style="height: 20px;">
                         <div class="progress-bar bg-info" role="progressbar" style="width: {{ fit.education_match|default:0 }}%">
                             {{ fit.education_match|default:"—" }}{% if fit.education_match %}%{% endif %}
@@ -254,7 +262,7 @@
         <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="mb-0"><i class="bi bi-question-circle"></i> Interview Questions</h5>
             {% if not fit.interview_questions %}
-                {% if request.user.subscription_tier == 'premium' %}
+                {% if request.user.plan_features.interview_questions %}
                     <form method="post" action="{% url 'recruitment_generate_questions' fit.id %}" style="display: inline;">
                         {% csrf_token %}
                         <button type="submit" class="btn btn-sm btn-primary">
@@ -277,7 +285,7 @@
                             </h2>
                             <div id="collapse{{ forloop.counter }}" class="accordion-collapse collapse {% if forloop.first %}show{% endif %}" data-bs-parent="#questionsAccordion">
                                 <div class="accordion-body">
-                                    <strong>Why ask this:</strong>
+                                    <strong>{% trans "Why ask this:" %}</strong>
                                     <p>{{ question.why_ask }}</p>
                                 </div>
                             </div>
@@ -287,7 +295,7 @@
             {% else %}
                 <div class="text-center py-4">
                     <i class="bi bi-question-circle text-muted" style="font-size: 3rem;"></i>
-                    {% if request.user.subscription_tier == 'premium' %}
+                    {% if request.user.plan_features.interview_questions %}
                         <p class="text-muted mt-3">No interview questions generated yet. Click the button above to generate AI-powered questions.</p>
                     {% else %}
                         <p class="text-muted mt-3">Interview questions are available with Premium subscription.</p>

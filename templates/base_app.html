@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
+{% load i18n %}
 
 {% block layout %}
 <!-- Topbar -->
@@ -16,30 +17,47 @@
 
     <div class="topbar-nav d-none d-md-flex">
         <a href="{% url 'dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
-            <i class="bi bi-grid me-1"></i> Dashboard
+            <i class="bi bi-grid me-1"></i> {% trans "Dashboard" %}
         </a>
         <a href="{% url 'cv_upload' %}" class="{% if request.resolver_match.url_name == 'cv_upload' %}active{% endif %}">
-            <i class="bi bi-cloud-upload me-1"></i> Upload CV
+            <i class="bi bi-cloud-upload me-1"></i> {% trans "Upload CV" %}
         </a>
         <a href="{% url 'analysis_history' %}" class="{% if request.resolver_match.url_name == 'analysis_history' %}active{% endif %}">
-            <i class="bi bi-clock-history me-1"></i> History
+            <i class="bi bi-clock-history me-1"></i> {% trans "History" %}
         </a>
     </div>
 
     <div class="topbar-right">
-        <button class="theme-toggle" id="themeToggle" title="Toggle theme">
+        <button class="theme-toggle" id="themeToggle" title="{% trans "Toggle theme" %}">
             <i class="bi bi-moon"></i>
         </button>
+
+        <!-- Language Switcher -->
+        <form action="{% url 'set_language' %}" method="post" class="d-inline ms-2 me-2">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ request.path }}">
+            {% get_current_language as CURRENT_LANGUAGE %}
+            {% if CURRENT_LANGUAGE == 'pl' %}
+                <button type="submit" name="language" value="en" class="btn btn-sm btn-outline-secondary" title="Switch to English">
+                    EN
+                </button>
+            {% else %}
+                <button type="submit" name="language" value="pl" class="btn btn-sm btn-outline-secondary" title="Przełącz na polski">
+                    PL
+                </button>
+            {% endif %}
+        </form>
+
         <div class="dropdown">
             <button class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
                 <i class="bi bi-person-circle me-1"></i>
                 {{ request.user.username }}
             </button>
             <ul class="dropdown-menu dropdown-menu-end">
-                <li><a class="dropdown-item" href="{% url 'profile' %}"><i class="bi bi-person me-2"></i>Profile</a></li>
-                <li><a class="dropdown-item" href="{% url 'subscription' %}"><i class="bi bi-credit-card me-2"></i>Subscription</a></li>
+                <li><a class="dropdown-item" href="{% url 'profile' %}"><i class="bi bi-person me-2"></i>{% trans "Profile" %}</a></li>
+                <li><a class="dropdown-item" href="{% url 'subscription' %}"><i class="bi bi-credit-card me-2"></i>{% trans "Subscription" %}</a></li>
                 <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item text-danger" href="{% url 'logout' %}"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
+                <li><a class="dropdown-item text-danger" href="{% url 'logout' %}"><i class="bi bi-box-arrow-right me-2"></i>{% trans "Logout" %}</a></li>
             </ul>
         </div>
     </div>
@@ -48,58 +66,55 @@
 <!-- Sidebar -->
 <aside class="sidebar" id="sidebar">
     <div class="sidebar-section">
-        <div class="sidebar-label">Main</div>
+        <div class="sidebar-label">{% trans "Main" %}</div>
         <a href="{% url 'dashboard' %}" class="sidebar-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
-            <span class="icon"><i class="bi bi-grid"></i></span> Dashboard
-        </a>
-        <a href="{% url 'cv_upload' %}" class="sidebar-link {% if request.resolver_match.url_name == 'cv_upload' %}active{% endif %}">
-            <span class="icon"><i class="bi bi-cloud-upload"></i></span> Upload CV
+            <span class="icon"><i class="bi bi-grid"></i></span> {% trans "Dashboard" %}
         </a>
     </div>
 
     <div class="sidebar-section">
-        <div class="sidebar-label">Analysis</div>
+        <div class="sidebar-label">{% trans "Analysis" %}</div>
         <a href="{% url 'analysis_history' %}" class="sidebar-link {% if request.resolver_match.url_name == 'analysis_history' %}active{% endif %}">
-            <span class="icon"><i class="bi bi-clock-history"></i></span> Analysis History
+            <span class="icon"><i class="bi bi-clock-history"></i></span> {% trans "Analysis History" %}
         </a>
         <a href="{% url 'cv_list' %}" class="sidebar-link {% if request.resolver_match.url_name == 'cv_list' %}active{% endif %}">
-            <span class="icon"><i class="bi bi-folder"></i></span> My CVs
+            <span class="icon"><i class="bi bi-folder"></i></span> {% trans "My CVs" %}
         </a>
     </div>
 
     <div class="sidebar-section">
-        <div class="sidebar-label">Recruitment</div>
+        <div class="sidebar-label">{% trans "Recruitment" %}</div>
         <a href="{% url 'recruitment_dashboard' %}" class="sidebar-link {% if 'recruitment' in request.path %}active{% endif %}">
-            <span class="icon"><i class="bi bi-people-fill"></i></span> HR Dashboard
+            <span class="icon"><i class="bi bi-people-fill"></i></span> {% trans "HR Dashboard" %}
+        </a>
+        <a href="{% url 'cv_upload' %}" class="sidebar-link {% if request.resolver_match.url_name == 'cv_upload' %}active{% endif %}">
+            <span class="icon"><i class="bi bi-cloud-upload"></i></span> {% trans "Upload CV" %}
         </a>
         <a href="{% url 'recruitment_position_list' %}" class="sidebar-link">
-            <span class="icon"><i class="bi bi-briefcase"></i></span> Positions
+            <span class="icon"><i class="bi bi-briefcase"></i></span> {% trans "Positions" %}
         </a>
         <a href="{% url 'recruitment_candidate_list' %}" class="sidebar-link">
-            <span class="icon"><i class="bi bi-person-lines-fill"></i></span> Candidates
-        </a>
-        <a href="{% url 'recruitment_candidate_upload' %}" class="sidebar-link">
-            <span class="icon"><i class="bi bi-cloud-upload"></i></span> Upload CV
+            <span class="icon"><i class="bi bi-person-lines-fill"></i></span> {% trans "Candidates" %}
         </a>
         <a href="{% url 'recruitment_position_ranks' %}" class="sidebar-link">
-            <span class="icon"><i class="bi bi-trophy"></i></span> Position Ranks
+            <span class="icon"><i class="bi bi-trophy"></i></span> {% trans "Position Ranks" %}
         </a>
     </div>
 
     <div class="sidebar-section">
-        <div class="sidebar-label">Account</div>
+        <div class="sidebar-label">{% trans "Account" %}</div>
         <a href="{% url 'profile' %}" class="sidebar-link {% if request.resolver_match.url_name == 'profile' %}active{% endif %}">
-            <span class="icon"><i class="bi bi-person"></i></span> Profile
+            <span class="icon"><i class="bi bi-person"></i></span> {% trans "Profile" %}
         </a>
         <a href="{% url 'subscription' %}" class="sidebar-link {% if request.resolver_match.url_name == 'subscription' %}active{% endif %}">
-            <span class="icon"><i class="bi bi-credit-card"></i></span> Plan & Billing
+            <span class="icon"><i class="bi bi-credit-card"></i></span> {% trans "Plan & Billing" %}
         </a>
     </div>
 
     <div class="sidebar-section mt-auto">
         <div class="px-3">
             <div class="d-flex align-items-center justify-content-between mb-1">
-                <small class="text-muted">Usage</small>
+                <small class="text-muted">{% trans "Usage" %}</small>
                 <span class="plan-badge {{ request.user.plan }}">{{ request.user.plan }}</span>
             </div>
             <div class="usage-bar">
@@ -114,9 +129,9 @@
             <small class="text-muted d-block mt-1">
                 {{ request.user.analyses_used_this_month }}
                 {% with limit=request.user.get_plan_limit %}
-                {% if limit %}/ {{ limit }}{% else %}/ Unlimited{% endif %}
+                {% if limit %}/ {{ limit }}{% else %}/ {% trans "Unlimited" %}{% endif %}
                 {% endwith %}
-                analyses
+                {% trans "analyses" %}
             </small>
         </div>
     </div>

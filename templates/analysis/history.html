@@ -1,4 +1,5 @@
 {% extends "base_app.html" %}
+{% load i18n %}
 
 {% block title %}Analysis History - CV Analyzer{% endblock %}
 
@@ -13,10 +14,10 @@
         <table class="table mb-0">
             <thead>
                 <tr>
-                    <th>CV Document</th>
-                    <th>Status</th>
-                    <th>Problems</th>
-                    <th>Date</th>
+                    <th>{% trans "CV Document" %}</th>
+                    <th>{% trans "Status" %}</th>
+                    <th>{% trans "Problems" %}</th>
+                    <th>{% trans "Date" %}</th>
                     <th></th>
                 </tr>
             </thead>
@@ -30,13 +31,18 @@
                     <td>{{ a.problems.count }}</td>
                     <td>{{ a.created_at|date:"M d, Y H:i" }}</td>
                     <td>
-                        {% if a.status == 'done' %}
-                        <a href="{% url 'analysis_result' a.id %}" class="btn btn-sm btn-outline-primary">View</a>
+                        {% if a.status == 'done' or a.status == 'partial' %}
+                        <a href="{% url 'analysis_result' a.id %}" class="btn btn-sm btn-outline-primary me-1">{% trans "View" %}</a>
                         {% elif a.status == 'processing' or a.status == 'pending' %}
-                        <a href="{% url 'analysis_processing' a.id %}" class="btn btn-sm btn-outline-secondary">Check</a>
+                        <a href="{% url 'analysis_processing' a.id %}" class="btn btn-sm btn-outline-secondary me-1">{% trans "Check" %}</a>
                         {% else %}
-                        <span class="text-muted">Failed</span>
+                        <span class="text-muted me-1">Failed</span>
                         {% endif %}
+                        <form method="post" action="{% url 'analysis_delete' a.id %}" style="display:inline;"
+                              onsubmit="return confirm('Delete this analysis?');">
+                            {% csrf_token %}
+                            <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                        </form>
                     </td>
                 </tr>
                 {% endfor %}

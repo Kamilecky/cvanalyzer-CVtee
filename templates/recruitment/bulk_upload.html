@@ -1,6 +1,7 @@
 {% extends "base_app.html" %}
 
 {% block title %}Upload CV{% endblock %}
+{% load i18n %}
 
 {% block content %}
 <div class="container py-4">
@@ -68,7 +69,7 @@
                             </label>
                             <div class="border border-2 border-dashed rounded p-4 text-center upload-area" id="singleUploadArea">
                                 <i class="bi bi-cloud-upload text-primary" style="font-size: 3rem;"></i>
-                                <h6 class="mt-2">Drag and drop a CV file here</h6>
+                                <h6 class="mt-2">{% trans "Drag and drop a CV file here" %}</h6>
                                 <p class="text-muted small">or</p>
                                 <label for="singleFileInput" class="btn btn-sm btn-outline-primary">
                                     <i class="bi bi-folder2-open"></i> Browse
@@ -89,7 +90,7 @@
                             </label>
                             <div class="border border-2 border-dashed rounded p-4 text-center upload-area" id="multiUploadArea">
                                 <i class="bi bi-cloud-upload text-success" style="font-size: 3rem;"></i>
-                                <h6 class="mt-2">Drag and drop multiple CV files here</h6>
+                                <h6 class="mt-2">{% trans "Drag and drop multiple CV files here" %}</h6>
                                 <p class="text-muted small">or</p>
                                 <label for="multiFileInput" class="btn btn-sm btn-outline-success">
                                     <i class="bi bi-folder2-open"></i> Browse Multiple
@@ -117,9 +118,9 @@
                 </div>
                 <div class="card-body">
                     <ul class="mb-0">
-                        <li><strong>PDF</strong> - Portable Document Format (.pdf)</li>
-                        <li><strong>DOCX</strong> - Microsoft Word Document (.docx)</li>
-                        <li><strong>TXT</strong> - Plain Text File (.txt)</li>
+                        <li><strong>{% trans "PDF" %}</strong> - Portable Document Format (.pdf)</li>
+                        <li><strong>{% trans "DOCX" %}</strong> - Microsoft Word Document (.docx)</li>
+                        <li><strong>{% trans "TXT" %}</strong> - Plain Text File (.txt)</li>
                     </ul>
                 </div>
             </div>
@@ -162,7 +163,7 @@
 
     function showFiles(files, infoDiv) {
         if (files.length > 0) {
-            let html = '<div class="alert alert-info py-2 mb-0"><small><strong>Selected:</strong><ul class="mb-0 mt-1">';
+            let html = '<div class="alert alert-info py-2 mb-0"><small><strong>{% trans "Selected:" %}</strong><ul class="mb-0 mt-1">';
             for (let i = 0; i < files.length; i++) {
                 html += `<li>${files[i].name} (${formatFileSize(files[i].size)})</li>`;
             }

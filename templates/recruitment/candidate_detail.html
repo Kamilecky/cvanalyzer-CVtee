@@ -1,4 +1,5 @@
 {% extends "base_app.html" %}
+{% load i18n %}
 
 {% block title %}{{ profile.name }}{% endblock %}
 
@@ -22,6 +23,9 @@
                     <i class="bi bi-arrow-repeat"></i> Match to All Positions
                 </button>
             </form>
+            <button type="button" class="btn btn-outline-danger ms-2" data-bs-toggle="modal" data-bs-target="#deleteCandidateModal">
+                <i class="bi bi-trash"></i> Delete
+            </button>
         </div>
     </div>
 
@@ -35,27 +39,27 @@
                 <div class="card-body">
                     <div class="row mb-3">
                         <div class="col-md-6">
-                            <strong>Email:</strong>
+                            <strong>{% trans "Email:" %}</strong>
                             <p>{{ profile.email|default:"Not provided" }}</p>
                         </div>
                         <div class="col-md-6">
-                            <strong>Phone:</strong>
+                            <strong>{% trans "Phone:" %}</strong>
                             <p>{{ profile.phone|default:"Not provided" }}</p>
                         </div>
                     </div>
                     <div class="row mb-3">
                         <div class="col-md-6">
-                            <strong>Seniority Level:</strong>
+                            <strong>{% trans "Seniority Level:" %}</strong>
                             <p>{{ profile.seniority_level|default:"Not specified" }}</p>
                         </div>
                         <div class="col-md-6">
-                            <strong>Years of Experience:</strong>
+                            <strong>{% trans "Years of Experience:" %}</strong>
                             <p>{{ profile.years_of_experience|default:"Not specified" }}</p>
                         </div>
                     </div>
 
                     <div class="mb-3">
-                        <strong>Tags:</strong>
+                        <strong>{% trans "Tags:" %}</strong>
                         <div class="mt-2">
                             {% if profile.tags %}
                                 {% for tag in profile.tags %}
@@ -84,7 +88,7 @@
                     {% endif %}
 
                     {% if profile.skill_levels %}
-                        <strong>Skill Levels:</strong>
+                        <strong>{% trans "Skill Levels:" %}</strong>
                         <ul class="list-unstyled mt-2">
                             {% for skill, level in profile.skill_levels.items %}
                                 <li><strong>{{ skill }}:</strong> {{ level }}</li>
@@ -219,11 +223,11 @@
                             <table class="table table-hover">
                                 <thead>
                                     <tr>
-                                        <th>Position</th>
-                                        <th>Overall Match</th>
-                                        <th>Skill Match</th>
-                                        <th>Recommendation</th>
-                                        <th>Actions</th>
+                                        <th>{% trans "Position" %}</th>
+                                        <th>{% trans "Overall Match" %}</th>
+                                        <th>{% trans "Skill Match" %}</th>
+                                        <th>{% trans "Recommendation" %}</th>
+                                        <th>{% trans "Actions" %}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -270,15 +274,15 @@
                 </div>
                 <div class="card-body">
                     <div class="mb-3">
-                        <h6 class="text-muted">Total Skills</h6>
+                        <h6 class="text-muted">{% trans "Total Skills" %}</h6>
                         <h3>{{ profile.skills|length|default:0 }}</h3>
                     </div>
                     <div class="mb-3">
-                        <h6 class="text-muted">Position Matches</h6>
+                        <h6 class="text-muted">{% trans "Position Matches" %}</h6>
                         <h3>{{ fit_results|length|default:0 }}</h3>
                     </div>
                     <div>
-                        <h6 class="text-muted">Red Flags</h6>
+                        <h6 class="text-muted">{% trans "Red Flags" %}</h6>
                         <h3 class="{% if profile.red_flags %}text-danger{% endif %}">
                             {{ profile.red_flags|length|default:0 }}
                         </h3>
@@ -292,10 +296,33 @@
                 </div>
                 <div class="card-body">
                     <small class="text-muted">
-                        <strong>Created:</strong> {{ profile.created_at|date:"M d, Y H:i" }}<br>
-                        <strong>Updated:</strong> {{ profile.updated_at|date:"M d, Y H:i" }}
+                        <strong>{% trans "Created:" %}</strong> {{ profile.created_at|date:"M d, Y H:i" }}<br>
+                        <strong>{% trans "Updated:" %}</strong> {{ profile.updated_at|date:"M d, Y H:i" }}
                     </small>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Candidate Modal -->
+<div class="modal fade" id="deleteCandidateModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{% trans "Confirm Delete" %}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to delete <strong>{{ profile.name }}</strong>?
+                All position match results for this candidate will be permanently removed.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="post" action="{% url 'recruitment_candidate_delete' profile.id %}" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">{% trans "Delete Candidate" %}</button>
+                </form>
             </div>
         </div>
     </div>

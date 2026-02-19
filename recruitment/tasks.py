@@ -1,20 +1,22 @@
-"""recruitment/tasks.py - Threading wrappers dla przetwarzania w tle."""
+"""recruitment/tasks.py - Threading wrappers dla przetwarzania w tle.
+
+Używa thread_manager z semaphore (MAX_THREADS=5).
+"""
 
 import logging
-import threading
+
+from analysis.services.thread_manager import run_with_limit
 
 logger = logging.getLogger(__name__)
 
 
 def run_profile_extraction_in_thread(cv_document_id, user_id):
     """Ekstrakcja profilu kandydata w osobnym wątku."""
-    thread = threading.Thread(
-        target=_run_profile_extraction,
+    return run_with_limit(
+        _run_profile_extraction,
         args=(cv_document_id, user_id),
-        daemon=True,
+        name=f'profile-{str(cv_document_id)[:8]}',
     )
-    thread.start()
-    return thread
 
 
 def _run_profile_extraction(cv_document_id, user_id):
@@ -33,13 +35,11 @@ def _run_profile_extraction(cv_document_id, user_id):
 
 def run_position_match_in_thread(fit_result_id):
     """Matching kandydata do stanowiska w osobnym wątku."""
-    thread = threading.Thread(
-        target=_run_position_match,
+    return run_with_limit(
+        _run_position_match,
         args=(fit_result_id,),
-        daemon=True,
+        name=f'match-{str(fit_result_id)[:8]}',
     )
-    thread.start()
-    return thread
 
 
 def _run_position_match(fit_result_id):
@@ -54,13 +54,11 @@ def _run_position_match(fit_result_id):
 
 def run_bulk_matching_in_thread(candidate_profile_id, user_id):
     """Matching kandydata do WSZYSTKICH aktywnych stanowisk w tle."""
-    thread = threading.Thread(
-        target=_run_bulk_matching,
+    return run_with_limit(
+        _run_bulk_matching,
         args=(candidate_profile_id, user_id),
-        daemon=True,
+        name=f'bulk-{str(candidate_profile_id)[:8]}',
     )
-    thread.start()
-    return thread
 
 
 def _run_bulk_matching(candidate_profile_id, user_id):
@@ -81,13 +79,11 @@ def _run_bulk_matching(candidate_profile_id, user_id):
 
 def run_selective_matching_in_thread(candidate_profile_id, user_id, position_ids):
     """Matching kandydata do WYBRANYCH stanowisk w tle."""
-    thread = threading.Thread(
-        target=_run_selective_matching,
+    return run_with_limit(
+        _run_selective_matching,
         args=(candidate_profile_id, user_id, position_ids),
-        daemon=True,
+        name=f'selective-{str(candidate_profile_id)[:8]}',
     )
-    thread.start()
-    return thread
 
 
 def _run_selective_matching(candidate_profile_id, user_id, position_ids):

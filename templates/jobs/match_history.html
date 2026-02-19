@@ -1,4 +1,5 @@
 {% extends "base_app.html" %}
+{% load i18n %}
 
 {% block title %}Match History - CV Analyzer{% endblock %}
 
@@ -13,11 +14,11 @@
         <table class="table mb-0">
             <thead>
                 <tr>
-                    <th>CV</th>
-                    <th>Job</th>
+                    <th>{% trans "CV" %}</th>
+                    <th>{% trans "Job" %}</th>
                     <th>Match %</th>
-                    <th>Status</th>
-                    <th>Date</th>
+                    <th>{% trans "Status" %}</th>
+                    <th>{% trans "Date" %}</th>
                     <th></th>
                 </tr>
             </thead>
@@ -37,7 +38,7 @@
                     <td>{{ m.created_at|date:"M d, Y" }}</td>
                     <td>
                         {% if m.status == 'done' %}
-                        <a href="{% url 'job_match_result' m.id %}" class="btn btn-sm btn-outline-primary">View</a>
+                        <a href="{% url 'job_match_result' m.id %}" class="btn btn-sm btn-outline-primary">{% trans "View" %}</a>
                         {% endif %}
                     </td>
                 </tr>

@@ -1,15 +1,18 @@
 """recruitment/views.py - Widoki modułu rekrutacji HR."""
 
+from django.conf import settings
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import JsonResponse
+from django.utils.translation import gettext as _
 from django.views.decorators.http import require_POST
 from django.db.models import Avg
 
 from cv.models import CVDocument
 from cv.services.parser import CVParser
 from cv.services.section_detector import SectionDetector
+from analysis.utils import start_cv_analysis
 from .models import JobPosition, CandidateProfile, JobFitResult, RequirementMatch
 from .forms import JobPositionForm, BulkUploadForm, CVUploadForm
 from .tasks import (
@@ -61,13 +64,26 @@ def position_list_view(request):
 
 @login_required
 def position_create_view(request):
+    position_limit = settings.JOB_POSITION_LIMITS.get(request.user.plan)
+    if position_limit is not None:
+        current_count = JobPosition.objects.filter(
+            user=request.user, is_active=True,
+        ).count()
+        if current_count >= position_limit:
+            messages.error(
+                request,
+                _('Limit of %(limit)s active positions reached. '
+                  'Upgrade your plan to create more.') % {'limit': position_limit},
+            )
+            return redirect('recruitment_position_list')
+
     if request.method == 'POST':
         form = JobPositionForm(request.POST)
         if form.is_valid():
             position = form.save(commit=False)
             position.user = request.user
             position.save()
-            messages.success(request, f'Position "{position.title}" created.')
+            messages.success(request, _('Position "%(title)s" created.') % {'title': position.title})
             return redirect('recruitment_position_detail', position_id=position.id)
     else:
         form = JobPositionForm()
@@ -85,7 +101,7 @@ def position_edit_view(request, position_id):
         form = JobPositionForm(request.POST, instance=position)
         if form.is_valid():
             form.save()
-            messages.success(request, f'Position "{position.title}" updated.')
+            messages.success(request, _('Position "%(title)s" updated.') % {'title': position.title})
             return redirect('recruitment_position_detail', position_id=position.id)
     else:
         form = JobPositionForm(instance=position)
@@ -101,8 +117,19 @@ def position_delete_view(request, position_id):
     position = get_object_or_404(JobPosition, id=position_id, user=request.user)
     position.is_active = False
     position.save(update_fields=['is_active'])
-    messages.success(request, f'Position "{position.title}" deactivated.')
+    messages.success(request, _('Position "%(title)s" deactivated.') % {'title': position.title})
     return redirect('recruitment_position_list')
+
+
+@login_required
+@require_POST
+def candidate_delete_view(request, profile_id):
+    """Hard-delete profilu kandydata + powiazanych JobFitResult (CASCADE)."""
+    profile = get_object_or_404(CandidateProfile, id=profile_id, user=request.user)
+    name = profile.name or str(profile.id)[:8]
+    profile.delete()
+    messages.success(request, _('Candidate "%(name)s" deleted.') % {'name': name})
+    return redirect('recruitment_candidate_list')
 
 
 @login_required
@@ -134,15 +161,20 @@ def position_detail_view(request, position_id):
 def candidate_list_view(request):
     """Lista kandydatów z wyszukiwaniem."""
     profiles = CandidateProfile.objects.filter(
-        user=request.user, status='done',
+        user=request.user, status__in=['done', 'partial'],
     ).order_by('-created_at')
 
     q = request.GET.get('q', '').strip()
     if q:
         profiles = profiles.filter(name__icontains=q)
 
+    active_positions = JobPosition.objects.filter(
+        user=request.user, is_active=True,
+    ).order_by('-created_at')
+
     return render(request, 'recruitment/candidate_list.html', {
         'profiles': profiles, 'query': q,
+        'active_positions': active_positions,
     })
 
 
@@ -175,17 +207,21 @@ def candidate_upload_view(request):
                 cv_doc = _process_uploaded_cv(uploaded_file, request.user)
                 if cv_doc:
                     run_profile_extraction_in_thread(cv_doc.id, request.user.id)
+
+                    # CV analysis (billing + history) — same logic as /cv/upload/
+                    start_cv_analysis(cv_doc, request.user)
+
                     uploaded_count += 1
                     last_cv_doc = cv_doc
 
             if uploaded_count == 1 and last_cv_doc:
-                messages.info(request, f'CV "{last_cv_doc.original_filename}" uploaded. Extracting profile...')
+                messages.info(request, _('CV "%(name)s" uploaded. Extracting profile...') % {'name': last_cv_doc.original_filename})
                 return redirect('recruitment_candidate_processing', cv_id=last_cv_doc.id)
             elif uploaded_count > 1:
-                messages.success(request, f'{uploaded_count} CV(s) uploaded and processing.')
+                messages.success(request, _('%(count)s CV(s) uploaded and processing.') % {'count': uploaded_count})
                 return redirect('recruitment_candidate_list')
             else:
-                messages.error(request, 'No valid CV files uploaded.')
+                messages.error(request, _('No valid CV files uploaded.'))
                 return redirect('recruitment_candidate_upload')
     else:
         form = CVUploadForm()
@@ -255,8 +291,11 @@ def candidate_processing_view(request, cv_id):
         profile = cv_doc.candidate_profile
         if profile.status == 'done':
             return redirect('recruitment_candidate_detail', profile_id=profile.id)
+        elif profile.status == 'partial':
+            messages.warning(request, _('Partial profile — some data extracted via fallback.'))
+            return redirect('recruitment_candidate_detail', profile_id=profile.id)
         elif profile.status == 'failed':
-            messages.error(request, f'Profile extraction failed: {profile.error_message}')
+            messages.error(request, _('Profile extraction failed: %(error)s') % {'error': profile.error_message})
             return redirect('recruitment_candidate_list')
     except CandidateProfile.DoesNotExist:
         pass
@@ -275,7 +314,7 @@ def candidate_status_api(request, cv_id):
     try:
         profile = cv_doc.candidate_profile
         data = {'status': profile.status}
-        if profile.status == 'done':
+        if profile.status in ('done', 'partial'):
             from django.urls import reverse
             position_ids = request.session.get('selected_position_ids')
             if position_ids:
@@ -315,7 +354,7 @@ def match_all_positions_view(request, profile_id):
     profile = get_object_or_404(CandidateProfile, id=profile_id, user=request.user, status='done')
 
     run_bulk_matching_in_thread(str(profile.id), request.user.id)
-    messages.info(request, f'Matching {profile.name} to all active positions...')
+    messages.info(request, _('Matching %(name)s to all active positions...') % {'name': profile.name})
     return redirect('recruitment_candidate_detail', profile_id=profile.id)
 
 
@@ -323,7 +362,8 @@ def match_all_positions_view(request, profile_id):
 def fit_result_detail_view(request, fit_id):
     """Szczegółowy wynik dopasowania kandydata do stanowiska."""
     fit = get_object_or_404(
-        JobFitResult, id=fit_id, user=request.user, status='done',
+        JobFitResult, id=fit_id, user=request.user,
+        status__in=['done', 'partial'],
     )
 
     requirement_matches = fit.requirement_matches.all().order_by('-match_percentage')
@@ -334,6 +374,7 @@ def fit_result_detail_view(request, fit_id):
         'fit': fit,
         'requirement_matches': requirement_matches,
         'section_scores': section_scores,
+        'is_partial': fit.status == 'partial',
     })
 
 
@@ -346,7 +387,7 @@ def fit_status_api(request, fit_id):
         'progress': fit.progress,
         'overall_match': fit.overall_match,
     }
-    if fit.status == 'done':
+    if fit.status in ('done', 'partial'):
         from django.urls import reverse
         data['redirect_url'] = reverse('recruitment_fit_result', args=[fit.id])
     elif fit.status == 'failed':
@@ -359,7 +400,7 @@ def fit_status_api(request, fit_id):
 def generate_questions_view(request, fit_id):
     """Generuje pytania rekrutacyjne AI (Premium)."""
     if not request.user.has_feature('interview_questions'):
-        messages.error(request, 'Interview questions require Premium plan.')
+        messages.error(request, _('Interview questions require Premium plan.'))
         return redirect('recruitment_fit_result', fit_id=fit_id)
 
     fit = get_object_or_404(
@@ -371,9 +412,9 @@ def generate_questions_view(request, fit_id):
     questions = generator.generate_questions(fit)
 
     if questions:
-        messages.success(request, f'{len(questions)} interview questions generated.')
+        messages.success(request, _('%(count)s interview questions generated.') % {'count': len(questions)})
     else:
-        messages.error(request, 'Failed to generate interview questions.')
+        messages.error(request, _('Failed to generate interview questions.'))
 
     return redirect('recruitment_fit_result', fit_id=fit_id)
 
@@ -419,11 +460,11 @@ def match_selected_positions_view(request, profile_id):
 
     position_ids = request.POST.getlist('position_ids')
     if not position_ids:
-        messages.error(request, 'Select at least one position to analyze.')
+        messages.error(request, _('Select at least one position to analyze.'))
         return redirect('recruitment_select_positions', profile_id=profile.id)
 
     run_selective_matching_in_thread(str(profile.id), request.user.id, position_ids)
-    messages.info(request, f'Matching {profile.name} to {len(position_ids)} selected position(s)...')
+    messages.info(request, _('Matching %(name)s to %(count)s selected position(s)...') % {'name': profile.name, 'count': len(position_ids)})
     return redirect('recruitment_candidate_detail', profile_id=profile.id)
 
 
@@ -434,7 +475,7 @@ def selective_match_status_api(request, profile_id):
 
     pending_fits = JobFitResult.objects.filter(
         candidate=profile,
-        status__in=['pending', 'processing'],
+        status__in=['pending', 'processing', 'pending_ai'],
     )
 
     if pending_fits.exists():
@@ -532,4 +573,59 @@ def match_summary_view(request, profile_id):
     return render(request, 'recruitment/match_summary.html', {
         'profile': profile,
         'fit_results': fit_results,
+    })
+
+
+# ---------------------------------------------------------------------------
+# Bulk Analysis (all candidates × selected positions)
+# ---------------------------------------------------------------------------
+
+@login_required
+@require_POST
+def bulk_analysis_view(request):
+    """Uruchamia matching WSZYSTKICH kandydatów do wybranych stanowisk."""
+    position_ids = request.POST.getlist('position_ids')
+    if not position_ids:
+        messages.error(request, _('Select at least one position.'))
+        return redirect('recruitment_candidate_list')
+
+    positions = JobPosition.objects.filter(
+        id__in=position_ids, user=request.user, is_active=True,
+    )
+    if not positions.exists():
+        messages.error(request, _('Select at least one position.'))
+        return redirect('recruitment_candidate_list')
+
+    candidates = CandidateProfile.objects.filter(
+        user=request.user, status='done',
+    )
+    if not candidates.exists():
+        messages.warning(request, _('No candidates available for analysis.'))
+        return redirect('recruitment_candidate_list')
+
+    valid_position_ids = [str(p.id) for p in positions]
+    for profile in candidates:
+        run_selective_matching_in_thread(
+            str(profile.id), request.user.id, valid_position_ids,
+        )
+
+    messages.info(
+        request,
+        _('Bulk analysis started: %(candidates)s candidates × %(positions)s positions.')
+        % {'candidates': candidates.count(), 'positions': positions.count()},
+    )
+    return redirect('recruitment_candidate_list')
+
+
+@login_required
+def bulk_analysis_status_api(request):
+    """JSON API: status zbiorczego matchingu."""
+    pending_count = JobFitResult.objects.filter(
+        user=request.user,
+        status__in=['pending', 'processing', 'pending_ai'],
+    ).count()
+
+    return JsonResponse({
+        'status': 'processing' if pending_count > 0 else 'done',
+        'pending_count': pending_count,
     })

@@ -1,4 +1,5 @@
 {% extends "base_app.html" %}
+{% load i18n %}
 
 {% block title %}Analysis Result - CV Analyzer{% endblock %}
 
@@ -9,7 +10,7 @@
         <p class="text-muted mb-0">{{ analysis.cv_document.original_filename }} &mdash; {{ analysis.created_at|date:"M d, Y H:i" }}</p>
     </div>
     <div>
-        {% if request.user.has_feature.pdf_export %}
+        {% if request.user.plan_features.pdf_export %}
         <a href="{% url 'report_generate' analysis.id %}" class="btn btn-outline-primary btn-sm">
             <i class="bi bi-file-pdf me-1"></i> Export PDF
         </a>
@@ -19,6 +20,20 @@
         </a>
     </div>
 </div>
+
+{% if is_partial %}
+<div class="alert alert-warning mb-4">
+    <i class="bi bi-exclamation-triangle me-2"></i>
+    <strong>{% trans "Partial results" %}</strong> — some AI prompts failed. Data may be incomplete.
+</div>
+{% endif %}
+
+{% if short_text_warning %}
+<div class="alert alert-info mb-4">
+    <i class="bi bi-info-circle me-2"></i>
+    <strong>{% trans "Short CV detected" %}</strong> — the document contains very little text. Results may be less accurate.
+</div>
+{% endif %}
 
 <!-- Summary -->
 {% if analysis.summary %}
@@ -108,7 +123,7 @@
                         </h6>
                         <p class="mb-1">{{ p.description }}</p>
                         {% if p.affected_text %}
-                        <small class="text-muted"><strong>Affected:</strong> "{{ p.affected_text|truncatechars:120 }}"</small>
+                        <small class="text-muted"><strong>{% trans "Affected:" %}</strong> "{{ p.affected_text|truncatechars:120 }}"</small>
                         {% endif %}
                     </div>
                     <span class="badge bg-secondary">{{ p.get_category_display }}</span>
@@ -135,7 +150,7 @@
                         <p class="mb-1">{{ r.description }}</p>
                         {% if r.suggested_text %}
                         <div class="mt-2 p-2 bg-light rounded">
-                            <small class="text-muted"><strong>Suggested:</strong></small>
+                            <small class="text-muted"><strong>{% trans "Suggested:" %}</strong></small>
                             <p class="mb-0 small">{{ r.suggested_text }}</p>
                         </div>
                         {% endif %}
@@ -204,7 +219,7 @@
         {% endfor %}
 
         {% if sections %}
-        <h6 class="mt-4 mb-3">Rewrite a Section</h6>
+        <h6 class="mt-4 mb-3">{% trans "Rewrite a Section" %}</h6>
         {% for s in sections %}
         <form method="post" action="{% url 'analysis_rewrite' analysis.id %}" class="d-inline">
             {% csrf_token %}

@@ -1,0 +1,747 @@
+# Polish translations for CV Analyzer
+# Copyright (C) 2024
+# This file is distributed under the same license as the cvanalyzer package.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: cvanalyzer 1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-01-01 00:00+0000\n"
+"PO-Revision-Date: 2024-01-01 00:00+0000\n"
+"Last-Translator: CV Analyzer Team\n"
+"Language-Team: Polish\n"
+"Language: pl\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=4; plural=(n==1 ? 0 : (n%10>=2 && n%10<=4) && (n%100<12 || n%100>14) ? 1 : n!=1 && (n%10>=0 && n%10<=1) || (n%10>=5 && n%10<=9) || (n%100>=12 && n%100<=14) ? 2 : 3);\n"
+
+msgid "%(count)s CV(s) uploaded and processing."
+msgstr "%(count)s CV przesłane i przetwarzane."
+
+msgid "%(count)s interview questions generated."
+msgstr "Wygenerowano %(count)s pytań rekrutacyjnych."
+
+msgid "AI rewriting is available for Premium users. Upgrade your plan."
+msgstr ""
+"Przepisywanie AI jest dostępne dla użytkowników Premium. Ulepsz swój plan."
+
+msgid "Account"
+msgstr "Konto"
+
+msgid "Actions"
+msgstr "Akcje"
+
+msgid "Active"
+msgstr "Aktywne"
+
+msgid "Active Positions"
+msgstr "Aktywne stanowiska"
+
+msgid "Affected:"
+msgstr "Dotyczy:"
+
+msgid "Analysis"
+msgstr "Analiza"
+
+msgid "Analysis History"
+msgstr "Historia analiz"
+
+msgid "Analysis failed: %(error)s"
+msgstr "Analiza nie powiodła się: %(error)s"
+
+msgid "Analysis for \"%(name)s\" deleted."
+msgstr "Analiza dla \"%(name)s\" usunięta."
+
+msgid "Apply"
+msgstr "Zastosuj"
+
+msgid "Average Match Score"
+msgstr "Średni wynik dopasowania"
+
+msgid "Avg Match"
+msgstr "Śr. dopasowanie"
+
+msgid "Basic"
+msgstr "Podstawowy"
+
+msgid "CV"
+msgstr "CV"
+
+msgid "CV \"%(name)s\" deleted."
+msgstr "CV \"%(name)s\" usunięte."
+
+msgid "CV \"%(name)s\" uploaded successfully!"
+msgstr "CV \"%(name)s\" przesłane pomyślnie!"
+
+msgid "CV \"%(name)s\" uploaded. Extracting profile..."
+msgstr "CV \"%(name)s\" przesłane. Wyodrębnianie profilu..."
+
+msgid "CV Document"
+msgstr "Dokument CV"
+
+msgid "Cancel"
+msgstr "Anuluj"
+
+msgid "Candidate \"%(name)s\" deleted."
+msgstr "Kandydat \"%(name)s\" usunięty."
+
+msgid "Candidates"
+msgstr "Kandydaci"
+
+msgid "Change Email"
+msgstr "Zmień e-mail"
+
+msgid "Change Password"
+msgstr "Zmień hasło"
+
+msgid "Check"
+msgstr "Sprawdź"
+
+msgid "Check your email"
+msgstr "Sprawdź swoją skrzynkę e-mail"
+
+msgid "Checkout Cancelled"
+msgstr "Płatność anulowana"
+
+msgid "Confirm Deactivation"
+msgstr "Potwierdź dezaktywację"
+
+msgid "Confirm Delete"
+msgstr "Potwierdź usunięcie"
+
+msgid "Confirm New Password"
+msgstr "Potwierdź nowe hasło"
+
+msgid "Confirm Password"
+msgstr "Potwierdź hasło"
+
+msgid "Confirm new password"
+msgstr "Potwierdź nowe hasło"
+
+msgid "Could not extract text. Please try another format."
+msgstr "Nie udało się wyodrębnić tekstu. Spróbuj innego formatu."
+
+msgid "Could not initiate checkout. Please try again."
+msgstr "Nie udało się rozpocząć płatności. Spróbuj ponownie."
+
+msgid "Could not open billing portal. Please try again."
+msgstr "Nie udało się otworzyć portalu płatności. Spróbuj ponownie."
+
+msgid "Create Account"
+msgstr "Utwórz konto"
+
+msgid "Created"
+msgstr "Utworzono"
+
+msgid "Created:"
+msgstr "Utworzono:"
+
+msgid "Current Password"
+msgstr "Obecne hasło"
+
+msgid "Current Role"
+msgstr "Obecna rola"
+
+msgid "Current period ends:"
+msgstr "Bieżący okres kończy się:"
+
+msgid "DOCX"
+msgstr "DOCX"
+
+msgid "Dashboard"
+msgstr "Panel"
+
+msgid "Date"
+msgstr "Data"
+
+msgid "Deactivate Position"
+msgstr "Dezaktywuj stanowisko"
+
+msgid "Delete"
+msgstr "Usuń"
+
+msgid "Delete Candidate"
+msgstr "Usuń kandydata"
+
+msgid "Delete My Account"
+msgstr "Usuń moje konto"
+
+msgid "Delete Position"
+msgstr "Usuń stanowisko"
+
+msgid "Department"
+msgstr "Dział"
+
+msgid "Drag and drop a CV file here"
+msgstr "Przeciągnij i upuść plik CV tutaj"
+
+msgid "Drag and drop multiple CV files here"
+msgstr "Przeciągnij i upuść wiele plików CV tutaj"
+
+msgid "Education Match"
+msgstr "Dopasowanie wykształcenia"
+
+msgid "Email"
+msgstr "E-mail"
+
+msgid "Email Address"
+msgstr "Adres e-mail"
+
+msgid "Email:"
+msgstr "E-mail:"
+
+msgid "Employment Type"
+msgstr "Typ zatrudnienia"
+
+msgid "Employment Type:"
+msgstr "Typ zatrudnienia:"
+
+msgid "Enter Job URL"
+msgstr "Wprowadź URL oferty pracy"
+
+msgid "Enter new password"
+msgstr "Wprowadź nowe hasło"
+
+msgid "Enter your email"
+msgstr "Wprowadź swój e-mail"
+
+msgid "Enter your password to confirm"
+msgstr "Wprowadź hasło, aby potwierdzić"
+
+msgid "Enterprise"
+msgstr "Firmowy"
+
+msgid "Error parsing file: %(error)s"
+msgstr "Błąd parsowania pliku: %(error)s"
+
+msgid "Experience"
+msgstr "Doświadczenie"
+
+msgid "Experience Match"
+msgstr "Dopasowanie doświadczenia"
+
+msgid "Experience Required:"
+msgstr "Wymagane doświadczenie:"
+
+msgid "Explanation"
+msgstr "Wyjaśnienie"
+
+msgid "Failed to generate interview questions."
+msgstr "Nie udało się wygenerować pytań rekrutacyjnych."
+
+msgid "Filename"
+msgstr "Nazwa pliku"
+
+msgid "Format"
+msgstr "Format"
+
+msgid "Free"
+msgstr "Darmowy"
+
+msgid "HR Dashboard"
+msgstr "Panel HR"
+
+msgid "History"
+msgstr "Historia"
+
+msgid "Industry"
+msgstr "Branża"
+
+msgid "Industry:"
+msgstr "Branża:"
+
+msgid "Instant result from cache (identical CV analyzed before)."
+msgstr ""
+"Natychmiastowy wynik z pamięci podręcznej (identyczne CV analizowane "
+"wcześniej)."
+
+msgid "Interview questions require Premium plan."
+msgstr "Pytania rekrutacyjne wymagają planu Premium."
+
+msgid "Invalid Link"
+msgstr "Nieprawidłowy link"
+
+msgid "Invalid plan selected."
+msgstr "Wybrano nieprawidłowy plan."
+
+msgid "Job"
+msgstr "Praca"
+
+msgid "Job Description"
+msgstr "Opis stanowiska"
+
+msgid "Job Posting URL"
+msgstr "URL ogłoszenia o pracę"
+
+msgid "Job Source"
+msgstr "Źródło oferty"
+
+msgid "Languages Required"
+msgstr "Wymagane języki"
+
+msgid "Languages Required:"
+msgstr "Wymagane języki:"
+
+msgid "Location"
+msgstr "Lokalizacja"
+
+msgid "Logout"
+msgstr "Wyloguj"
+
+msgid "Main"
+msgstr "Główne"
+
+msgid "Matches Analyzed"
+msgstr "Przeanalizowane dopasowania"
+
+msgid "Matching %(name)s to %(count)s selected position(s)..."
+msgstr "Dopasowywanie %(name)s do %(count)s wybranych stanowisk..."
+
+msgid "Matching %(name)s to all active positions..."
+msgstr "Dopasowywanie %(name)s do wszystkich aktywnych stanowisk..."
+
+msgid "Matching to Positions"
+msgstr "Dopasowywanie do stanowisk"
+
+msgid "Missing section data."
+msgstr "Brak danych sekcji."
+
+msgid "My CVs"
+msgstr "Moje CV"
+
+msgid "Name"
+msgstr "Nazwa"
+
+msgid "New Email Address"
+msgstr "Nowy adres e-mail"
+
+msgid "New Password"
+msgstr "Nowe hasło"
+
+msgid "Nice to Have"
+msgstr "Mile widziane"
+
+msgid "Nice to Have:"
+msgstr "Mile widziane:"
+
+msgid "No valid CV files uploaded."
+msgstr "Nie przesłano prawidłowych plików CV."
+
+msgid "Optional Skills"
+msgstr "Opcjonalne umiejętności"
+
+msgid "Optional Skills:"
+msgstr "Opcjonalne umiejętności:"
+
+msgid "Overall Match"
+msgstr "Dopasowanie ogólne"
+
+msgid "Overall Match Score"
+msgstr "Ogólny wynik dopasowania"
+
+msgid "PDF"
+msgstr "PDF"
+
+msgid "Partial profile — some data extracted via fallback."
+msgstr ""
+"Częściowy profil — część danych wyodrębniona za pomocą metody awaryjnej."
+
+msgid "Partial results"
+msgstr "Częściowe wyniki"
+
+msgid "Partial results — some AI prompts failed. Data may be incomplete."
+msgstr ""
+"Częściowe wyniki — niektóre zapytania AI nie powiodły się. Dane mogą być "
+"niekompletne."
+
+msgid "Password"
+msgstr "Hasło"
+
+msgid "Paste Job Description"
+msgstr "Wklej opis stanowiska"
+
+msgid "Phone:"
+msgstr "Telefon:"
+
+msgid "Plan & Billing"
+msgstr "Plan i płatności"
+
+msgid "Plan changed to %(plan)s."
+msgstr "Plan zmieniony na %(plan)s."
+
+msgid "Position"
+msgstr "Stanowisko"
+
+msgid "Position \"%(title)s\" created."
+msgstr "Stanowisko \"%(title)s\" utworzone."
+
+msgid "Position \"%(title)s\" deactivated."
+msgstr "Stanowisko \"%(title)s\" dezaktywowane."
+
+msgid "Position \"%(title)s\" updated."
+msgstr "Stanowisko \"%(title)s\" zaktualizowane."
+
+msgid "Position Matches"
+msgstr "Dopasowania stanowisk"
+
+msgid "Position Ranks"
+msgstr "Rankingi stanowisk"
+
+msgid "Positions"
+msgstr "Stanowiska"
+
+msgid "Premium"
+msgstr "Premium"
+
+msgid "Pricing Plans"
+msgstr "Plany cenowe"
+
+msgid "Problems"
+msgstr "Problemy"
+
+msgid "Processing CV"
+msgstr "Przetwarzanie CV"
+
+msgid "Profile"
+msgstr "Profil"
+
+msgid "Profile extraction failed: %(error)s"
+msgstr "Wyodrębnianie profilu nie powiodło się: %(error)s"
+
+msgid "Rank"
+msgstr "Pozycja"
+
+msgid "Recent Analyses"
+msgstr "Ostatnie analizy"
+
+msgid "Recommendation"
+msgstr "Rekomendacja"
+
+msgid "Recruitment"
+msgstr "Rekrutacja"
+
+msgid "Recruitment Dashboard"
+msgstr "Panel rekrutacji"
+
+msgid "Red Flags"
+msgstr "Ostrzeżenia"
+
+msgid "Request a new link"
+msgstr "Poproś o nowy link"
+
+msgid "Required Skills"
+msgstr "Wymagane umiejętności"
+
+msgid "Required Skills:"
+msgstr "Wymagane umiejętności:"
+
+msgid "Requirement"
+msgstr "Wymaganie"
+
+msgid "Requirements Description"
+msgstr "Opis wymagań"
+
+msgid "Requirements:"
+msgstr "Wymagania:"
+
+msgid "Resend Link"
+msgstr "Wyślij link ponownie"
+
+msgid "Resend verification email"
+msgstr "Wyślij ponownie e-mail weryfikacyjny"
+
+msgid "Responsibilities"
+msgstr "Obowiązki"
+
+msgid "Responsibilities:"
+msgstr "Obowiązki:"
+
+msgid "Rewrite a Section"
+msgstr "Przepisz sekcję"
+
+msgid "Rewriting \"%(section)s\" section... Refresh in a moment."
+msgstr "Przepisywanie sekcji \"%(section)s\"... Odśwież za chwilę."
+
+msgid "Save Changes"
+msgstr "Zapisz zmiany"
+
+msgid "Search by name, role, skills..."
+msgstr "Szukaj po nazwisku, roli, umiejętnościach..."
+
+msgid "Select CV"
+msgstr "Wybierz CV"
+
+msgid "Select at least one position to analyze."
+msgstr "Wybierz co najmniej jedno stanowisko do analizy."
+
+msgid "Selected:"
+msgstr "Wybrane:"
+
+msgid "Send Reset Link"
+msgstr "Wyślij link resetujący"
+
+msgid "Seniority"
+msgstr "Poziom doświadczenia"
+
+msgid "Seniority Level"
+msgstr "Poziom doświadczenia"
+
+msgid "Seniority Level:"
+msgstr "Poziom doświadczenia:"
+
+msgid "Seniority Match"
+msgstr "Dopasowanie poziomu"
+
+msgid "Set Password"
+msgstr "Ustaw hasło"
+
+msgid "Short CV detected"
+msgstr "Wykryto krótkie CV"
+
+msgid "Sign In"
+msgstr "Zaloguj się"
+
+msgid "Size"
+msgstr "Rozmiar"
+
+msgid "Skill Levels:"
+msgstr "Poziomy umiejętności:"
+
+msgid "Skill Match"
+msgstr "Dopasowanie umiejętności"
+
+msgid "Skills"
+msgstr "Umiejętności"
+
+msgid "Status"
+msgstr "Status"
+
+msgid "Status:"
+msgstr "Status:"
+
+msgid "Subscription"
+msgstr "Subskrypcja"
+
+msgid "Suggested:"
+msgstr "Sugerowane:"
+
+msgid "TXT"
+msgstr "TXT"
+
+msgid "Tags"
+msgstr "Tagi"
+
+msgid "Tags:"
+msgstr "Tagi:"
+
+msgid "This CV has no extracted text. Please re-upload."
+msgstr "To CV nie ma wyodrębnionego tekstu. Prześlij ponownie."
+
+msgid "This plan is not available for purchase."
+msgstr "Ten plan nie jest dostępny do zakupu."
+
+msgid "Title"
+msgstr "Tytuł"
+
+msgid "Toggle theme"
+msgstr "Zmień motyw"
+
+msgid "Total Candidates"
+msgstr "Łącznie kandydatów"
+
+msgid "Total Skills"
+msgstr "Łącznie umiejętności"
+
+msgid "Type"
+msgstr "Typ"
+
+msgid "Unlimited"
+msgstr "Bez limitu"
+
+msgid "Updated:"
+msgstr "Zaktualizowano:"
+
+msgid "Upgrade to Basic"
+msgstr "Ulepsz do Basic"
+
+msgid "Upgrade to Enterprise"
+msgstr "Ulepsz do Enterprise"
+
+msgid "Upgrade to Premium"
+msgstr "Ulepsz do Premium"
+
+msgid "Upload CV"
+msgstr "Prześlij CV"
+
+msgid "Uploaded"
+msgstr "Przesłano"
+
+msgid "Usage"
+msgstr "Użycie"
+
+msgid "Usage counter has been reset to 0."
+msgstr "Licznik użycia został zresetowany do 0."
+
+msgid "Username"
+msgstr "Nazwa użytkownika"
+
+msgid "Verification Failed"
+msgstr "Weryfikacja nie powiodła się"
+
+msgid "View"
+msgstr "Zobacz"
+
+msgid "View All History"
+msgstr "Zobacz całą historię"
+
+msgid "Weight"
+msgstr "Waga"
+
+msgid "Why ask this:"
+msgstr "Dlaczego o to pytamy:"
+
+msgid "Years of Experience"
+msgstr "Lata doświadczenia"
+
+msgid "Years of Experience:"
+msgstr "Lata doświadczenia:"
+
+msgid ""
+"You have reached your monthly analysis limit. Upgrade your plan for more."
+msgstr "Osiągnięto miesięczny limit analiz. Ulepsz plan, aby uzyskać więcej."
+
+msgid "analyses"
+msgstr "analiz"
+
+msgid "Add Position"
+msgstr "Dodaj stanowisko"
+
+msgid "Analyses This Month"
+msgstr "Analizy w tym miesiącu"
+
+msgid "CVs Uploaded"
+msgstr "Przesłane CV"
+
+msgid "Get AI-powered analysis and recommendations"
+msgstr "Uzyskaj analizę i rekomendacje AI"
+
+msgid "Job Positions"
+msgstr "Stanowiska pracy"
+
+msgid "Quick Links"
+msgstr "Szybkie linki"
+
+msgid "Remaining Analyses"
+msgstr "Pozostałe analizy"
+
+msgid "Upload Candidate CV"
+msgstr "Prześlij CV kandydata"
+
+msgid "Upload your first CV to get started"
+msgstr "Prześlij swoje pierwsze CV, aby rozpocząć"
+
+msgid "Welcome back,"
+msgstr "Witaj ponownie,"
+
+msgid "Bulk Analysis"
+msgstr "Analiza zbiorcza"
+
+msgid "Assign to Position"
+msgstr "Przypisz do stanowiska"
+
+msgid "Select positions to match all candidates against:"
+msgstr "Wybierz stanowiska, do których dopasować wszystkich kandydatów:"
+
+msgid "Select All"
+msgstr "Zaznacz wszystkie"
+
+msgid "Start Analysis"
+msgstr "Rozpocznij analizę"
+
+msgid "Analyzing candidates..."
+msgstr "Analizowanie kandydatów..."
+
+msgid "candidates"
+msgstr "kandydatów"
+
+msgid "No candidates available for analysis."
+msgstr "Brak kandydatów do analizy."
+
+msgid "Select at least one position."
+msgstr "Wybierz co najmniej jedno stanowisko."
+
+msgid "Bulk analysis started: %(candidates)s candidates × %(positions)s positions."
+msgstr "Analiza zbiorcza rozpoczęta: %(candidates)s kandydatów × %(positions)s stanowisk."
+
+msgid "Candidates"
+msgstr "Kandydaci"
+
+msgid "Bulk Upload"
+msgstr "Masowe przesyłanie"
+
+msgid "Search"
+msgstr "Szukaj"
+
+msgid "Clear Search"
+msgstr "Wyczyść wyszukiwanie"
+
+msgid "No candidates uploaded yet."
+msgstr "Nie przesłano jeszcze kandydatów."
+
+msgid "Upload Your First CV"
+msgstr "Prześlij swoje pierwsze CV"
+
+msgid "Upload a single CV or multiple CVs at once for analysis."
+msgstr "Prześlij pojedyncze CV lub wiele CV jednocześnie do analizy."
+
+msgid "Supported formats:"
+msgstr "Obsługiwane formaty:"
+
+msgid "Matching to Positions"
+msgstr "Dopasowanie do stanowisk"
+
+msgid "Select position(s) to automatically match after upload"
+msgstr "Wybierz stanowisko(a) do automatycznego dopasowania po przesłaniu"
+
+msgid "Deselect All"
+msgstr "Odznacz wszystkie"
+
+msgid "Single CV"
+msgstr "Pojedyncze CV"
+
+msgid "or"
+msgstr "lub"
+
+msgid "Browse"
+msgstr "Przeglądaj"
+
+msgid "Multiple CVs (batch)"
+msgstr "Wiele CV (masowo)"
+
+msgid "Browse Multiple"
+msgstr "Przeglądaj wiele"
+
+msgid "Supported Formats"
+msgstr "Obsługiwane formaty"
+
+msgid "Manage your uploaded CV documents"
+msgstr "Zarządzaj przesłanymi dokumentami CV"
+
+msgid "Analyze All"
+msgstr "Analizuj wszystkie"
+
+msgid "Analyze all CVs on this list? This will use your analysis quota."
+msgstr "Analizować wszystkie CV z listy? Zużyje to limit analiz."
+
+msgid "No CVs to analyze."
+msgstr "Brak CV do analizy."
+
+msgid "Bulk analysis started for %(count)s CV(s)."
+msgstr "Rozpoczęto zbiorczą analizę %(count)s CV."
+
+msgid "Not enough analyses remaining. You need %(needed)s but have %(remaining)s left. Upgrade your plan."
+msgstr "Niewystarczająca liczba analiz. Potrzebujesz %(needed)s, a pozostało %(remaining)s. Ulepsz plan."
+
+msgid "No CVs uploaded yet."
+msgstr "Nie przesłano jeszcze CV."

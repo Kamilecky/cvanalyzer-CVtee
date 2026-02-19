@@ -116,6 +116,8 @@ class CandidateProfile(models.Model):
         ('pending', 'Pending'),
         ('processing', 'Processing'),
         ('done', 'Done'),
+        ('partial', 'Partial Results'),
+        ('pending_ai', 'Pending AI'),
         ('failed', 'Failed'),
     ])
     error_message = models.TextField(blank=True, default='')
@@ -139,6 +141,8 @@ class JobFitResult(models.Model):
         ('pending', 'Pending'),
         ('processing', 'Processing'),
         ('done', 'Done'),
+        ('partial', 'Partial Results'),
+        ('pending_ai', 'Pending AI'),
         ('failed', 'Failed'),
     ]
 

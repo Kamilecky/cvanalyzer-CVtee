@@ -1,4 +1,5 @@
 {% extends "base_app.html" %}
+{% load i18n %}
 
 {% block title %}{{ title }}{% endblock %}
 
@@ -23,7 +24,7 @@
                                 {% endif %}
                             </div>
                             <div class="col-md-4">
-                                <label for="{{ form.is_active.id_for_label }}" class="form-label">Active</label>
+                                <label for="{{ form.is_active.id_for_label }}" class="form-label">{% trans "Active" %}</label>
                                 <div class="form-check form-switch mt-2">
                                     {{ form.is_active }}
                                     <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
@@ -35,14 +36,14 @@
 
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label for="{{ form.department.id_for_label }}" class="form-label">Department</label>
+                                <label for="{{ form.department.id_for_label }}" class="form-label">{% trans "Department" %}</label>
                                 {{ form.department }}
                                 {% if form.department.errors %}
                                     <div class="text-danger small">{{ form.department.errors }}</div>
                                 {% endif %}
                             </div>
                             <div class="col-md-6">
-                                <label for="{{ form.location.id_for_label }}" class="form-label">Location</label>
+                                <label for="{{ form.location.id_for_label }}" class="form-label">{% trans "Location" %}</label>
                                 {{ form.location }}
                                 {% if form.location.errors %}
                                     <div class="text-danger small">{{ form.location.errors }}</div>
@@ -52,21 +53,21 @@
 
                         <div class="row mb-3">
                             <div class="col-md-4">
-                                <label for="{{ form.employment_type.id_for_label }}" class="form-label">Employment Type</label>
+                                <label for="{{ form.employment_type.id_for_label }}" class="form-label">{% trans "Employment Type" %}</label>
                                 {{ form.employment_type }}
                                 {% if form.employment_type.errors %}
                                     <div class="text-danger small">{{ form.employment_type.errors }}</div>
                                 {% endif %}
                             </div>
                             <div class="col-md-4">
-                                <label for="{{ form.seniority_level.id_for_label }}" class="form-label">Seniority Level</label>
+                                <label for="{{ form.seniority_level.id_for_label }}" class="form-label">{% trans "Seniority Level" %}</label>
                                 {{ form.seniority_level }}
                                 {% if form.seniority_level.errors %}
                                     <div class="text-danger small">{{ form.seniority_level.errors }}</div>
                                 {% endif %}
                             </div>
                             <div class="col-md-4">
-                                <label for="{{ form.years_of_experience_required.id_for_label }}" class="form-label">Years of Experience</label>
+                                <label for="{{ form.years_of_experience_required.id_for_label }}" class="form-label">{% trans "Years of Experience" %}</label>
                                 {{ form.years_of_experience_required }}
                                 {% if form.years_of_experience_required.errors %}
                                     <div class="text-danger small">{{ form.years_of_experience_required.errors }}</div>
@@ -75,7 +76,7 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="{{ form.industry.id_for_label }}" class="form-label">Industry</label>
+                            <label for="{{ form.industry.id_for_label }}" class="form-label">{% trans "Industry" %}</label>
                             {{ form.industry }}
                             {% if form.industry.errors %}
                                 <div class="text-danger small">{{ form.industry.errors }}</div>
@@ -83,7 +84,7 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="{{ form.required_skills_text.id_for_label }}" class="form-label">Required Skills</label>
+                            <label for="{{ form.required_skills_text.id_for_label }}" class="form-label">{% trans "Required Skills" %}</label>
                             {{ form.required_skills_text }}
                             <small class="form-text text-muted">Comma-separated list of required skills</small>
                             {% if form.required_skills_text.errors %}
@@ -92,7 +93,7 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="{{ form.optional_skills_text.id_for_label }}" class="form-label">Optional Skills</label>
+                            <label for="{{ form.optional_skills_text.id_for_label }}" class="form-label">{% trans "Optional Skills" %}</label>
                             {{ form.optional_skills_text }}
                             <small class="form-text text-muted">Comma-separated list of nice-to-have skills</small>
                             {% if form.optional_skills_text.errors %}
@@ -101,7 +102,7 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="{{ form.languages_required_text.id_for_label }}" class="form-label">Languages Required</label>
+                            <label for="{{ form.languages_required_text.id_for_label }}" class="form-label">{% trans "Languages Required" %}</label>
                             {{ form.languages_required_text }}
                             <small class="form-text text-muted">Comma-separated list of required languages</small>
                             {% if form.languages_required_text.errors %}
@@ -110,7 +111,7 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="{{ form.responsibilities.id_for_label }}" class="form-label">Responsibilities</label>
+                            <label for="{{ form.responsibilities.id_for_label }}" class="form-label">{% trans "Responsibilities" %}</label>
                             {{ form.responsibilities }}
                             {% if form.responsibilities.errors %}
                                 <div class="text-danger small">{{ form.responsibilities.errors }}</div>
@@ -118,7 +119,7 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="{{ form.requirements_description.id_for_label }}" class="form-label">Requirements Description</label>
+                            <label for="{{ form.requirements_description.id_for_label }}" class="form-label">{% trans "Requirements Description" %}</label>
                             {{ form.requirements_description }}
                             {% if form.requirements_description.errors %}
                                 <div class="text-danger small">{{ form.requirements_description.errors }}</div>
@@ -126,7 +127,7 @@
                         </div>
 
                         <div class="mb-3">
-                            <label for="{{ form.nice_to_have.id_for_label }}" class="form-label">Nice to Have</label>
+                            <label for="{{ form.nice_to_have.id_for_label }}" class="form-label">{% trans "Nice to Have" %}</label>
                             {{ form.nice_to_have }}
                             {% if form.nice_to_have.errors %}
                                 <div class="text-danger small">{{ form.nice_to_have.errors }}</div>
@@ -161,7 +162,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Confirm Delete</h5>
+                <h5 class="modal-title">{% trans "Confirm Delete" %}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
@@ -171,7 +172,7 @@
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                 <form method="post" action="{% url 'recruitment_position_delete' position.id %}" style="display: inline;">
                     {% csrf_token %}
-                    <button type="submit" class="btn btn-danger">Delete Position</button>
+                    <button type="submit" class="btn btn-danger">{% trans "Delete Position" %}</button>
                 </form>
             </div>
         </div>

@@ -1,37 +1,154 @@
 {% extends "base_app.html" %}
+{% load i18n %}
 
-{% block title %}Upload CV - CV Analyzer{% endblock %}
+{% block title %}{% trans "Upload CV" %} - CV Analyzer{% endblock %}
 
 {% block content %}
-<div class="page-header">
-    <h1><i class="bi bi-cloud-upload me-2"></i>Upload CV</h1>
-    <p>Upload your CV in PDF, DOCX, or TXT format</p>
-</div>
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">
+                        <i class="bi bi-cloud-upload"></i> {% trans "Upload CV" %}
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-4">
+                        {% trans "Upload a single CV or multiple CVs at once for analysis." %}
+                        {% trans "Supported formats:" %} PDF, DOCX, TXT
+                    </p>
 
-<div class="row">
-    <div class="col-lg-8">
-        <form method="post" enctype="multipart/form-data" id="uploadForm">
-            {% csrf_token %}
-            <div class="upload-zone" id="uploadZone">
-                <div class="upload-icon"><i class="bi bi-cloud-arrow-up"></i></div>
-                <div class="upload-text">Drag & drop your CV here or click to browse</div>
-                <div class="upload-hint">Supported formats: PDF, DOCX, TXT (max 10 MB)</div>
-                <input type="file" name="file" id="cvFileInput" accept=".pdf,.docx,.txt" style="display: none;">
+                    <form method="post" action="{% url 'cv_upload' %}" enctype="multipart/form-data">
+                        {% csrf_token %}
+
+                        <!-- Single CV Upload -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-file-earmark"></i> {% trans "Single CV" %}
+                            </label>
+                            <div class="border border-2 border-dashed rounded p-4 text-center upload-area" id="singleUploadArea">
+                                <i class="bi bi-cloud-upload text-primary" style="font-size: 3rem;"></i>
+                                <h6 class="mt-2">{% trans "Drag and drop a CV file here" %}</h6>
+                                <p class="text-muted small">{% trans "or" %}</p>
+                                <label for="singleFileInput" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-folder2-open"></i> {% trans "Browse" %}
+                                </label>
+                                <input type="file" name="single_cv" id="singleFileInput" class="d-none" accept=".pdf,.docx,.txt">
+                                <div id="singleFileInfo" class="mt-2 text-start"></div>
+                            </div>
+                        </div>
+
+                        <div class="text-center text-muted my-3">
+                            <hr><span class="bg-white px-3" style="position: relative; top: -0.8rem;">{% trans "or" %}</span>
+                        </div>
+
+                        <!-- Multiple CVs Upload -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-files"></i> {% trans "Multiple CVs (batch)" %}
+                            </label>
+                            <div class="border border-2 border-dashed rounded p-4 text-center upload-area" id="multiUploadArea">
+                                <i class="bi bi-cloud-upload text-success" style="font-size: 3rem;"></i>
+                                <h6 class="mt-2">{% trans "Drag and drop multiple CV files here" %}</h6>
+                                <p class="text-muted small">{% trans "or" %}</p>
+                                <label for="multiFileInput" class="btn btn-sm btn-outline-success">
+                                    <i class="bi bi-folder2-open"></i> {% trans "Browse Multiple" %}
+                                </label>
+                                <input type="file" name="multiple_cvs" id="multiFileInput" class="d-none" accept=".pdf,.docx,.txt" multiple>
+                                <div id="multiFileInfo" class="mt-2 text-start"></div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'cv_list' %}" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> {% trans "Cancel" %}
+                            </a>
+                            <button type="submit" class="btn btn-primary" id="submitBtn" disabled>
+                                <i class="bi bi-upload"></i> {% trans "Upload CV" %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
-        </form>
-    </div>
-    <div class="col-lg-4">
-        <div class="card">
-            <div class="card-header">Tips</div>
-            <div class="card-body">
-                <ul class="list-unstyled mb-0">
-                    <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>Use PDF for best results</li>
-                    <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>Ensure text is selectable</li>
-                    <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>Include clear section headings</li>
-                    <li><i class="bi bi-x-circle text-danger me-2"></i>Scanned images won't parse</li>
-                </ul>
+
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-info-circle"></i> {% trans "Supported Formats" %}</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="mb-0">
+                        <li><strong>{% trans "PDF" %}</strong> - Portable Document Format (.pdf)</li>
+                        <li><strong>{% trans "DOCX" %}</strong> - Microsoft Word Document (.docx)</li>
+                        <li><strong>{% trans "TXT" %}</strong> - Plain Text File (.txt)</li>
+                    </ul>
+                </div>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const singleArea = document.getElementById('singleUploadArea');
+    const singleInput = document.getElementById('singleFileInput');
+    const singleInfo = document.getElementById('singleFileInfo');
+    const multiArea = document.getElementById('multiUploadArea');
+    const multiInput = document.getElementById('multiFileInput');
+    const multiInfo = document.getElementById('multiFileInfo');
+    const submitBtn = document.getElementById('submitBtn');
+
+    function setupDragDrop(area, input, infoDiv) {
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(e => {
+            area.addEventListener(e, ev => { ev.preventDefault(); ev.stopPropagation(); }, false);
+        });
+        ['dragenter', 'dragover'].forEach(e => {
+            area.addEventListener(e, () => area.classList.add('border-primary', 'bg-light'), false);
+        });
+        ['dragleave', 'drop'].forEach(e => {
+            area.addEventListener(e, () => area.classList.remove('border-primary', 'bg-light'), false);
+        });
+        area.addEventListener('drop', e => {
+            input.files = e.dataTransfer.files;
+            showFiles(input.files, infoDiv);
+            updateSubmitBtn();
+        }, false);
+        input.addEventListener('change', e => {
+            showFiles(e.target.files, infoDiv);
+            updateSubmitBtn();
+        });
+    }
+
+    setupDragDrop(singleArea, singleInput, singleInfo);
+    setupDragDrop(multiArea, multiInput, multiInfo);
+
+    function showFiles(files, infoDiv) {
+        if (files.length > 0) {
+            let html = '<div class="alert alert-info py-2 mb-0"><small><strong>{% trans "Selected:" %}</strong><ul class="mb-0 mt-1">';
+            for (let i = 0; i < files.length; i++) {
+                html += '<li>' + files[i].name + ' (' + formatFileSize(files[i].size) + ')</li>';
+            }
+            html += '</ul></small></div>';
+            infoDiv.innerHTML = html;
+        } else {
+            infoDiv.innerHTML = '';
+        }
+    }
+
+    function updateSubmitBtn() {
+        submitBtn.disabled = !(singleInput.files.length > 0 || multiInput.files.length > 0);
+    }
+
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 B';
+        const k = 1024;
+        const sizes = ['B', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+    }
+
+});
+</script>
 {% endblock %}

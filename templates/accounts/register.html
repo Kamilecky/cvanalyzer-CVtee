@@ -1,4 +1,5 @@
 {% extends "base_auth.html" %}
+{% load i18n %}
 
 {% block title %}Register - CV Analyzer{% endblock %}
 {% block auth_subtitle %}Create your account{% endblock %}
@@ -7,34 +8,34 @@
 <form method="post">
     {% csrf_token %}
     <div class="mb-3">
-        <label for="id_username" class="form-label">Username</label>
+        <label for="id_username" class="form-label">{% trans "Username" %}</label>
         {{ form.username }}
         {% if form.username.errors %}
         <div class="text-danger small mt-1">{{ form.username.errors.0 }}</div>
         {% endif %}
     </div>
     <div class="mb-3">
-        <label for="id_email" class="form-label">Email</label>
+        <label for="id_email" class="form-label">{% trans "Email" %}</label>
         {{ form.email }}
         {% if form.email.errors %}
         <div class="text-danger small mt-1">{{ form.email.errors.0 }}</div>
         {% endif %}
     </div>
     <div class="mb-3">
-        <label for="id_password1" class="form-label">Password</label>
+        <label for="id_password1" class="form-label">{% trans "Password" %}</label>
         {{ form.password1 }}
         {% if form.password1.errors %}
         <div class="text-danger small mt-1">{{ form.password1.errors.0 }}</div>
         {% endif %}
     </div>
     <div class="mb-4">
-        <label for="id_password2" class="form-label">Confirm Password</label>
+        <label for="id_password2" class="form-label">{% trans "Confirm Password" %}</label>
         {{ form.password2 }}
         {% if form.password2.errors %}
         <div class="text-danger small mt-1">{{ form.password2.errors.0 }}</div>
         {% endif %}
     </div>
-    <button type="submit" class="btn btn-primary w-100 mb-3">Create Account</button>
+    <button type="submit" class="btn btn-primary w-100 mb-3">{% trans "Create Account" %}</button>
     <p class="text-center text-muted small">
         Already have an account? <a href="{% url 'login' %}">Sign in</a>
     </p>

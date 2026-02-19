@@ -51,6 +51,18 @@ class InterviewGenerator:
 
             questions = data['questions']
 
+            # Validation: dedup, limit, minimum check
+            questions = self._validate_questions(questions)
+
+            # Retry once if too few questions
+            if len(questions) < 3:
+                logger.warning(f"Only {len(questions)} questions, retrying once...")
+                retry_result = self.client.chat(SYSTEM_PROMPT, prompt)
+                if not retry_result['error']:
+                    retry_data = self.client.parse_json_response(retry_result['content'])
+                    if retry_data and 'questions' in retry_data:
+                        questions = self._validate_questions(retry_data['questions'])
+
             job_fit_result.interview_questions = questions
             job_fit_result.save(update_fields=['interview_questions'])
 
@@ -63,3 +75,16 @@ class InterviewGenerator:
         except Exception as e:
             logger.error(f"Interview question generation failed: {e}")
             return []
+
+    @staticmethod
+    def _validate_questions(questions):
+        """Dedup, limit max 10, remove empty."""
+        seen = set()
+        unique = []
+        for q in questions:
+            # Support both dict and string questions
+            q_text = q.get('question', '') if isinstance(q, dict) else str(q)
+            if q_text and q_text not in seen:
+                seen.add(q_text)
+                unique.append(q)
+        return unique[:10]

@@ -5,7 +5,17 @@ Obsługuje ekstrakcję tekstu z plików PDF, DOCX i TXT
 z automatycznym wykrywaniem kodowania (chardet).
 """
 
+import logging
+
 import chardet
+
+logger = logging.getLogger(__name__)
+
+# Magic bytes for MIME type validation
+MIME_SIGNATURES = {
+    'pdf': b'%PDF',
+    'docx': b'PK\x03\x04',
+}
 
 
 class CVParser:
@@ -21,13 +31,37 @@ class CVParser:
         return ext if ext in CVParser.SUPPORTED_FORMATS else None
 
     @staticmethod
+    def validate_mime(file_obj, fmt):
+        """Waliduje plik po magic bytes. Zwraca (is_valid, error_message)."""
+        if fmt not in MIME_SIGNATURES:
+            return True, ''  # TXT — brak sygnatury
+
+        file_obj.seek(0)
+        header = file_obj.read(8)
+        file_obj.seek(0)
+
+        expected = MIME_SIGNATURES[fmt]
+        if not header.startswith(expected):
+            logger.warning(f"MIME mismatch: expected {fmt} signature, got {header[:8]!r}")
+            return False, f'File content does not match .{fmt} format. The file may be corrupted or renamed.'
+        return True, ''
+
+    @staticmethod
     def validate_file(file_obj, filename):
-        """Waliduje plik (format + rozmiar). Zwraca (is_valid, error_message)."""
+        """Waliduje plik (format + rozmiar + MIME + size>0). Zwraca (is_valid, error_message)."""
         fmt = CVParser.detect_format(filename)
         if not fmt:
             return False, f'Unsupported format. Please upload PDF, DOCX, or TXT.'
+        if hasattr(file_obj, 'size') and file_obj.size == 0:
+            return False, 'File is empty. Please upload a valid document.'
         if hasattr(file_obj, 'size') and file_obj.size > CVParser.MAX_FILE_SIZE:
             return False, f'File is too large. Maximum size is 10 MB.'
+
+        # MIME type validation via magic bytes
+        is_valid_mime, mime_error = CVParser.validate_mime(file_obj, fmt)
+        if not is_valid_mime:
+            return False, mime_error
+
         return True, ''
 
     @staticmethod

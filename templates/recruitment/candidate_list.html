@@ -1,18 +1,27 @@
 {% extends "base_app.html" %}
+{% load i18n %}
 
-{% block title %}Candidates{% endblock %}
+{% block title %}{% trans "Candidates" %} - CV Analyzer{% endblock %}
 
 {% block content %}
 <div class="container-fluid py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2><i class="bi bi-people"></i> Candidates</h2>
+        <h2><i class="bi bi-people"></i> {% trans "Candidates" %}</h2>
         <div>
-            <a href="{% url 'recruitment_bulk_upload' %}" class="btn btn-outline-primary me-2">
-                <i class="bi bi-files"></i> Bulk Upload
-            </a>
-            <a href="{% url 'recruitment_candidate_upload' %}" class="btn btn-primary">
-                <i class="bi bi-file-earmark-arrow-up"></i> Upload CV
-            </a>
+            {% if profiles and active_positions %}
+            <button type="button" class="btn btn-outline-success me-2" data-bs-toggle="modal" data-bs-target="#bulkAnalysisModal">
+                <i class="bi bi-diagram-3"></i> {% trans "Assign to Position" %}
+            </button>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Bulk Analysis Progress Banner -->
+    <div id="bulkProgressBanner" class="alert alert-info d-none mb-4">
+        <div class="d-flex align-items-center">
+            <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+            <span id="bulkProgressText">{% trans "Analyzing candidates..." %}</span>
+            <span class="ms-2 badge bg-primary" id="bulkPendingCount"></span>
         </div>
     </div>
 
@@ -21,11 +30,11 @@
         <div class="card-body">
             <form method="get" class="row g-3">
                 <div class="col-md-10">
-                    <input type="text" name="q" class="form-control" placeholder="Search by name, role, skills..." value="{{ query|default:'' }}">
+                    <input type="text" name="q" class="form-control" placeholder="{% trans "Search by name, role, skills..." %}" value="{{ query|default:'' }}">
                 </div>
                 <div class="col-md-2">
                     <button type="submit" class="btn btn-primary w-100">
-                        <i class="bi bi-search"></i> Search
+                        <i class="bi bi-search"></i> {% trans "Search" %}
                     </button>
                 </div>
             </form>
@@ -40,14 +49,14 @@
                     <table class="table table-hover">
                         <thead>
                             <tr>
-                                <th>Name</th>
-                                <th>Current Role</th>
-                                <th>Seniority</th>
-                                <th>Experience</th>
-                                <th>Skills</th>
-                                <th>Tags</th>
-                                <th>Created</th>
-                                <th>Actions</th>
+                                <th>{% trans "Name" %}</th>
+                                <th>{% trans "Current Role" %}</th>
+                                <th>{% trans "Seniority" %}</th>
+                                <th>{% trans "Experience" %}</th>
+                                <th>{% trans "Skills" %}</th>
+                                <th>{% trans "Tags" %}</th>
+                                <th>{% trans "Created" %}</th>
+                                <th>{% trans "Actions" %}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -91,9 +100,14 @@
                                     </td>
                                     <td>{{ profile.created_at|date:"M d, Y" }}</td>
                                     <td>
-                                        <a href="{% url 'recruitment_candidate_detail' profile.id %}" class="btn btn-sm btn-outline-primary">
-                                            <i class="bi bi-eye"></i> View
+                                        <a href="{% url 'recruitment_candidate_detail' profile.id %}" class="btn btn-sm btn-outline-primary me-1">
+                                            <i class="bi bi-eye"></i> {% trans "View" %}
                                         </a>
+                                        <form method="post" action="{% url 'recruitment_candidate_delete' profile.id %}" style="display:inline;"
+                                              onsubmit="return confirm('Delete candidate {{ profile.name }}? All match results will be lost.');">
+                                            {% csrf_token %}
+                                            <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                                        </form>
                                     </td>
                                 </tr>
                             {% endfor %}
@@ -106,12 +120,12 @@
                     {% if query %}
                         <p class="text-muted mt-3">No candidates found matching "{{ query }}".</p>
                         <a href="{% url 'recruitment_candidate_list' %}" class="btn btn-secondary">
-                            <i class="bi bi-x-circle"></i> Clear Search
+                            <i class="bi bi-x-circle"></i> {% trans "Clear Search" %}
                         </a>
                     {% else %}
-                        <p class="text-muted mt-3">No candidates uploaded yet.</p>
+                        <p class="text-muted mt-3">{% trans "No candidates uploaded yet." %}</p>
                         <a href="{% url 'recruitment_candidate_upload' %}" class="btn btn-primary">
-                            <i class="bi bi-file-earmark-arrow-up"></i> Upload Your First CV
+                            <i class="bi bi-file-earmark-arrow-up"></i> {% trans "Upload Your First CV" %}
                         </a>
                     {% endif %}
                 </div>
@@ -119,4 +133,107 @@
         </div>
     </div>
 </div>
+
+<!-- Bulk Analysis Modal -->
+{% if active_positions %}
+<div class="modal fade" id="bulkAnalysisModal" tabindex="-1" aria-labelledby="bulkAnalysisModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" action="{% url 'recruitment_bulk_analyze' %}" id="bulkAnalysisForm">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title" id="bulkAnalysisModalLabel">
+                        <i class="bi bi-diagram-3 me-1"></i> {% trans "Assign to Position" %}
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted mb-3">{% trans "Select positions to match all candidates against:" %}</p>
+                    <div class="form-check mb-3 border-bottom pb-2">
+                        <input class="form-check-input" type="checkbox" id="selectAllPositions">
+                        <label class="form-check-label fw-bold" for="selectAllPositions">
+                            {% trans "Select All" %}
+                        </label>
+                    </div>
+                    {% for pos in active_positions %}
+                    <div class="form-check mb-2">
+                        <input class="form-check-input position-checkbox" type="checkbox"
+                               name="position_ids" value="{{ pos.id }}" id="pos_{{ pos.id }}">
+                        <label class="form-check-label" for="pos_{{ pos.id }}">
+                            <strong>{{ pos.title }}</strong>
+                            {% if pos.department %}<span class="text-muted">— {{ pos.department }}</span>{% endif %}
+                            {% if pos.candidate_count %}
+                                <span class="badge bg-secondary ms-1">{{ pos.candidate_count }} {% trans "candidates" %}</span>
+                            {% endif %}
+                        </label>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans "Cancel" %}</button>
+                    <button type="submit" class="btn btn-success" id="startBulkAnalysis" disabled>
+                        <i class="bi bi-lightning me-1"></i> {% trans "Start Analysis" %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Select All toggle
+    const selectAll = document.getElementById('selectAllPositions');
+    const checkboxes = document.querySelectorAll('.position-checkbox');
+    const startBtn = document.getElementById('startBulkAnalysis');
+
+    if (selectAll) {
+        selectAll.addEventListener('change', function() {
+            checkboxes.forEach(cb => cb.checked = this.checked);
+            updateStartBtn();
+        });
+
+        checkboxes.forEach(cb => {
+            cb.addEventListener('change', function() {
+                selectAll.checked = [...checkboxes].every(c => c.checked);
+                updateStartBtn();
+            });
+        });
+    }
+
+    function updateStartBtn() {
+        if (startBtn) {
+            const anyChecked = [...checkboxes].some(c => c.checked);
+            startBtn.disabled = !anyChecked;
+        }
+    }
+
+    // Show progress banner if bulk analysis is running
+    const banner = document.getElementById('bulkProgressBanner');
+    const pendingBadge = document.getElementById('bulkPendingCount');
+
+    function checkBulkStatus() {
+        fetch('{% url "recruitment_bulk_analyze_status" %}')
+            .then(r => r.json())
+            .then(data => {
+                if (data.status === 'processing') {
+                    banner.classList.remove('d-none');
+                    pendingBadge.textContent = data.pending_count + ' pending';
+                    setTimeout(checkBulkStatus, 2000);
+                } else {
+                    if (!banner.classList.contains('d-none')) {
+                        location.reload();
+                    }
+                }
+            })
+            .catch(() => setTimeout(checkBulkStatus, 3000));
+    }
+
+    // Check on page load if there's an ongoing bulk analysis
+    checkBulkStatus();
+});
+</script>
 {% endblock %}

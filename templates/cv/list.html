@@ -1,17 +1,30 @@
 {% extends "base_app.html" %}
+{% load i18n %}
 
-{% block title %}My CVs - CV Analyzer{% endblock %}
+{% block title %}{% trans "My CVs" %} - CV Analyzer{% endblock %}
 
 {% block content %}
 <div class="page-header">
-    <h1><i class="bi bi-folder me-2"></i>My CVs</h1>
-    <p>Manage your uploaded CV documents</p>
-</div>
-
-<div class="mb-3">
-    <a href="{% url 'cv_upload' %}" class="btn btn-accent btn-sm">
-        <i class="bi bi-cloud-upload me-1"></i> Upload New CV
-    </a>
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1><i class="bi bi-folder me-2"></i>{% trans "My CVs" %}</h1>
+            <p>{% trans "Manage your uploaded CV documents" %}</p>
+        </div>
+        <div>
+            {% if cvs %}
+            <form method="post" action="{% url 'cv_bulk_analyze' %}" style="display:inline;"
+                  onsubmit="return confirm('{% trans "Analyze all CVs on this list? This will use your analysis quota." %}');">
+                {% csrf_token %}
+                <button class="btn btn-outline-success me-2">
+                    <i class="bi bi-lightning me-1"></i> {% trans "Analyze All" %}
+                </button>
+            </form>
+            {% endif %}
+            <a href="{% url 'cv_upload' %}" class="btn btn-accent">
+                <i class="bi bi-cloud-upload me-1"></i> {% trans "Upload CV" %}
+            </a>
+        </div>
+    </div>
 </div>
 
 {% if cvs %}
@@ -20,11 +33,11 @@
         <table class="table mb-0">
             <thead>
                 <tr>
-                    <th>Filename</th>
-                    <th>Format</th>
-                    <th>Size</th>
-                    <th>Uploaded</th>
-                    <th>Actions</th>
+                    <th>{% trans "Filename" %}</th>
+                    <th>{% trans "Format" %}</th>
+                    <th>{% trans "Size" %}</th>
+                    <th>{% trans "Uploaded" %}</th>
+                    <th>{% trans "Actions" %}</th>
                 </tr>
             </thead>
             <tbody>
@@ -40,11 +53,11 @@
                     <td>{{ cv.get_file_size_display }}</td>
                     <td>{{ cv.uploaded_at|date:"M d, Y" }}</td>
                     <td>
-                        <a href="{% url 'cv_detail' cv_id=cv.id %}" class="btn btn-sm btn-outline-primary me-1">View</a>
+                        <a href="{% url 'cv_detail' cv_id=cv.id %}" class="btn btn-sm btn-outline-primary me-1">{% trans "View" %}</a>
                         <form method="post" action="{% url 'cv_delete' cv_id=cv.id %}" style="display:inline;"
                               onsubmit="return confirm('Delete this CV?');">
                             {% csrf_token %}
-                            <button class="btn btn-sm btn-outline-danger">Delete</button>
+                            <button class="btn btn-sm btn-outline-danger">{% trans "Delete" %}</button>
                         </form>
                     </td>
                 </tr>
@@ -58,9 +71,9 @@
     <div class="card-body">
         <div class="empty-state">
             <div class="empty-icon"><i class="bi bi-folder2-open"></i></div>
-            <div class="empty-text">No CVs uploaded yet</div>
-            <p class="text-muted">Upload your first CV to get started with AI analysis</p>
-            <a href="{% url 'cv_upload' %}" class="btn btn-accent mt-2">Upload CV</a>
+            <div class="empty-text">{% trans "No CVs uploaded yet." %}</div>
+            <p class="text-muted">{% trans "Upload your first CV to get started" %}</p>
+            <a href="{% url 'cv_upload' %}" class="btn btn-accent mt-2">{% trans "Upload CV" %}</a>
         </div>
     </div>
 </div>

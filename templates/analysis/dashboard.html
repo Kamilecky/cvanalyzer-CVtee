@@ -1,11 +1,12 @@
 {% extends "base_app.html" %}
+{% load i18n %}
 
 {% block title %}Dashboard - CV Analyzer{% endblock %}
 
 {% block content %}
 <div class="page-header">
-    <h1><i class="bi bi-grid me-2"></i>Dashboard</h1>
-    <p>Welcome back, {{ request.user.username }}!</p>
+    <h1><i class="bi bi-grid me-2"></i>{% trans "Dashboard" %}</h1>
+    <p>{% trans "Welcome back," %} {{ request.user.username }}!</p>
 </div>
 
 <!-- Stat cards -->
@@ -15,7 +16,7 @@
             <div class="d-flex justify-content-between">
                 <div>
                     <div class="stat-value">{{ request.user.analyses_used_this_month }}</div>
-                    <div class="stat-label">Analyses This Month</div>
+                    <div class="stat-label">{% trans "Analyses This Month" %}</div>
                 </div>
                 <div class="stat-icon"><i class="bi bi-graph-up"></i></div>
             </div>
@@ -26,7 +27,7 @@
             <div class="d-flex justify-content-between">
                 <div>
                     <div class="stat-value">{{ cv_count }}</div>
-                    <div class="stat-label">CVs Uploaded</div>
+                    <div class="stat-label">{% trans "CVs Uploaded" %}</div>
                 </div>
                 <div class="stat-icon"><i class="bi bi-file-earmark-text"></i></div>
             </div>
@@ -41,7 +42,7 @@
                         {% if remaining >= 999 %}&#8734;{% else %}{{ remaining }}{% endif %}
                         {% endwith %}
                     </div>
-                    <div class="stat-label">Remaining Analyses</div>
+                    <div class="stat-label">{% trans "Remaining Analyses" %}</div>
                 </div>
                 <div class="stat-icon"><i class="bi bi-lightning"></i></div>
             </div>
@@ -55,14 +56,14 @@
         <div class="card">
             <div class="card-body">
                 {% if recent_analyses %}
-                <h5 class="mb-3">Recent Analyses</h5>
+                <h5 class="mb-3">{% trans "Recent Analyses" %}</h5>
                 <div class="table-responsive">
                     <table class="table">
                         <thead>
                             <tr>
-                                <th>CV</th>
-                                <th>Status</th>
-                                <th>Date</th>
+                                <th>{% trans "CV" %}</th>
+                                <th>{% trans "Status" %}</th>
+                                <th>{% trans "Date" %}</th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -74,20 +75,20 @@
                                     <span class="status-badge status-{{ a.status }}">{{ a.get_status_display }}</span>
                                 </td>
                                 <td>{{ a.created_at|date:"M d, Y" }}</td>
-                                <td><a href="{% url 'analysis_result' a.id %}" class="btn btn-sm btn-outline-primary">View</a></td>
+                                <td><a href="{% url 'analysis_result' a.id %}" class="btn btn-sm btn-outline-primary">{% trans "View" %}</a></td>
                             </tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
-                <a href="{% url 'analysis_history' %}" class="btn btn-outline-secondary btn-sm">View All History</a>
+                <a href="{% url 'analysis_history' %}" class="btn btn-outline-secondary btn-sm">{% trans "View All History" %}</a>
                 {% else %}
                 <div class="empty-state">
                     <div class="empty-icon"><i class="bi bi-file-earmark-person"></i></div>
-                    <div class="empty-text">Upload your first CV to get started</div>
-                    <p class="text-muted mb-4">Get AI-powered analysis and recommendations</p>
+                    <div class="empty-text">{% trans "Upload your first CV to get started" %}</div>
+                    <p class="text-muted mb-4">{% trans "Get AI-powered analysis and recommendations" %}</p>
                     <a href="{% url 'cv_upload' %}" class="btn btn-accent">
-                        <i class="bi bi-cloud-upload me-1"></i> Upload CV
+                        <i class="bi bi-cloud-upload me-1"></i> {% trans "Upload CV" %}
                     </a>
                 </div>
                 {% endif %}
@@ -96,33 +97,33 @@
     </div>
     <div class="col-lg-4">
         <div class="card mb-3">
-            <div class="card-header">Quick Links</div>
+            <div class="card-header">{% trans "Quick Links" %}</div>
             <div class="card-body">
                 <a href="{% url 'cv_upload' %}" class="sidebar-link">
-                    <span class="icon"><i class="bi bi-cloud-upload"></i></span> Upload CV
+                    <span class="icon"><i class="bi bi-cloud-upload"></i></span> {% trans "Upload CV" %}
                 </a>
                 <a href="{% url 'analysis_history' %}" class="sidebar-link">
-                    <span class="icon"><i class="bi bi-clock-history"></i></span> Analysis History
+                    <span class="icon"><i class="bi bi-clock-history"></i></span> {% trans "Analysis History" %}
                 </a>
                 <a href="{% url 'cv_list' %}" class="sidebar-link">
-                    <span class="icon"><i class="bi bi-folder"></i></span> My CVs
+                    <span class="icon"><i class="bi bi-folder"></i></span> {% trans "My CVs" %}
                 </a>
             </div>
         </div>
         <div class="card">
-            <div class="card-header"><i class="bi bi-people-fill me-1"></i> Recruitment</div>
+            <div class="card-header"><i class="bi bi-people-fill me-1"></i> {% trans "Recruitment" %}</div>
             <div class="card-body">
                 <a href="{% url 'recruitment_dashboard' %}" class="sidebar-link">
-                    <span class="icon"><i class="bi bi-kanban"></i></span> Recruitment Dashboard
+                    <span class="icon"><i class="bi bi-kanban"></i></span> {% trans "Recruitment Dashboard" %}
                 </a>
                 <a href="{% url 'recruitment_position_list' %}" class="sidebar-link">
-                    <span class="icon"><i class="bi bi-briefcase"></i></span> Job Positions
+                    <span class="icon"><i class="bi bi-briefcase"></i></span> {% trans "Job Positions" %}
                 </a>
                 <a href="{% url 'recruitment_position_create' %}" class="sidebar-link">
-                    <span class="icon"><i class="bi bi-plus-circle"></i></span> Add Position
+                    <span class="icon"><i class="bi bi-plus-circle"></i></span> {% trans "Add Position" %}
                 </a>
                 <a href="{% url 'recruitment_candidate_upload' %}" class="sidebar-link">
-                    <span class="icon"><i class="bi bi-file-earmark-person"></i></span> Upload Candidate CV
+                    <span class="icon"><i class="bi bi-file-earmark-person"></i></span> {% trans "Upload Candidate CV" %}
                 </a>
             </div>
         </div>

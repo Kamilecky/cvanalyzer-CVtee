@@ -99,6 +99,7 @@ class CVSection(models.Model):
         ('projects', 'Projects'),
         ('certificates', 'Certificates'),
         ('languages', 'Languages'),
+        ('contact', 'Contact'),
         ('interests', 'Interests'),
         ('other', 'Other'),
     ]
