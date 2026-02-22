@@ -28,6 +28,7 @@ from django.utils.html import strip_tags
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from django.views.decorators.http import require_POST
+from django.http import JsonResponse
 
 from .forms import (
     RegisterForm, LoginForm, ProfileForm,

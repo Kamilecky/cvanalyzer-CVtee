@@ -15,10 +15,10 @@
         <label for="id_password" class="form-label">{% trans "Password" %}</label>
         {{ form.password }}
     </div>
-    <button type="submit" class="btn btn-primary w-100 mb-3">{% trans "Sign In" %}</button>
-    <div class="d-flex justify-content-between">
-        <a href="{% url 'register' %}" class="small">Create account</a>
-        <a href="{% url 'password_reset' %}" class="small">Forgot password?</a>
+    <button type="submit" class="btn btn-primary w-100">{% trans "Sign In" %}</button>
+    <div class="auth-links">
+        <a href="{% url 'register' %}">Create account</a>
+        <a href="{% url 'password_reset' %}">Forgot password?</a>
     </div>
 </form>
 {% endblock %}

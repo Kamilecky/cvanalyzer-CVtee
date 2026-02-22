@@ -1,11 +1,11 @@
 {% extends "base.html" %}
-{% load i18n %}
+{% load i18n static %}
 
 {% block layout %}
 <div class="auth-container">
     <div class="auth-card">
         <div class="auth-title">
-            <i class="bi bi-file-earmark-person"></i> CV Analyzer
+            <img src="{% static 'img/CVeeto Logo (2).svg' %}" alt="CVeeto" width="120">
         </div>
         <p class="auth-subtitle">{% block auth_subtitle %}{% endblock %}</p>
 
