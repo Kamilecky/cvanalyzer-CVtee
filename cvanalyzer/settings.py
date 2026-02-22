@@ -20,7 +20,15 @@ SECRET_KEY = os.environ.get(
     'django-insecure-cvanalyzer-dev-key-change-in-production'
 )
 DEBUG = os.environ.get('DJANGO_DEBUG', 'False') == 'True'
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = [
+    "cvanalyzer-cvtee-production-e3ca.up.railway.app",
+    "cveeto.com",
+    "www.cveeto.com",
+]
+CSRF_TRUSTED_ORIGINS = [
+    "https://cveeto.com",
+    "https://www.cveeto.com",
+]
 
 # ---------------------------------------------------------------------------
 # Aplikacje
@@ -141,7 +149,7 @@ LOCALE_PATHS = [
 # ---------------------------------------------------------------------------
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
-STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 MEDIA_URL = '/media/'
