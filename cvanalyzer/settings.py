@@ -19,8 +19,8 @@ SECRET_KEY = os.environ.get(
     'DJANGO_SECRET_KEY',
     'django-insecure-cvanalyzer-dev-key-change-in-production'
 )
-DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+DEBUG = os.environ.get('DJANGO_DEBUG', 'False') == 'True'
+ALLOWED_HOSTS = ['*']
 
 # ---------------------------------------------------------------------------
 # Aplikacje
@@ -46,6 +46,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -76,8 +77,10 @@ TEMPLATES = [
 WSGI_APPLICATION = 'cvanalyzer.wsgi.application'
 
 # ---------------------------------------------------------------------------
-# Baza danych - SQLite (dev) / PostgreSQL (prod)
+# Baza danych - SQLite (dev) / PostgreSQL (prod via DATABASE_URL)
 # ---------------------------------------------------------------------------
+import dj_database_url
+
 DATABASES = {
     'default': {
         'ENGINE': os.environ.get('DB_ENGINE', 'django.db.backends.sqlite3'),
@@ -88,6 +91,15 @@ DATABASES = {
         'PORT': os.environ.get('DB_PORT', ''),
     }
 }
+
+# Railway / produkcja: nadpisz konfigurację bazy przez DATABASE_URL
+_DATABASE_URL = os.environ.get('DATABASE_URL')
+if _DATABASE_URL:
+    DATABASES['default'] = dj_database_url.config(
+        default=_DATABASE_URL,
+        conn_max_age=600,
+        ssl_require=True,
+    )
 
 # ---------------------------------------------------------------------------
 # Walidacja haseł
@@ -130,6 +142,7 @@ LOCALE_PATHS = [
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
