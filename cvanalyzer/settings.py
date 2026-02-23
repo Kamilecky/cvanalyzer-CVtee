@@ -22,12 +22,12 @@ SECRET_KEY = os.environ.get(
 DEBUG = os.environ.get('DJANGO_DEBUG', 'False') == 'True'
 ALLOWED_HOSTS = [
     "cvanalyzer-cvtee-production-e3ca.up.railway.app",
-    "cveeto.com",
-    "www.cveeto.com",
+    "cveeto.eu",
+    "www.cveeto.eu",
 ]
 CSRF_TRUSTED_ORIGINS = [
-    "https://cveeto.com",
-    "https://www.cveeto.com",
+    "https://cveeto.eu",
+    "https://www.cveeto.eu",
 ]
 
 # ---------------------------------------------------------------------------
