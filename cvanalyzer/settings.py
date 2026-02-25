@@ -29,6 +29,7 @@ CSRF_TRUSTED_ORIGINS = [
     "https://cveeto.eu",
     "https://www.cveeto.eu",
 ]
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 # ---------------------------------------------------------------------------
 # Aplikacje
