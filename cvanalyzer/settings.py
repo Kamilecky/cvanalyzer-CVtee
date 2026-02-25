@@ -20,10 +20,7 @@ SECRET_KEY = os.environ.get(
     'django-insecure-cvanalyzer-dev-key-change-in-production'
 )
 DEBUG = os.environ.get('DJANGO_DEBUG', 'False') == 'True'
-ALLOWED_HOSTS = [
-    "cveeto.eu",
-    "www.cveeto.eu",
-]
+ALLOWED_HOSTS = ["*"]
 CSRF_TRUSTED_ORIGINS = [
     "https://cveeto.eu",
     "https://www.cveeto.eu",
