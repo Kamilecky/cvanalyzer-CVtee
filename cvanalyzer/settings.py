@@ -8,6 +8,7 @@ Zawiera konfigurację: OpenAI, Celery+Redis, Stripe, email SMTP, plany subskrypc
 import os
 from pathlib import Path
 from dotenv import load_dotenv
+import dj_database_url
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / '.env')
@@ -82,29 +83,13 @@ TEMPLATES = [
 WSGI_APPLICATION = 'cvanalyzer.wsgi.application'
 
 # ---------------------------------------------------------------------------
-# Baza danych - SQLite (dev) / PostgreSQL (prod via DATABASE_URL)
+# Baza danych - PostgreSQL via DATABASE_URL
 # ---------------------------------------------------------------------------
-import dj_database_url
-
 DATABASES = {
-    'default': {
-        'ENGINE': os.environ.get('DB_ENGINE', 'django.db.backends.sqlite3'),
-        'NAME': os.environ.get('DB_NAME', str(BASE_DIR / 'db.sqlite3')),
-        'USER': os.environ.get('DB_USER', ''),
-        'PASSWORD': os.environ.get('DB_PASSWORD', ''),
-        'HOST': os.environ.get('DB_HOST', ''),
-        'PORT': os.environ.get('DB_PORT', ''),
-    }
-}
-
-# Railway / produkcja: nadpisz konfigurację bazy przez DATABASE_URL
-_DATABASE_URL = os.environ.get('DATABASE_URL')
-if _DATABASE_URL:
-    DATABASES['default'] = dj_database_url.config(
-        default=_DATABASE_URL,
-        conn_max_age=600,
-        ssl_require=True,
+    'default': dj_database_url.config(
+        default=os.environ.get('DATABASE_URL')
     )
+}
 
 # ---------------------------------------------------------------------------
 # Walidacja haseł

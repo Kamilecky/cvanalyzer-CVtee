@@ -164,3 +164,32 @@ Flow 2: Rekrutacja
   6. (Premium) Generowanie pytan na rozmowe kwalifikacyjna
 
 ================================================================================
+Teraz dodać klucz do stripe
+Tak — jeśli Twój kod w settings.py używa zmiennych środowiskowych Stripe (STRIPE_PUBLIC_KEY, STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET) i w .env tych wartości brakuje, to Django może nie crashować od razu (chyba że odwołujesz się do nich przy starcie), ale jeśli którakolwiek część aplikacji wymaga Stripe (np. inicjalizacja planów subskrypcyjnych, webhooki), to brak wartości może powodować błędy runtime.
+
+Co zrobić:
+
+Wygeneruj klucze Stripe
+
+Zaloguj się na https://dashboard.stripe.com/test/apikeys
+
+Skopiuj:
+
+Publishable key → do STRIPE_PUBLIC_KEY
+
+Secret key → do STRIPE_SECRET_KEY
+
+Jeśli używasz webhooków, ustaw też Webhook secret → STRIPE_WEBHOOK_SECRET.
+
+Dodaj je do Railway env vars
+W panelu projektu w Railway:
+
+STRIPE_PUBLIC_KEY      <tutaj wklej publiczny klucz>
+STRIPE_SECRET_KEY      <tutaj wklej secret key>
+STRIPE_WEBHOOK_SECRET  <tutaj wklej webhook secret (jeśli potrzebny)>
+
+Restart deploya
+
+Po zapisaniu zmiennych w Railway zrestartuj aplikację.
+
+Django odczyta te wartości przez os.environ.get(...) w settings.py.
