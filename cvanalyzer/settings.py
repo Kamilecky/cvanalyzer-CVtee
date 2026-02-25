@@ -21,7 +21,6 @@ SECRET_KEY = os.environ.get(
 )
 DEBUG = os.environ.get('DJANGO_DEBUG', 'False') == 'True'
 ALLOWED_HOSTS = [
-    "cvanalyzer-cvtee-production-e3ca.up.railway.app",
     "cveeto.eu",
     "www.cveeto.eu",
 ]
