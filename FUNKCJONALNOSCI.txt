@@ -164,26 +164,51 @@ Flow 2: Rekrutacja
   6. (Premium) Generowanie pytan na rozmowe kwalifikacyjna
 
 ================================================================================
-Żeby Ci skutecznie pomóc podłączyć PostgreSQL z Railway do projektu Django na Windowsie, potrzebuję kilku rzeczy, żeby dopasować instrukcje:
+1️⃣ Sprawdź settings.py
 
-Czy masz już .env w projekcie i chcesz go używać dla DATABASE_URL?
+Upewnij się, że w Twoim Django masz coś w tym stylu:
 
-Czy chcesz, żeby Django korzystało z tej zmiennej lokalnie, czy tylko w Railway?
+import os
+import dj_database_url
 
-Czy projekt jest już “linked” do Railway CLI?
+DATABASES = {
+    'default': dj_database_url.config(
+        default=os.environ.get('DATABASE_URL'),
+        conn_max_age=600,
+        ssl_require=True,  # Railway wymaga SSL
+    )
+}
 
-Czy w katalogu projektu istnieje folder .railway?
+default=os.environ.get('DATABASE_URL') → używa zmiennej z Railway.
 
-Jeśli nie, będziemy musieli użyć railway link i wybrać projekt.
+ssl_require=True → ważne przy połączeniu do Railway PostgreSQL.
 
-Czy chcesz uruchamiać migracje i Django lokalnie, czy tylko w kontenerze Railway?
+2️⃣ Wykonaj migracje
 
-Bo host postgres.railway.internal działa tylko w kontenerze Railway.
+Otwórz terminal Railway lub konsolę w projekcie (diplomatic-imagination).
 
-Czy masz dostęp do panelu Railway w przeglądarce?
+Uruchom:
 
-Żeby pobrać host, port, username, password, jeśli nie możemy użyć CLI.
+python manage.py migrate
 
-Czy chcesz, żeby migracje były odpalane na Windowsie, czy w Railway (remote)?
+Jeśli wszystko jest dobrze ustawione, Django połączy się z PostgreSQL i stworzy tabele.
 
-Jak odpowiesz na te punkty, mogę Ci przygotować pełną, krok-po-kroku instrukcję, żeby lokalnie i na Railway Django łączyło się z PostgreSQL.
+Nie powinno już być błędów ImproperlyConfigured.
+
+3️⃣ Przetestuj połączenie
+
+Możesz w manage.py shell sprawdzić, czy Django widzi bazę:
+
+from django.db import connection
+connection.ensure_connection()
+print(connection.settings_dict)
+
+Jeśli nie wyrzuca błędów → połączenie działa.
+
+4️⃣ Zrestartuj deployment
+
+Po dodaniu zmiennych i sprawdzeniu settings.py najlepiej:
+
+W Railway kliknij Deploy / Redeploy dla diplomatic-imagination i cvanalyzer-CVtee.
+
+Dzięki temu wszystkie zmienne środowiskowe zostaną wczytane przy starcie aplikacji.
