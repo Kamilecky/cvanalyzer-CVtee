@@ -87,7 +87,7 @@ WSGI_APPLICATION = 'cvanalyzer.wsgi.application'
 # ---------------------------------------------------------------------------
 DATABASES = {
     'default': dj_database_url.config(
-        default=os.environ.get('postgresql://postgres:BKvpiAfGQvksiBQJLGdSUiFmSCCYVFXV@shinkansen.proxy.rlwy.net:51967/railway'),
+        default=os.environ.get("DATABASE_URL"),
         conn_max_age=600,
         ssl_require=True,
     )

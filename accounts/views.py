@@ -344,7 +344,7 @@ def password_reset_confirm_view(request, uidb64, token):
                 user.set_password(password1)
                 user.save()
                 messages.success(request, 'Your password has been reset. You can now log in.')
-                return redirect('password_reset_complete')
+                return redirect('login')
             else:
                 messages.error(request, 'Passwords do not match.')
 
