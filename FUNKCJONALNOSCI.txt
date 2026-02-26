@@ -164,32 +164,26 @@ Flow 2: Rekrutacja
   6. (Premium) Generowanie pytan na rozmowe kwalifikacyjna
 
 ================================================================================
-Teraz dodać klucz do stripe
-Tak — jeśli Twój kod w settings.py używa zmiennych środowiskowych Stripe (STRIPE_PUBLIC_KEY, STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET) i w .env tych wartości brakuje, to Django może nie crashować od razu (chyba że odwołujesz się do nich przy starcie), ale jeśli którakolwiek część aplikacji wymaga Stripe (np. inicjalizacja planów subskrypcyjnych, webhooki), to brak wartości może powodować błędy runtime.
+Żeby Ci skutecznie pomóc podłączyć PostgreSQL z Railway do projektu Django na Windowsie, potrzebuję kilku rzeczy, żeby dopasować instrukcje:
 
-Co zrobić:
+Czy masz już .env w projekcie i chcesz go używać dla DATABASE_URL?
 
-Wygeneruj klucze Stripe
+Czy chcesz, żeby Django korzystało z tej zmiennej lokalnie, czy tylko w Railway?
 
-Zaloguj się na https://dashboard.stripe.com/test/apikeys
+Czy projekt jest już “linked” do Railway CLI?
 
-Skopiuj:
+Czy w katalogu projektu istnieje folder .railway?
 
-Publishable key → do STRIPE_PUBLIC_KEY
+Jeśli nie, będziemy musieli użyć railway link i wybrać projekt.
 
-Secret key → do STRIPE_SECRET_KEY
+Czy chcesz uruchamiać migracje i Django lokalnie, czy tylko w kontenerze Railway?
 
-Jeśli używasz webhooków, ustaw też Webhook secret → STRIPE_WEBHOOK_SECRET.
+Bo host postgres.railway.internal działa tylko w kontenerze Railway.
 
-Dodaj je do Railway env vars
-W panelu projektu w Railway:
+Czy masz dostęp do panelu Railway w przeglądarce?
 
-STRIPE_PUBLIC_KEY      <tutaj wklej publiczny klucz>
-STRIPE_SECRET_KEY      <tutaj wklej secret key>
-STRIPE_WEBHOOK_SECRET  <tutaj wklej webhook secret (jeśli potrzebny)>
+Żeby pobrać host, port, username, password, jeśli nie możemy użyć CLI.
 
-Restart deploya
+Czy chcesz, żeby migracje były odpalane na Windowsie, czy w Railway (remote)?
 
-Po zapisaniu zmiennych w Railway zrestartuj aplikację.
-
-Django odczyta te wartości przez os.environ.get(...) w settings.py.
+Jak odpowiesz na te punkty, mogę Ci przygotować pełną, krok-po-kroku instrukcję, żeby lokalnie i na Railway Django łączyło się z PostgreSQL.
