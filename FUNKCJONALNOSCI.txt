@@ -164,51 +164,65 @@ Flow 2: Rekrutacja
   6. (Premium) Generowanie pytan na rozmowe kwalifikacyjna
 
 ================================================================================
-1️⃣ Sprawdź settings.py
+🔹 Plan działania na jutro
 
-Upewnij się, że w Twoim Django masz coś w tym stylu:
+Sprawdź, jak wychodzą maile w lokalnym Django
 
-import os
-import dj_database_url
+Otwórz terminal i wpisz:
 
-DATABASES = {
-    'default': dj_database_url.config(
-        default=os.environ.get('DATABASE_URL'),
-        conn_max_age=600,
-        ssl_require=True,  # Railway wymaga SSL
-    )
+python manage.py shell
+from django.core.mail import send_mail
+
+send_mail(
+    "Test",
+    "To jest testowy mail",
+    "no-reply@cveeto.eu",
+    ["twój@email.com"],
+    fail_silently=False
+)
+
+Jeśli wychodzi błąd – zanotuj go, będziesz wiedział, co poprawić w produkcji.
+
+Załóż konto w profesjonalnej usłudze mailowej
+
+np. SendGrid (łatwy w integracji z Django/AnyMail)
+
+Zweryfikuj domenę cveeto.eu w SendGrid (będą potrzebne rekordy DNS SPF/DKIM).
+
+Dodaj API key do zmiennych środowiskowych na Railway
+
+W panelu projektu Railway dodaj np.:
+
+SENDGRID_API_KEY = "<twój_sendgrid_api_key>"
+
+Skonfiguruj Django do produkcji
+
+W settings.py:
+
+EMAIL_BACKEND = "anymail.backends.sendgrid.EmailBackend"
+ANYMAIL = {
+    "SENDGRID_API_KEY": "<twój_sendgrid_api_key>"
 }
+DEFAULT_FROM_EMAIL = "no-reply@cveeto.eu"
 
-default=os.environ.get('DATABASE_URL') → używa zmiennej z Railway.
+Dodaj rekordy SPF/DKIM do DNS domeny
 
-ssl_require=True → ważne przy połączeniu do Railway PostgreSQL.
+W panelu OVH lub gdzie masz domenę:
 
-2️⃣ Wykonaj migracje
+SPF: v=spf1 include:sendgrid.net ~all
 
-Otwórz terminal Railway lub konsolę w projekcie (diplomatic-imagination).
+DKIM: SendGrid poda Ci dokładny rekord TXT
 
-Uruchom:
+Dzięki temu maile nie będą trafiać do SPAMU.
 
-python manage.py migrate
+Przetestuj wysyłkę w produkcji
 
-Jeśli wszystko jest dobrze ustawione, Django połączy się z PostgreSQL i stworzy tabele.
+Po wdrożeniu na Railway, w konsoli lub przez resend-verification sprawdź, czy mail dochodzi.
 
-Nie powinno już być błędów ImproperlyConfigured.
+Sprawdź foldery SPAM i promocje.
 
-3️⃣ Przetestuj połączenie
+(Opcjonalnie) Loguj błędy wysyłki
 
-Możesz w manage.py shell sprawdzić, czy Django widzi bazę:
+W widoku resend-verification ustaw fail_silently=False lub łap wyjątki i zapisuj je do logów.
 
-from django.db import connection
-connection.ensure_connection()
-print(connection.settings_dict)
-
-Jeśli nie wyrzuca błędów → połączenie działa.
-
-4️⃣ Zrestartuj deployment
-
-Po dodaniu zmiennych i sprawdzeniu settings.py najlepiej:
-
-W Railway kliknij Deploy / Redeploy dla diplomatic-imagination i cvanalyzer-CVtee.
-
-Dzięki temu wszystkie zmienne środowiskowe zostaną wczytane przy starcie aplikacji.
+Dzięki temu, jeśli coś pójdzie nie tak, od razu widać problem.

@@ -76,14 +76,11 @@ def billing_portal_view(request):
         return redirect('subscription')
 
 
-ADMIN_EMAIL = 'kamil3c2@onet.pl'
-
-
 @login_required
 @require_POST
 def reset_usage_view(request):
-    """Resetuje licznik analiz do 0 — tylko dla admina."""
-    if request.user.email != ADMIN_EMAIL:
+    """Resetuje licznik analiz do 0 — tylko dla superusera."""
+    if not request.user.is_superuser:
         return HttpResponse(status=403)
     request.user.analyses_used_this_month = 0
     request.user.save(update_fields=['analyses_used_this_month'])
@@ -94,8 +91,8 @@ def reset_usage_view(request):
 @login_required
 @require_POST
 def change_plan_view(request):
-    """Zmienia plan bez pobierania opłat — tylko dla admina."""
-    if request.user.email != ADMIN_EMAIL:
+    """Zmienia plan bez pobierania opłat — tylko dla superusera."""
+    if not request.user.is_superuser:
         return HttpResponse(status=403)
     new_plan = request.POST.get('plan', '')
     valid_plans = [c[0] for c in request.user.PLAN_CHOICES]

@@ -46,7 +46,7 @@
                     {% endwith %}
                 </p>
 
-                {% if request.user.email == 'kamil3c2@onet.pl' %}
+                {% if request.user.is_superuser %}
                 <form method="post" action="{% url 'reset_usage' %}" class="mt-3">
                     {% csrf_token %}
                     <button type="submit" class="btn btn-outline-danger btn-sm">Reset usage to 0</button>
@@ -55,7 +55,7 @@
             </div>
         </div>
 
-        {% if request.user.email == 'kamil3c2@onet.pl' %}
+        {% if request.user.is_superuser %}
         <div class="card mt-4">
             <div class="card-header">Change Plan (no charge)</div>
             <div class="card-body">
