@@ -305,6 +305,41 @@
     </div>
 </div>
 
+<!-- No Match Modal -->
+{% if all_not_fit %}
+<div class="modal fade" id="noMatchModal" tabindex="-1" aria-labelledby="noMatchModalLabel">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="noMatchModalLabel">
+                    <i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>
+                    {% trans "No Match Found" %}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                {% if fit_results|length == 1 %}
+                    {% trans "Unfortunately, this candidate does not match the position." %}
+                {% else %}
+                    {% trans "Unfortunately, this candidate does not match the selected positions." %}
+                {% endif %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans "Close" %}</button>
+                <a href="{% url 'recruitment_select_positions' profile.id %}" class="btn btn-primary">
+                    <i class="bi bi-check2-square me-1"></i>{% trans "Try Other Positions" %}
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    new bootstrap.Modal(document.getElementById('noMatchModal')).show();
+});
+</script>
+{% endif %}
+
 <!-- Delete Candidate Modal -->
 <div class="modal fade" id="deleteCandidateModal" tabindex="-1">
     <div class="modal-dialog">

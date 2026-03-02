@@ -73,12 +73,44 @@
     <div class="card">
         <div class="card-body text-center py-5">
             <i class="bi bi-briefcase text-muted" style="font-size: 3rem;"></i>
-            <p class="text-muted mt-3">No active positions found. Create a position first.</p>
+            <p class="text-muted mt-3">{% trans "No active positions found. Create a position first." %}</p>
             <a href="{% url 'recruitment_position_create' %}" class="btn btn-primary">
-                <i class="bi bi-plus-circle me-1"></i> Create Position
+                <i class="bi bi-plus-circle me-1"></i> {% trans "Create Position" %}
             </a>
         </div>
     </div>
+
+    <!-- No Positions Modal - auto-triggered -->
+    <div class="modal fade" id="noPositionsModal" tabindex="-1" aria-labelledby="noPositionsModalLabel">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="noPositionsModalLabel">
+                        <i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>
+                        {% trans "No Match Found" %}
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    {% trans "Unfortunately, this candidate does not match the position." %}
+                    <p class="text-muted mt-2 mb-0">{% trans "There are no active job positions to compare against. Create a position first." %}</p>
+                </div>
+                <div class="modal-footer">
+                    <a href="{% url 'recruitment_candidate_detail' profile.id %}" class="btn btn-secondary">
+                        {% trans "Back to Candidate" %}
+                    </a>
+                    <a href="{% url 'recruitment_position_create' %}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle me-1"></i>{% trans "Create Position" %}
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        new bootstrap.Modal(document.getElementById('noPositionsModal')).show();
+    });
+    </script>
     {% endif %}
 </div>
 

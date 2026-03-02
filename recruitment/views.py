@@ -333,13 +333,22 @@ def candidate_detail_view(request, profile_id):
     """Profil kandydata + wszystkie dopasowania do stanowisk."""
     profile = get_object_or_404(CandidateProfile, id=profile_id, user=request.user)
 
-    fit_results = JobFitResult.objects.filter(
-        candidate=profile, status='done',
-    ).select_related('position').order_by('-overall_match')
+    fit_results = list(
+        JobFitResult.objects.filter(
+            candidate=profile, status='done',
+        ).select_related('position').order_by('-overall_match')
+    )
+
+    # Show "no match" modal when ALL results are weak or not recommended
+    all_not_fit = bool(fit_results) and all(
+        fit.fit_recommendation in ('not_recommended', 'weak_fit')
+        for fit in fit_results
+    )
 
     return render(request, 'recruitment/candidate_detail.html', {
         'profile': profile,
         'fit_results': fit_results,
+        'all_not_fit': all_not_fit,
     })
 
 
@@ -351,7 +360,17 @@ def candidate_detail_view(request, profile_id):
 @require_POST
 def match_all_positions_view(request, profile_id):
     """Uruchamia matching kandydata do wszystkich aktywnych stanowisk."""
-    profile = get_object_or_404(CandidateProfile, id=profile_id, user=request.user, status='done')
+    profile = CandidateProfile.objects.filter(
+        id=profile_id, user=request.user, status__in=['done', 'partial']
+    ).first()
+    if not profile:
+        messages.error(request, _('Candidate profile not found or not yet ready for matching.'))
+        return redirect('recruitment_candidate_list')
+
+    positions = JobPosition.objects.filter(user=request.user, is_active=True)
+    if not positions.exists():
+        messages.warning(request, _('No active positions to match against.'))
+        return redirect('recruitment_candidate_detail', profile_id=profile_id)
 
     run_bulk_matching_in_thread(str(profile.id), request.user.id)
     messages.info(request, _('Matching %(name)s to all active positions...') % {'name': profile.name})
@@ -426,7 +445,12 @@ def generate_questions_view(request, fit_id):
 @login_required
 def select_positions_view(request, profile_id):
     """Wybor stanowisk do matchingu (checkboxy)."""
-    profile = get_object_or_404(CandidateProfile, id=profile_id, user=request.user, status='done')
+    profile = CandidateProfile.objects.filter(
+        id=profile_id, user=request.user, status__in=['done', 'partial']
+    ).first()
+    if not profile:
+        messages.error(request, _('Candidate profile not found or not yet ready for matching.'))
+        return redirect('recruitment_candidate_list')
 
     positions = JobPosition.objects.filter(user=request.user, is_active=True).order_by('-created_at')
 
@@ -456,7 +480,12 @@ def select_positions_view(request, profile_id):
 @require_POST
 def match_selected_positions_view(request, profile_id):
     """Uruchamia matching kandydata do WYBRANYCH stanowisk."""
-    profile = get_object_or_404(CandidateProfile, id=profile_id, user=request.user, status='done')
+    profile = CandidateProfile.objects.filter(
+        id=profile_id, user=request.user, status__in=['done', 'partial']
+    ).first()
+    if not profile:
+        messages.error(request, _('Candidate profile not found or not yet ready for matching.'))
+        return redirect('recruitment_candidate_list')
 
     position_ids = request.POST.getlist('position_ids')
     if not position_ids:
@@ -548,7 +577,12 @@ def position_ranks_view(request):
 @login_required
 def auto_match_view(request, profile_id):
     """Auto-matching po ekstrakcji profilu z pozycjami z sesji."""
-    profile = get_object_or_404(CandidateProfile, id=profile_id, user=request.user, status='done')
+    profile = CandidateProfile.objects.filter(
+        id=profile_id, user=request.user, status__in=['done', 'partial']
+    ).first()
+    if not profile:
+        messages.error(request, _('Candidate profile not found or not yet ready for matching.'))
+        return redirect('recruitment_candidate_list')
 
     position_ids = request.session.pop('selected_position_ids', [])
     if not position_ids:
@@ -564,7 +598,12 @@ def auto_match_view(request, profile_id):
 @login_required
 def match_summary_view(request, profile_id):
     """Podsumowanie dopasowania: tylko % per stanowisko."""
-    profile = get_object_or_404(CandidateProfile, id=profile_id, user=request.user, status='done')
+    profile = CandidateProfile.objects.filter(
+        id=profile_id, user=request.user, status__in=['done', 'partial']
+    ).first()
+    if not profile:
+        messages.error(request, _('Candidate profile not found or not yet ready for matching.'))
+        return redirect('recruitment_candidate_list')
 
     fit_results = JobFitResult.objects.filter(
         candidate=profile, status='done',
