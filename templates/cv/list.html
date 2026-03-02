@@ -53,11 +53,21 @@
                     <td>{{ cv.get_file_size_display }}</td>
                     <td>{{ cv.uploaded_at|date:"M d, Y" }}</td>
                     <td>
-                        <a href="{% url 'cv_detail' cv_id=cv.id %}" class="btn btn-sm btn-outline-primary me-1">{% trans "View" %}</a>
+                        <form method="post" action="{% url 'start_analysis' cv_id=cv.id %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button class="btn btn-sm btn-outline-warning me-1" title="{% trans "Analyze" %}">
+                                <i class="bi bi-file-earmark-lightning-fill me-1"></i>{% trans "Analyze" %}
+                            </button>
+                        </form>
+                        <a href="{% url 'cv_detail' cv_id=cv.id %}" class="btn btn-sm btn-outline-primary me-1" title="{% trans "View" %}">
+                            <i class="bi bi-eye me-1"></i>{% trans "View" %}
+                        </a>
                         <form method="post" action="{% url 'cv_delete' cv_id=cv.id %}" style="display:inline;"
                               onsubmit="return confirm('Delete this CV?');">
                             {% csrf_token %}
-                            <button class="btn btn-sm btn-outline-danger">{% trans "Delete" %}</button>
+                            <button class="btn btn-sm btn-outline-danger" title="{% trans "Delete" %}">
+                                <i class="bi bi-trash me-1"></i>{% trans "Delete" %}
+                            </button>
                         </form>
                     </td>
                 </tr>
