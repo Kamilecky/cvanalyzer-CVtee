@@ -125,7 +125,15 @@ def position_delete_view(request, position_id):
 @require_POST
 def candidate_delete_view(request, profile_id):
     """Hard-delete profilu kandydata + powiazanych JobFitResult (CASCADE)."""
-    profile = get_object_or_404(CandidateProfile, id=profile_id, user=request.user)
+    from django.urls import reverse
+    qs = CandidateProfile.objects.filter(id=profile_id)
+    if not request.user.is_superuser:
+        qs = qs.filter(user=request.user)
+
+    profile = qs.first()
+    if not profile:
+        return redirect(reverse('recruitment_candidate_list') + '?delete_error=1')
+
     name = profile.name or str(profile.id)[:8]
     profile.delete()
     messages.success(request, _('Candidate "%(name)s" deleted.') % {'name': name})

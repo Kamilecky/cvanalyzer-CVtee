@@ -103,11 +103,12 @@
                                         <a href="{% url 'recruitment_candidate_detail' profile.id %}" class="btn btn-sm btn-outline-primary me-1">
                                             <i class="bi bi-eye"></i> {% trans "View" %}
                                         </a>
-                                        <form method="post" action="{% url 'recruitment_candidate_delete' profile.id %}" style="display:inline;"
-                                              onsubmit="return confirm('Delete candidate {{ profile.name }}? All match results will be lost.');">
-                                            {% csrf_token %}
-                                            <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
-                                        </form>
+                                        <button type="button" class="btn btn-sm btn-outline-danger"
+                                                data-name="{{ profile.name|escapejs }}"
+                                                data-url="{% url 'recruitment_candidate_delete' profile.id %}"
+                                                onclick="openCandidateDeleteModal(this)">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
                                     </td>
                                 </tr>
                             {% endfor %}
@@ -133,6 +134,60 @@
         </div>
     </div>
 </div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteCandidateModal" tabindex="-1" aria-labelledby="deleteCandidateModalLabel">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteCandidateModalLabel">
+                    <i class="bi bi-trash text-danger me-2"></i>{% trans "Delete Candidate" %}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>{% trans "Are you sure you want to delete" %} <strong id="deleteCandidateName"></strong>?</p>
+                <p class="text-muted mb-0">{% trans "All position match results for this candidate will be permanently removed." %}</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans "Cancel" %}</button>
+                <form id="deleteCandidateForm" method="post" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash me-1"></i>{% trans "Delete" %}
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Error Modal -->
+{% if request.GET.delete_error %}
+<div class="modal fade" id="deleteErrorModal" tabindex="-1" aria-labelledby="deleteErrorModalLabel">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteErrorModalLabel">
+                    <i class="bi bi-exclamation-circle text-danger me-2"></i>{% trans "Error" %}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                {% trans "Candidate not found or has already been deleted." %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans "Close" %}</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    new bootstrap.Modal(document.getElementById('deleteErrorModal')).show();
+});
+</script>
+{% endif %}
 
 <!-- Bulk Analysis Modal -->
 {% if active_positions %}
@@ -184,6 +239,12 @@
 
 {% block extra_js %}
 <script>
+function openCandidateDeleteModal(btn) {
+    document.getElementById('deleteCandidateName').textContent = btn.dataset.name;
+    document.getElementById('deleteCandidateForm').action = btn.dataset.url;
+    new bootstrap.Modal(document.getElementById('deleteCandidateModal')).show();
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     // Select All toggle
     const selectAll = document.getElementById('selectAllPositions');
