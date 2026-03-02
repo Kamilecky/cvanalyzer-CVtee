@@ -74,7 +74,7 @@
             .then(function(data) {
                 var progress = data.progress || 0;
 
-                if (data.status === 'done' && data.redirect_url) {
+                if ((data.status === 'done' || data.status === 'partial') && data.redirect_url) {
                     progressBar.style.width = '100%';
                     progressText.textContent = '100%';
                     statusText.textContent = 'Analysis complete! Redirecting...';

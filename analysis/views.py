@@ -108,9 +108,11 @@ def result_view(request, analysis_id):
     has_skill_gap = request.user.has_feature('skill_gap')
     has_rewriting = request.user.has_feature('ai_rewriting')
 
-    # Check for metadata warnings
-    metadata = (analysis.raw_ai_response or {}).get('metadata', {})
+    # Check for metadata warnings and prompt errors
+    raw = analysis.raw_ai_response or {}
+    metadata = raw.get('metadata', {})
     short_text_warning = metadata.get('short_text_warning', False)
+    prompt_errors = raw.get('prompt_errors', [])
 
     return render(request, 'analysis/result.html', {
         'analysis': analysis,
@@ -125,6 +127,7 @@ def result_view(request, analysis_id):
         'has_rewriting': has_rewriting,
         'is_partial': analysis.status == 'partial',
         'short_text_warning': short_text_warning,
+        'prompt_errors': prompt_errors,
     })
 
 

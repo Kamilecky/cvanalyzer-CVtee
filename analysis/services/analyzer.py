@@ -46,6 +46,7 @@ class CVAnalyzer:
         start_time = time.time()
         total_tokens = 0
         extraction_failed = False
+        prompt_errors = []
 
         try:
             # --- Krok 1: Czyszczenie tekstu -> 30% ---
@@ -88,6 +89,10 @@ class CVAnalyzer:
             except Exception as ext_err:
                 logger.error(f"Analysis {analysis_id} extraction failed: {ext_err}")
                 extraction_failed = True
+                prompt_errors.append({
+                    'prompt': 'Extraction (CV data + problems)',
+                    'error': str(ext_err),
+                })
                 # Regex fallback for basic info
                 fallback = self._regex_fallback(cv_text)
                 extracted = {'regex_fallback': fallback}
@@ -130,6 +135,10 @@ class CVAnalyzer:
             except Exception as sec_err:
                 # Logujemy błąd, ale nie zmieniamy statusu jeśli ekstrakcja się udała
                 logger.error(f"Analysis {analysis_id} section analysis failed: {sec_err}")
+                prompt_errors.append({
+                    'prompt': 'Section Analysis (recommendations + skill gaps)',
+                    'error': str(sec_err),
+                })
 
             analysis.progress = 90
             analysis.save(update_fields=['progress'])
@@ -148,6 +157,8 @@ class CVAnalyzer:
                 raw_response['section_analysis'] = analysis_data
             if metadata:
                 raw_response['metadata'] = metadata
+            if prompt_errors:
+                raw_response['prompt_errors'] = prompt_errors
 
             # Status 'partial' tylko gdy ekstrakcja (krok krytyczny) się nie powiodła
             is_partial = extraction_failed
