@@ -61,11 +61,36 @@ class OpenAIClient:
                     }
 
     def parse_json_response(self, content):
-        """Parsuje odpowiedź JSON z OpenAI. Zwraca dict lub None."""
+        """Parsuje odpowiedź JSON z OpenAI. Zwraca dict lub None.
+
+        Obsługuje: markdown code fences, BOM, whitespace, JSON zagnieżdżony w tekście.
+        """
         if not content:
             return None
+
+        cleaned = content.strip().lstrip('\ufeff')
+
+        # Strip markdown code fences: ```json ... ``` or ``` ... ```
+        if cleaned.startswith('```'):
+            newline = cleaned.find('\n')
+            if newline != -1:
+                cleaned = cleaned[newline + 1:]
+            if cleaned.endswith('```'):
+                cleaned = cleaned[:-3].rstrip()
+
         try:
-            return json.loads(content)
-        except json.JSONDecodeError as e:
-            logger.error(f"Failed to parse OpenAI JSON response: {e}")
-            return None
+            return json.loads(cleaned)
+        except json.JSONDecodeError:
+            pass
+
+        # Fallback: extract first {...} block from response
+        start = cleaned.find('{')
+        end = cleaned.rfind('}')
+        if start != -1 and end > start:
+            try:
+                return json.loads(cleaned[start:end + 1])
+            except json.JSONDecodeError:
+                pass
+
+        logger.error(f"Failed to parse OpenAI JSON response: {content[:300]}")
+        return None
