@@ -12,13 +12,9 @@
         </div>
         <div>
             {% if cvs %}
-            <form method="post" action="{% url 'cv_bulk_analyze' %}" style="display:inline;"
-                  onsubmit="return confirm('{% trans "Analyze all CVs on this list? This will use your analysis quota." %}');">
-                {% csrf_token %}
-                <button class="btn btn-outline-success me-2">
-                    <i class="bi bi-lightning me-1"></i> {% trans "Analyze All" %}
-                </button>
-            </form>
+            <button class="btn btn-outline-success me-2" data-bs-toggle="modal" data-bs-target="#bulkAnalyzeModal">
+                <i class="bi bi-lightning me-1"></i> {% trans "Analyze All" %}
+            </button>
             {% endif %}
             <a href="{% url 'cv_upload' %}" class="btn btn-accent">
                 <i class="bi bi-cloud-upload me-1"></i> {% trans "Upload CV" %}
@@ -88,4 +84,152 @@
     </div>
 </div>
 {% endif %}
+
+<!-- Bulk Analyze Modal -->
+{% if cvs %}
+<div class="modal fade" id="bulkAnalyzeModal" tabindex="-1" aria-labelledby="bulkAnalyzeModalLabel"
+     data-bs-backdrop="static" data-bs-keyboard="false" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="bulkAnalyzeModalLabel">
+                    <i class="bi bi-lightning me-2"></i>{% trans "Analyze All CVs" %}
+                </h5>
+            </div>
+            <div class="modal-body" id="bulkAnalyzeBody">
+                <div class="text-center py-3">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <p class="mt-2 text-muted">{% trans "Starting analyses..." %}</p>
+                </div>
+            </div>
+            <div class="modal-footer" id="bulkAnalyzeFooter" style="display:none;">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans "Close" %}</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    var modal = document.getElementById('bulkAnalyzeModal');
+    if (!modal) return;
+
+    var csrfToken = '{{ csrf_token }}';
+    var startUrl = '{% url "cv_bulk_analyze_start" %}';
+    var candidatesUrl = '{% url "recruitment_candidate_list" %}';
+
+    function escapeHtml(str) {
+        var div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+
+    modal.addEventListener('show.bs.modal', function () {
+        var body = document.getElementById('bulkAnalyzeBody');
+        var footer = document.getElementById('bulkAnalyzeFooter');
+
+        body.innerHTML = '<div class="text-center py-3"><div class="spinner-border text-primary" role="status"></div><p class="mt-2 text-muted">{% trans "Starting analyses..." %}</p></div>';
+        footer.style.display = 'none';
+
+        fetch(startUrl, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': csrfToken }
+        })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            var analyses = data.analyses || [];
+
+            if (analyses.length === 0) {
+                body.innerHTML = '<p class="text-muted text-center">{% trans "No CVs to analyze." %}</p>';
+                footer.style.display = '';
+                return;
+            }
+
+            var html = '<div class="list-group">';
+            for (var i = 0; i < analyses.length; i++) {
+                var a = analyses[i];
+                var isDone = a.is_done;
+                var isError = a.is_error;
+                var barClass = isError ? 'bg-danger' : (isDone ? 'bg-success' : 'progress-bar-striped progress-bar-animated');
+                var width = (isDone || isError) ? '100%' : '5%';
+                var badgeClass = isError ? 'bg-danger' : (isDone ? 'bg-success' : 'bg-secondary');
+                var badgeText = isError ? '✗' : (isDone ? '✓' : '0%');
+
+                html += '<div class="list-group-item" id="cv-item-' + a.cv_id + '">';
+                html += '<div class="d-flex justify-content-between align-items-center mb-1">';
+                html += '<span class="fw-semibold"><i class="bi bi-file-earmark-text me-1"></i>' + escapeHtml(a.filename) + '</span>';
+                html += '<span class="badge ' + badgeClass + '" id="badge-' + a.cv_id + '">' + badgeText + '</span>';
+                html += '</div>';
+                html += '<div class="progress" style="height:10px;">';
+                html += '<div class="progress-bar ' + barClass + '" id="bar-' + a.cv_id + '" role="progressbar" style="width:' + width + '" aria-valuenow="' + (isDone || isError ? 100 : 5) + '" aria-valuemin="0" aria-valuemax="100"></div>';
+                html += '</div></div>';
+            }
+            html += '</div>';
+            body.innerHTML = html;
+
+            var pending = analyses.filter(function (a) { return !a.is_done && !a.is_error && a.status_url; });
+            var resolvedCount = analyses.length - pending.length;
+            var total = analyses.length;
+
+            if (pending.length === 0) {
+                allDone();
+                return;
+            }
+
+            function resolveOne(cvId) {
+                resolvedCount++;
+                pending = pending.filter(function (a) { return a.cv_id !== cvId; });
+                if (pending.length === 0) {
+                    allDone();
+                }
+            }
+
+            function pollAnalysis(a) {
+                fetch(a.status_url)
+                    .then(function (r) { return r.json(); })
+                    .then(function (s) {
+                        var progress = s.progress || 5;
+                        var bar = document.getElementById('bar-' + a.cv_id);
+                        var badge = document.getElementById('badge-' + a.cv_id);
+
+                        if (s.status === 'done' || s.status === 'partial') {
+                            if (bar) {
+                                bar.style.width = '100%';
+                                bar.className = 'progress-bar bg-success';
+                            }
+                            if (badge) { badge.textContent = '✓'; badge.className = 'badge bg-success'; }
+                            resolveOne(a.cv_id);
+                        } else if (s.status === 'failed') {
+                            if (bar) { bar.style.width = '100%'; bar.className = 'progress-bar bg-danger'; }
+                            if (badge) { badge.textContent = '✗'; badge.className = 'badge bg-danger'; }
+                            resolveOne(a.cv_id);
+                        } else {
+                            if (bar) { bar.style.width = progress + '%'; bar.setAttribute('aria-valuenow', progress); }
+                            if (badge) { badge.textContent = progress + '%'; }
+                            setTimeout(function () { pollAnalysis(a); }, 2000);
+                        }
+                    })
+                    .catch(function () { setTimeout(function () { pollAnalysis(a); }, 3000); });
+            }
+
+            function allDone() {
+                footer.style.display = '';
+                body.innerHTML += '<div class="alert alert-success mt-3 mb-0"><i class="bi bi-check-circle-fill me-2"></i>{% trans "All analyses complete! Redirecting to candidates..." %}</div>';
+                setTimeout(function () { window.location.href = candidatesUrl; }, 1800);
+            }
+
+            for (var j = 0; j < pending.length; j++) {
+                pollAnalysis(pending[j]);
+            }
+        })
+        .catch(function () {
+            body.innerHTML = '<div class="alert alert-danger">{% trans "Failed to start analyses. Please try again." %}</div>';
+            footer.style.display = '';
+        });
+    });
+})();
+</script>
 {% endblock %}

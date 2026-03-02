@@ -167,6 +167,41 @@ def bulk_analyze_view(request):
 
 @login_required
 @require_POST
+def bulk_analyze_start_api(request):
+    """API: starts bulk analysis for all user CVs, returns JSON with analysis IDs."""
+    from django.http import JsonResponse
+    from django.urls import reverse
+
+    cvs = CVDocument.objects.filter(user=request.user, is_active=True)
+    results = []
+
+    for cv_doc in cvs:
+        analysis, status = start_cv_analysis(cv_doc, request.user)
+        if status == 'limit_reached':
+            break
+        if analysis and status in ('started', 'cached'):
+            results.append({
+                'cv_id': cv_doc.id,
+                'filename': cv_doc.original_filename,
+                'analysis_id': str(analysis.id),
+                'status_url': reverse('analysis_status', args=[analysis.id]),
+                'is_done': status == 'cached',
+            })
+        elif status == 'no_text':
+            results.append({
+                'cv_id': cv_doc.id,
+                'filename': cv_doc.original_filename,
+                'analysis_id': None,
+                'status_url': None,
+                'is_done': False,
+                'is_error': True,
+            })
+
+    return JsonResponse({'analyses': results})
+
+
+@login_required
+@require_POST
 def cv_delete_view(request, cv_id):
     """Soft-delete dokumentu CV."""
     cv_doc = get_object_or_404(CVDocument, id=cv_id, user=request.user)
