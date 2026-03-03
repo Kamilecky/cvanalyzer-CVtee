@@ -1,0 +1,410 @@
+{% extends "base_app.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Candidate Ranking" %} — {{ position.title }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div>
+            <h1><i class="bi bi-bar-chart-line me-2"></i>{% trans "Candidate Ranking" %}</h1>
+            <p class="mb-0">
+                {{ position.title }}
+                <span class="text-muted mx-1">·</span>
+                <span class="text-muted">{{ position.get_seniority_level_display }}</span>
+            </p>
+        </div>
+        <div class="d-flex gap-2 flex-wrap">
+            <a href="{% url 'recruitment_position_detail' position.id %}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left me-1"></i>{% trans "Back to Position" %}
+            </a>
+            <button id="btnSaveWeights" class="btn btn-primary btn-sm">
+                <i class="bi bi-floppy me-1"></i>{% trans "Save Weights" %}
+            </button>
+        </div>
+    </div>
+</div>
+
+{% if not total_candidates %}
+<div class="card">
+    <div class="card-body">
+        <div class="empty-state text-center py-5">
+            <div class="empty-icon"><i class="bi bi-people"></i></div>
+            <div class="empty-text">{% trans "No matched candidates yet." %}</div>
+            <p class="text-muted">{% trans "Match candidates to this position first." %}</p>
+            <a href="{% url 'recruitment_candidate_list' %}" class="btn btn-accent mt-2">
+                <i class="bi bi-people me-1"></i>{% trans "Go to Candidates" %}
+            </a>
+        </div>
+    </div>
+</div>
+{% else %}
+
+<div class="row g-3 align-items-start">
+
+    <!-- ===================== LEFT: Weight Panel ===================== -->
+    <div class="col-xl-3 col-lg-4">
+        <div class="card sticky-top" style="top: 1rem;">
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <span><i class="bi bi-sliders me-2"></i>{% trans "Criteria Weights" %}</span>
+                <button id="btnResetWeights" class="btn btn-sm btn-link text-muted p-0" title="{% trans "Reset to defaults" %}">
+                    <i class="bi bi-arrow-counterclockwise"></i>
+                </button>
+            </div>
+            <div class="card-body">
+                <p class="text-muted small mb-3">
+                    {% trans "Drag sliders to adjust importance of each criterion (0 = ignore, 10 = critical)." %}
+                </p>
+
+                <div id="weightSliders">
+                    {% for c in criteria %}
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label class="form-label mb-0 small fw-semibold" for="w_{{ c.key }}">{{ c.label }}</label>
+                            <span class="badge bg-primary ms-2" id="val_{{ c.key }}">{{ c.value|floatformat:0 }}</span>
+                        </div>
+                        <input
+                            type="range"
+                            class="form-range weight-slider"
+                            id="w_{{ c.key }}"
+                            name="{{ c.key }}"
+                            min="0" max="10" step="0.5"
+                            value="{{ c.value }}"
+                        >
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Panel suggestions -->
+                {% if panel_suggestions %}
+                <hr>
+                <p class="text-muted small fw-semibold mb-2">
+                    <i class="bi bi-lightbulb me-1"></i>{% trans "Suggestions" %}
+                </p>
+                {% for s in panel_suggestions %}
+                <div class="alert alert-{{ s.color }} py-2 px-3 mb-2 small d-flex gap-2 align-items-start">
+                    <i class="bi {{ s.icon }} flex-shrink-0 mt-1"></i>
+                    <span>{{ s.message }}</span>
+                </div>
+                {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================== RIGHT: Ranking Table ===================== -->
+    <div class="col-xl-9 col-lg-8">
+
+        <!-- Summary bar -->
+        <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+            <span class="text-muted small">
+                <i class="bi bi-people me-1"></i>
+                <strong>{{ total_candidates }}</strong> {% trans "candidate(s)" %} —
+                {% trans "ranked by weighted score" %}
+            </span>
+            <div class="input-group input-group-sm" style="max-width:220px;">
+                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                <input type="text" id="rankingSearch" class="form-control" placeholder="{% trans "Filter by name..." %}">
+            </div>
+        </div>
+
+        <!-- Spinner (shown during live-ranking fetch) -->
+        <div id="rankingSpinner" class="text-center py-3" style="display:none;">
+            <div class="spinner-border text-primary spinner-border-sm" role="status"></div>
+            <span class="text-muted ms-2 small">{% trans "Recalculating..." %}</span>
+        </div>
+
+        <!-- Ranking table -->
+        <div class="card">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 align-middle" id="rankingTable">
+                    <thead>
+                        <tr>
+                            <th class="text-center" style="width:48px;">#</th>
+                            <th>{% trans "Candidate" %}</th>
+                            <th class="text-center" style="width:110px;" data-sort="weighted_score">
+                                {% trans "Score" %} <i class="bi bi-arrow-down-up ms-1 text-muted small"></i>
+                            </th>
+                            <th class="d-none d-md-table-cell" style="width:240px;">{% trans "Sub-scores" %}</th>
+                            <th class="text-end" style="width:90px;">{% trans "Actions" %}</th>
+                        </tr>
+                    </thead>
+                    <tbody id="rankingBody">
+                        {% for r in ranking %}
+                        <tr class="ranking-row"
+                            data-rank="{{ r.rank }}"
+                            data-name="{{ r.name|lower }}"
+                            data-score="{{ r.weighted_score }}"
+                            data-fit="{{ r.fit_id }}"
+                            data-profile="{{ r.profile_id }}">
+                            <td class="text-center">
+                                {% if r.rank == 1 %}<i class="bi bi-trophy-fill text-warning fs-5"></i>
+                                {% elif r.rank == 2 %}<i class="bi bi-trophy-fill text-secondary fs-5"></i>
+                                {% elif r.rank == 3 %}<i class="bi bi-trophy-fill text-danger fs-6" style="color:#cd7f32!important"></i>
+                                {% else %}<span class="text-muted fw-semibold">{{ r.rank }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="fw-semibold">{{ r.name }}</div>
+                                <div class="text-muted small">{{ r.current_role }}</div>
+                                {% if r.suggestions %}
+                                <div class="mt-1 d-flex flex-wrap gap-1">
+                                    {% for s in r.suggestions %}
+                                    <span class="badge rounded-pill text-bg-{{ s.color }} py-1 px-2"
+                                          style="font-size:.7rem;"
+                                          title="{{ s.label }}">
+                                        <i class="bi {{ s.icon }} me-1"></i>{{ s.label }}
+                                    </span>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                <div class="fw-bold fs-5 score-val">{{ r.weighted_score }}</div>
+                                <div class="progress mt-1" style="height:6px;">
+                                    <div class="progress-bar {% if r.weighted_score >= 75 %}bg-success{% elif r.weighted_score >= 50 %}bg-warning{% else %}bg-danger{% endif %} score-bar"
+                                         style="width:{{ r.weighted_score }}%"></div>
+                                </div>
+                                <div class="text-muted" style="font-size:.7rem;">
+                                    {% trans "AI:" %} {{ r.original_match }}%
+                                </div>
+                            </td>
+                            <td class="d-none d-md-table-cell">
+                                <div class="d-flex flex-column gap-1" style="font-size:.75rem;">
+                                    {% include "recruitment/_sub_score_row.html" with label="Exp" value=r.experience_score icon="bi-briefcase" %}
+                                    {% include "recruitment/_sub_score_row.html" with label="Skills" value=r.skill_score icon="bi-code-slash" %}
+                                    {% include "recruitment/_sub_score_row.html" with label="Edu" value=r.education_score icon="bi-mortarboard" %}
+                                    {% include "recruitment/_sub_score_row.html" with label="Lang" value=r.lang_score icon="bi-translate" %}
+                                </div>
+                            </td>
+                            <td class="text-end">
+                                <a href="{% url 'recruitment_candidate_detail' r.profile_id %}"
+                                   class="btn btn-sm btn-outline-primary me-1" title="{% trans "Profile" %}">
+                                    <i class="bi bi-person"></i>
+                                </a>
+                                <a href="{% url 'recruitment_fit_result' r.fit_id %}"
+                                   class="btn btn-sm btn-outline-secondary" title="{% trans "Fit Details" %}">
+                                    <i class="bi bi-bar-chart"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div><!-- /col right -->
+</div><!-- /row -->
+
+{% endif %}
+{% endblock %}
+
+
+{% block extra_js %}
+<script>
+(function () {
+    'use strict';
+
+    var csrfToken = '{{ csrf_token }}';
+    var liveRankingUrl = '{% url "recruitment_live_ranking" position.id %}';
+    var saveWeightsUrl = '{% url "recruitment_position_weights" position.id %}';
+
+    var DEFAULT_WEIGHTS = {
+        experience: 5, education: 3, certifications: 2,
+        hard_skills: 5, soft_skills: 2, languages: 3
+    };
+
+    // ---- Utility ----
+    function getWeights() {
+        var w = {};
+        document.querySelectorAll('.weight-slider').forEach(function (s) {
+            w[s.name] = parseFloat(s.value);
+        });
+        return w;
+    }
+
+    function scoreColor(v) {
+        if (v >= 75) return 'bg-success';
+        if (v >= 50) return 'bg-warning';
+        return 'bg-danger';
+    }
+
+    function rankIcon(rank) {
+        if (rank === 1) return '<i class="bi bi-trophy-fill text-warning fs-5"></i>';
+        if (rank === 2) return '<i class="bi bi-trophy-fill text-secondary fs-5"></i>';
+        if (rank === 3) return '<i class="bi bi-trophy-fill" style="color:#cd7f32;font-size:1.1rem;"></i>';
+        return '<span class="text-muted fw-semibold">' + rank + '</span>';
+    }
+
+    function escapeHtml(s) {
+        var d = document.createElement('div');
+        d.textContent = s;
+        return d.innerHTML;
+    }
+
+    function badgeHtml(suggestions) {
+        if (!suggestions || !suggestions.length) return '';
+        var html = '<div class="mt-1 d-flex flex-wrap gap-1">';
+        suggestions.forEach(function (s) {
+            html += '<span class="badge rounded-pill text-bg-' + s.color + ' py-1 px-2" style="font-size:.7rem;" title="' + escapeHtml(s.label) + '">'
+                  + '<i class="bi ' + s.icon + ' me-1"></i>' + escapeHtml(s.label) + '</span>';
+        });
+        html += '</div>';
+        return html;
+    }
+
+    function subScoreRow(label, value, icon) {
+        var pct = Math.min(value, 100);
+        var cls = pct >= 75 ? 'bg-success' : (pct >= 50 ? 'bg-warning' : 'bg-danger');
+        return '<div class="d-flex align-items-center gap-1">'
+            + '<i class="bi ' + icon + ' text-muted" style="width:14px;"></i>'
+            + '<span class="text-muted" style="width:36px;">' + escapeHtml(label) + '</span>'
+            + '<div class="progress flex-grow-1" style="height:4px;">'
+            + '<div class="progress-bar ' + cls + '" style="width:' + pct + '%"></div></div>'
+            + '<span style="width:32px;text-align:right;">' + pct + '%</span>'
+            + '</div>';
+    }
+
+    // ---- Rebuild table from JSON ranking ----
+    function rebuildTable(ranking) {
+        var tbody = document.getElementById('rankingBody');
+        if (!tbody) return;
+
+        var filter = (document.getElementById('rankingSearch').value || '').toLowerCase();
+        var html = '';
+
+        ranking.forEach(function (r) {
+            if (filter && r.name.toLowerCase().indexOf(filter) === -1) return;
+
+            var profileUrl = '/recruitment/candidates/' + r.profile_id + '/';
+            var fitUrl = '/recruitment/fit/' + r.fit_id + '/';
+
+            html += '<tr class="ranking-row"'
+                + ' data-rank="' + r.rank + '"'
+                + ' data-name="' + escapeHtml(r.name.toLowerCase()) + '"'
+                + ' data-score="' + r.weighted_score + '"'
+                + ' data-fit="' + r.fit_id + '"'
+                + ' data-profile="' + r.profile_id + '">'
+
+                // Rank
+                + '<td class="text-center">' + rankIcon(r.rank) + '</td>'
+
+                // Name + role + badges
+                + '<td>'
+                + '<div class="fw-semibold">' + escapeHtml(r.name) + '</div>'
+                + '<div class="text-muted small">' + escapeHtml(r.current_role || '—') + '</div>'
+                + badgeHtml(r.suggestions)
+                + '</td>'
+
+                // Score
+                + '<td class="text-center">'
+                + '<div class="fw-bold fs-5 score-val">' + r.weighted_score + '</div>'
+                + '<div class="progress mt-1" style="height:6px;">'
+                + '<div class="progress-bar score-bar ' + scoreColor(r.weighted_score) + '" style="width:' + r.weighted_score + '%"></div>'
+                + '</div>'
+                + '<div class="text-muted" style="font-size:.7rem;">{% trans "AI:" %} ' + r.original_match + '%</div>'
+                + '</td>'
+
+                // Sub-scores
+                + '<td class="d-none d-md-table-cell">'
+                + '<div class="d-flex flex-column gap-1" style="font-size:.75rem;">'
+                + subScoreRow('Exp', r.experience_score, 'bi-briefcase')
+                + subScoreRow('Skills', r.skill_score, 'bi-code-slash')
+                + subScoreRow('Edu', r.education_score, 'bi-mortarboard')
+                + subScoreRow('Lang', r.lang_score, 'bi-translate')
+                + '</div></td>'
+
+                // Actions
+                + '<td class="text-end">'
+                + '<a href="' + profileUrl + '" class="btn btn-sm btn-outline-primary me-1" title="{% trans "Profile" %}"><i class="bi bi-person"></i></a>'
+                + '<a href="' + fitUrl + '" class="btn btn-sm btn-outline-secondary" title="{% trans "Fit Details" %}"><i class="bi bi-bar-chart"></i></a>'
+                + '</td>'
+                + '</tr>';
+        });
+
+        tbody.innerHTML = html || '<tr><td colspan="5" class="text-center text-muted py-4">{% trans "No candidates match the filter." %}</td></tr>';
+    }
+
+    // ---- Debounced live ranking fetch ----
+    var fetchTimer = null;
+    function scheduleFetch() {
+        clearTimeout(fetchTimer);
+        fetchTimer = setTimeout(doFetch, 280);
+    }
+
+    function doFetch() {
+        var weights = getWeights();
+        var params = new URLSearchParams(weights);
+        var spinner = document.getElementById('rankingSpinner');
+        if (spinner) spinner.style.display = '';
+
+        fetch(liveRankingUrl + '?' + params.toString())
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                if (spinner) spinner.style.display = 'none';
+                rebuildTable(data.ranking || []);
+            })
+            .catch(function () { if (spinner) spinner.style.display = 'none'; });
+    }
+
+    // ---- Slider event listeners ----
+    document.querySelectorAll('.weight-slider').forEach(function (slider) {
+        var badge = document.getElementById('val_' + slider.name);
+        slider.addEventListener('input', function () {
+            if (badge) badge.textContent = parseFloat(this.value).toFixed(this.value % 1 === 0 ? 0 : 1);
+            scheduleFetch();
+        });
+    });
+
+    // ---- Save weights ----
+    document.getElementById('btnSaveWeights').addEventListener('click', function () {
+        var btn = this;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>{% trans "Saving..." %}';
+
+        fetch(saveWeightsUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+            body: JSON.stringify(getWeights()),
+        })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-check-circle me-1"></i>{% trans "Saved!" %}';
+            setTimeout(function () {
+                btn.innerHTML = '<i class="bi bi-floppy me-1"></i>{% trans "Save Weights" %}';
+            }, 2000);
+            rebuildTable(data.ranking || []);
+        })
+        .catch(function () {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-floppy me-1"></i>{% trans "Save Weights" %}';
+        });
+    });
+
+    // ---- Reset to defaults ----
+    document.getElementById('btnResetWeights').addEventListener('click', function () {
+        document.querySelectorAll('.weight-slider').forEach(function (s) {
+            var def = DEFAULT_WEIGHTS[s.name];
+            if (def !== undefined) {
+                s.value = def;
+                var badge = document.getElementById('val_' + s.name);
+                if (badge) badge.textContent = def;
+            }
+        });
+        scheduleFetch();
+    });
+
+    // ---- Search / filter ----
+    document.getElementById('rankingSearch').addEventListener('input', function () {
+        var filter = this.value.toLowerCase();
+        document.querySelectorAll('.ranking-row').forEach(function (row) {
+            var name = (row.getAttribute('data-name') || '');
+            row.style.display = (!filter || name.indexOf(filter) !== -1) ? '' : 'none';
+        });
+    });
+
+})();
+</script>
+{% endblock %}

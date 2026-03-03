@@ -13,6 +13,9 @@ urlpatterns = [
     path('positions/<uuid:position_id>/', views.position_detail_view, name='recruitment_position_detail'),
     path('positions/<uuid:position_id>/edit/', views.position_edit_view, name='recruitment_position_edit'),
     path('positions/<uuid:position_id>/delete/', views.position_delete_view, name='recruitment_position_delete'),
+    path('positions/<uuid:position_id>/ranking/', views.position_ranking_view, name='recruitment_position_ranking'),
+    path('positions/<uuid:position_id>/live-ranking/', views.live_ranking_api, name='recruitment_live_ranking'),
+    path('positions/<uuid:position_id>/weights/', views.position_weights_api, name='recruitment_position_weights'),
 
     # Candidates
     path('candidates/', views.candidate_list_view, name='recruitment_candidate_list'),

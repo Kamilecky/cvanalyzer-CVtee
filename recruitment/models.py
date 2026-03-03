@@ -299,3 +299,43 @@ class SectionScore(models.Model):
 
     def __str__(self):
         return f"{self.get_section_name_display()} → {self.score:.0f}%"
+
+
+class PositionWeightTemplate(models.Model):
+    """Konfiguracja wag kryteriów oceny CV dla danego stanowiska (panel HR).
+
+    Każde kryterium ma wagę 0-10 (0 = pomijaj, 10 = najważniejsze).
+    Domyślne wartości odzwierciedlają typowe priorytety rekruterów.
+    """
+
+    position = models.OneToOneField(
+        JobPosition,
+        on_delete=models.CASCADE,
+        related_name='weight_template',
+    )
+
+    # Criteria weights (0-10)
+    w_experience = models.FloatField(default=5.0)
+    w_education = models.FloatField(default=3.0)
+    w_certifications = models.FloatField(default=2.0)
+    w_hard_skills = models.FloatField(default=5.0)
+    w_soft_skills = models.FloatField(default=2.0)
+    w_languages = models.FloatField(default=3.0)
+
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'recruitment_position_weight_template'
+
+    def __str__(self):
+        return f"Weights for: {self.position.title}"
+
+    def to_dict(self):
+        return {
+            'experience': self.w_experience,
+            'education': self.w_education,
+            'certifications': self.w_certifications,
+            'hard_skills': self.w_hard_skills,
+            'soft_skills': self.w_soft_skills,
+            'languages': self.w_languages,
+        }

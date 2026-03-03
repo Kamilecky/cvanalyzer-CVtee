@@ -13,7 +13,7 @@ from cv.models import CVDocument
 from cv.services.parser import CVParser
 from cv.services.section_detector import SectionDetector
 from analysis.utils import start_cv_analysis
-from .models import JobPosition, CandidateProfile, JobFitResult, RequirementMatch
+from .models import JobPosition, CandidateProfile, JobFitResult, RequirementMatch, PositionWeightTemplate
 from .forms import JobPositionForm, BulkUploadForm, CVUploadForm
 from .tasks import (
     run_profile_extraction_in_thread,
@@ -678,3 +678,80 @@ def bulk_analysis_status_api(request):
         'status': 'processing' if pending_count > 0 else 'done',
         'pending_count': pending_count,
     })
+
+
+# ---------------------------------------------------------------------------
+# Position Ranking with Custom Weights
+# ---------------------------------------------------------------------------
+
+@login_required
+def position_ranking_view(request, position_id):
+    """Panel rankingu kandydatów z wagami kryteriów HR."""
+    position = get_object_or_404(JobPosition, id=position_id, user=request.user)
+
+    template, _ = PositionWeightTemplate.objects.get_or_create(position=position)
+    weights = template.to_dict()
+
+    from recruitment.services.weight_engine import compute_ranking, get_panel_suggestions, CRITERIA_LABELS
+    ranking = compute_ranking(position, weights, request.user)
+    panel_suggestions = get_panel_suggestions(position, ranking)
+
+    criteria = [
+        {'key': key, 'label': label, 'value': weights[key]}
+        for key, label in CRITERIA_LABELS.items()
+    ]
+
+    return render(request, 'recruitment/position_ranking.html', {
+        'position': position,
+        'weights': weights,
+        'criteria': criteria,
+        'ranking': ranking,
+        'panel_suggestions': panel_suggestions,
+        'total_candidates': len(ranking),
+    })
+
+
+@login_required
+def live_ranking_api(request, position_id):
+    """JSON API: przelicza ranking na żywo bez zapisywania wag (preview)."""
+    position = get_object_or_404(JobPosition, id=position_id, user=request.user)
+
+    from recruitment.services.weight_engine import weights_from_dict, compute_ranking
+    weights = weights_from_dict(request.GET)
+    ranking = compute_ranking(position, weights, request.user)
+
+    return JsonResponse({'ranking': ranking})
+
+
+@login_required
+def position_weights_api(request, position_id):
+    """JSON API: GET pobiera wagi, POST zapisuje i zwraca nowy ranking."""
+    import json as _json
+
+    position = get_object_or_404(JobPosition, id=position_id, user=request.user)
+
+    if request.method == 'POST':
+        try:
+            data = _json.loads(request.body)
+        except Exception:
+            data = {}
+
+        from recruitment.services.weight_engine import weights_from_dict, compute_ranking, get_panel_suggestions
+        weights = weights_from_dict(data)
+
+        template, _ = PositionWeightTemplate.objects.get_or_create(position=position)
+        template.w_experience = weights['experience']
+        template.w_education = weights['education']
+        template.w_certifications = weights['certifications']
+        template.w_hard_skills = weights['hard_skills']
+        template.w_soft_skills = weights['soft_skills']
+        template.w_languages = weights['languages']
+        template.save()
+
+        ranking = compute_ranking(position, weights, request.user)
+        panel_suggestions = get_panel_suggestions(position, ranking)
+        return JsonResponse({'saved': True, 'weights': weights, 'ranking': ranking, 'panel_suggestions': panel_suggestions})
+
+    # GET
+    template, _ = PositionWeightTemplate.objects.get_or_create(position=position)
+    return JsonResponse({'weights': template.to_dict()})

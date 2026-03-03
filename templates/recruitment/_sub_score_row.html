@@ -1,0 +1,11 @@
+{% comment %}Partial: a mini progress bar row for a single sub-score.
+Variables: label, value, icon{% endcomment %}
+<div class="d-flex align-items-center gap-1">
+    <i class="bi {{ icon }} text-muted" style="width:14px;"></i>
+    <span class="text-muted" style="width:36px;">{{ label }}</span>
+    <div class="progress flex-grow-1" style="height:4px;">
+        <div class="progress-bar {% if value >= 75 %}bg-success{% elif value >= 50 %}bg-warning{% else %}bg-danger{% endif %}"
+             style="width:{{ value }}%"></div>
+    </div>
+    <span style="width:32px;text-align:right;">{{ value }}%</span>
+</div>

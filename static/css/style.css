@@ -1189,3 +1189,23 @@ body {
     font-weight: 700;
     font-size: 1.25rem;
 }
+
+/* ==============================
+   Accordion dark mode
+   (Interview Questions & any other accordion)
+   ============================== */
+[data-theme="dark"] .accordion {
+    --bs-accordion-bg: var(--bg-card);
+    --bs-accordion-border-color: var(--border-color);
+    --bs-accordion-btn-color: var(--text-primary);
+    --bs-accordion-btn-bg: var(--bg-card);
+    --bs-accordion-active-bg: #1a2744;
+    --bs-accordion-active-color: var(--accent);
+    --bs-accordion-color: var(--text-primary);
+    --bs-accordion-btn-focus-box-shadow: 0 0 0 0.2rem rgba(130, 177, 255, 0.15);
+}
+
+[data-theme="dark"] .accordion-button::after,
+[data-theme="dark"] .accordion-button:not(.collapsed)::after {
+    filter: invert(0.8);
+}
