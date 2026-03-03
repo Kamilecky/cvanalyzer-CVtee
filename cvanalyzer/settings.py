@@ -13,6 +13,9 @@ import dj_database_url
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / '.env')
 
+print("==== REDIS DEBUG START ====")
+print("REDIS_URL:", os.getenv("REDIS_URL"))
+print("==== REDIS DEBUG END ====")
 # ---------------------------------------------------------------------------
 # Bezpieczeństwo
 # ---------------------------------------------------------------------------
