@@ -43,6 +43,14 @@ class CVAnalyzer:
         analysis.progress = 10
         analysis.save(update_fields=['status', 'progress'])
 
+        # Language instruction (stored at creation time by start_cv_analysis)
+        _stored = analysis.raw_ai_response or {}
+        _lang = _stored.get('_lang', 'en')
+        _lang_note = (
+            '\n\nIMPORTANT: Write ALL your text responses in Polish (język polski). '
+            'Every title, description, summary, recommendation, and note must be in Polish.'
+        ) if _lang == 'pl' else ''
+
         start_time = time.time()
         total_tokens = 0
         extraction_failed = False
@@ -72,7 +80,7 @@ class CVAnalyzer:
             extracted = {}
 
             try:
-                extraction_prompt = EXTRACTION_PROMPT.format(cv_text=cleaned_text)
+                extraction_prompt = EXTRACTION_PROMPT.format(cv_text=cleaned_text) + _lang_note
                 extraction_result = self.client.chat(SYSTEM_PROMPT, extraction_prompt)
                 if extraction_result['error']:
                     raise Exception(f"Extraction API error: {extraction_result['error']}")
@@ -120,7 +128,7 @@ class CVAnalyzer:
                     sections_list=sections_list,
                     problems_summary=problems_summary,
                     sections_content=sections_content,
-                )
+                ) + _lang_note
 
                 analysis_result = self.client.chat(SYSTEM_PROMPT, analysis_prompt)
                 if analysis_result['error']:

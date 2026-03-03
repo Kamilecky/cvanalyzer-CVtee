@@ -211,13 +211,15 @@ def candidate_upload_view(request):
 
             uploaded_count = 0
             last_cv_doc = None
+            from django.utils.translation import get_language as _get_language
+            lang = (_get_language() or 'en')[:2]
             for uploaded_file in files_to_process:
                 cv_doc = _process_uploaded_cv(uploaded_file, request.user)
                 if cv_doc:
-                    run_profile_extraction_in_thread(cv_doc.id, request.user.id)
+                    run_profile_extraction_in_thread(cv_doc.id, request.user.id, language=lang)
 
                     # CV analysis (billing + history) — same logic as /cv/upload/
-                    start_cv_analysis(cv_doc, request.user)
+                    start_cv_analysis(cv_doc, request.user, language=lang)
 
                     uploaded_count += 1
                     last_cv_doc = cv_doc

@@ -13,12 +13,13 @@ from .services.analyzer import CVAnalyzer
 from .tasks import run_analysis_in_thread
 
 
-def start_cv_analysis(cv_doc, user):
+def start_cv_analysis(cv_doc, user, language='en'):
     """Uruchamia analizę CV z cache + billing.
 
     Args:
         cv_doc: CVDocument instance (must have extracted_text)
         user: User instance
+        language: ISO language code ('en', 'pl') — AI will respond in this language
 
     Returns:
         (analysis, status) where:
@@ -38,10 +39,12 @@ def start_cv_analysis(cv_doc, user):
         user.use_analysis()
         return cloned, 'cached'
 
+    lang = language[:2] if language else 'en'
     analysis = AnalysisResult.objects.create(
         user=user,
         cv_document=cv_doc,
         status='pending',
+        raw_ai_response={'_lang': lang},
     )
     run_analysis_in_thread(str(analysis.id))
     return analysis, 'started'

@@ -34,7 +34,9 @@ def start_analysis_view(request, cv_id):
     """Rozpoczyna nową analizę CV — deleguje do start_cv_analysis()."""
     cv_doc = get_object_or_404(CVDocument, id=cv_id, user=request.user, is_active=True)
 
-    analysis, status = start_cv_analysis(cv_doc, request.user)
+    from django.utils.translation import get_language
+    lang = (get_language() or 'en')[:2]
+    analysis, status = start_cv_analysis(cv_doc, request.user, language=lang)
 
     if status == 'limit_reached':
         messages.error(request, _('You have reached your monthly analysis limit. Upgrade your plan for more.'))

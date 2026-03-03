@@ -18,12 +18,22 @@ class ProfileExtractor:
     def __init__(self):
         self.client = OpenAIClient()
 
-    def extract_profile(self, cv_document, user):
+    def extract_profile(self, cv_document, user, language='en'):
         """Ekstrakcja CandidateProfile z CVDocument.
+
+        Args:
+            cv_document: CVDocument instance
+            user: User instance
+            language: ISO language code ('en', 'pl') — AI will respond in this language
 
         Returns:
             CandidateProfile instance
         """
+        _lang_note = (
+            '\n\nIMPORTANT: Write ALL your text responses in Polish (język polski). '
+            'Every summary, description, tag, red flag, and note must be in Polish.'
+        ) if (language or 'en')[:2] == 'pl' else ''
+
         profile, created = CandidateProfile.objects.get_or_create(
             cv_document=cv_document,
             defaults={'user': user},
@@ -41,7 +51,7 @@ class ProfileExtractor:
 
             cleaned_text = TextCleaner.clean(cv_text, max_length=4000)
 
-            prompt = PROFILE_EXTRACTION_PROMPT.format(cv_text=cleaned_text)
+            prompt = PROFILE_EXTRACTION_PROMPT.format(cv_text=cleaned_text) + _lang_note
             result = self.client.chat(SYSTEM_PROMPT, prompt)
 
             if result['error']:

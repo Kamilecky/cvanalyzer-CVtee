@@ -10,16 +10,16 @@ from analysis.services.thread_manager import run_with_limit
 logger = logging.getLogger(__name__)
 
 
-def run_profile_extraction_in_thread(cv_document_id, user_id):
+def run_profile_extraction_in_thread(cv_document_id, user_id, language='en'):
     """Ekstrakcja profilu kandydata w osobnym wątku."""
     return run_with_limit(
         _run_profile_extraction,
-        args=(cv_document_id, user_id),
+        args=(cv_document_id, user_id, language),
         name=f'profile-{str(cv_document_id)[:8]}',
     )
 
 
-def _run_profile_extraction(cv_document_id, user_id):
+def _run_profile_extraction(cv_document_id, user_id, language='en'):
     from cv.models import CVDocument
     from accounts.models import User
     from recruitment.services.profile_extractor import ProfileExtractor
@@ -28,7 +28,7 @@ def _run_profile_extraction(cv_document_id, user_id):
         cv_doc = CVDocument.objects.get(id=cv_document_id)
         user = User.objects.get(id=user_id)
         extractor = ProfileExtractor()
-        extractor.extract_profile(cv_doc, user)
+        extractor.extract_profile(cv_doc, user, language=language)
     except Exception as e:
         logger.error(f"Profile extraction thread failed: {e}")
 

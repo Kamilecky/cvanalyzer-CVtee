@@ -3,7 +3,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext as _, get_language
 from django.views.decorators.http import require_POST
 
 from .models import CVDocument, CVSection
@@ -86,14 +86,15 @@ def upload_view(request):
         uploaded_count = 0
         last_cv_doc = None
 
+        lang = (get_language() or 'en')[:2]
         for uploaded_file in files_to_process:
             cv_doc = _process_uploaded_cv(uploaded_file, request.user)
             if cv_doc:
                 # CV analysis (billing + history)
-                start_cv_analysis(cv_doc, request.user)
+                start_cv_analysis(cv_doc, request.user, language=lang)
 
                 # Profile extraction for recruitment
-                run_profile_extraction_in_thread(cv_doc.id, request.user.id)
+                run_profile_extraction_in_thread(cv_doc.id, request.user.id, language=lang)
 
                 uploaded_count += 1
                 last_cv_doc = cv_doc
@@ -147,8 +148,9 @@ def bulk_analyze_view(request):
         return redirect('cv_list')
 
     analyzed = 0
+    lang = (get_language() or 'en')[:2]
     for cv_doc in cvs:
-        analysis, status = start_cv_analysis(cv_doc, request.user)
+        analysis, status = start_cv_analysis(cv_doc, request.user, language=lang)
         if status == 'limit_reached':
             break
         if status in ('started', 'cached'):
@@ -174,9 +176,10 @@ def bulk_analyze_start_api(request):
 
     cvs = CVDocument.objects.filter(user=request.user, is_active=True)
     results = []
+    lang = (get_language() or 'en')[:2]
 
     for cv_doc in cvs:
-        analysis, status = start_cv_analysis(cv_doc, request.user)
+        analysis, status = start_cv_analysis(cv_doc, request.user, language=lang)
         if status == 'limit_reached':
             break
         if analysis and status in ('started', 'cached'):
