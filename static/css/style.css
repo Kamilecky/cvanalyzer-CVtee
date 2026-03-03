@@ -1209,3 +1209,32 @@ body {
 [data-theme="dark"] .accordion-button:not(.collapsed)::after {
     filter: invert(0.8);
 }
+
+/* ==============================
+   bg-body-tertiary dark mode
+   (Suggested text box, rewrite panels)
+   ============================== */
+[data-theme="dark"] .bg-body-tertiary {
+    background-color: var(--hover-bg) !important;
+}
+
+/* ==============================
+   Bootstrap badge dark mode overrides
+   (bg-warning, bg-info, bg-danger, bg-secondary)
+   ============================== */
+[data-theme="dark"] .badge.bg-warning {
+    background-color: #b45309 !important;
+    color: #fff !important;
+}
+[data-theme="dark"] .badge.bg-info {
+    background-color: #0369a1 !important;
+    color: #fff !important;
+}
+[data-theme="dark"] .badge.bg-danger {
+    background-color: #b91c1c !important;
+    color: #fff !important;
+}
+[data-theme="dark"] .badge.bg-secondary {
+    background-color: #475569 !important;
+    color: #e2e8f0 !important;
+}
