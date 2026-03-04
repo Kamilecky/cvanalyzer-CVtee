@@ -13,6 +13,7 @@ from cv.models import CVDocument
 from cv.services.parser import CVParser
 from cv.services.section_detector import SectionDetector
 from analysis.utils import start_cv_analysis
+from analysis.models import AnalysisResult
 from .models import JobPosition, CandidateProfile, JobFitResult, RequirementMatch, PositionWeightTemplate
 from .forms import JobPositionForm, BulkUploadForm, CVUploadForm
 from .tasks import (
@@ -176,12 +177,25 @@ def candidate_list_view(request):
     if q:
         profiles = profiles.filter(name__icontains=q)
 
+    profiles_list = list(profiles)
+
+    # Attach latest completed analysis ID to each profile (single query)
+    cv_doc_ids = [p.cv_document_id for p in profiles_list if p.cv_document_id]
+    analysis_map = {}
+    for a in AnalysisResult.objects.filter(
+        cv_document_id__in=cv_doc_ids, status__in=['done', 'partial'],
+    ).order_by('-created_at').values('cv_document_id', 'id'):
+        if a['cv_document_id'] not in analysis_map:
+            analysis_map[a['cv_document_id']] = str(a['id'])
+    for p in profiles_list:
+        p._analysis_id = analysis_map.get(p.cv_document_id)
+
     active_positions = JobPosition.objects.filter(
         user=request.user, is_active=True,
     ).order_by('-created_at')
 
     return render(request, 'recruitment/candidate_list.html', {
-        'profiles': profiles, 'query': q,
+        'profiles': profiles_list, 'query': q,
         'active_positions': active_positions,
     })
 

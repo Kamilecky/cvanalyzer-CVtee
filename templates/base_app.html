@@ -83,21 +83,23 @@
 
     <div class="sidebar-section">
         <div class="sidebar-label">{% trans "Recruitment" %}</div>
-        <a href="{% url 'recruitment_dashboard' %}" class="sidebar-link {% if 'recruitment' in request.path %}active{% endif %}">
+        {% with uname=request.resolver_match.url_name %}
+        <a href="{% url 'recruitment_dashboard' %}" class="sidebar-link {% if uname == 'recruitment_dashboard' %}active{% endif %}">
             <span class="icon"><i class="bi bi-people-fill"></i></span> {% trans "HR Dashboard" %}
         </a>
-        <a href="{% url 'cv_upload' %}" class="sidebar-link {% if request.resolver_match.url_name == 'cv_upload' %}active{% endif %}">
+        <a href="{% url 'cv_upload' %}" class="sidebar-link {% if uname == 'cv_upload' %}active{% endif %}">
             <span class="icon"><i class="bi bi-cloud-upload"></i></span> {% trans "Upload CV" %}
         </a>
-        <a href="{% url 'recruitment_position_list' %}" class="sidebar-link">
+        <a href="{% url 'recruitment_position_list' %}" class="sidebar-link {% if uname == 'recruitment_position_list' or uname == 'recruitment_position_detail' or uname == 'recruitment_position_create' or uname == 'recruitment_position_edit' or uname == 'recruitment_position_ranking' %}active{% endif %}">
             <span class="icon"><i class="bi bi-briefcase"></i></span> {% trans "Positions" %}
         </a>
-        <a href="{% url 'recruitment_candidate_list' %}" class="sidebar-link">
+        <a href="{% url 'recruitment_candidate_list' %}" class="sidebar-link {% if uname == 'recruitment_candidate_list' or uname == 'recruitment_candidate_detail' or uname == 'recruitment_select_positions' %}active{% endif %}">
             <span class="icon"><i class="bi bi-person-lines-fill"></i></span> {% trans "Candidates" %}
         </a>
-        <a href="{% url 'recruitment_position_ranks' %}" class="sidebar-link">
+        <a href="{% url 'recruitment_position_ranks' %}" class="sidebar-link {% if uname == 'recruitment_position_ranks' %}active{% endif %}">
             <span class="icon"><i class="bi bi-trophy"></i></span> {% trans "Position Ranks" %}
         </a>
+        {% endwith %}
     </div>
 
     <div class="sidebar-section">
