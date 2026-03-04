@@ -188,7 +188,7 @@ def candidate_list_view(request):
         if a['cv_document_id'] not in analysis_map:
             analysis_map[a['cv_document_id']] = str(a['id'])
     for p in profiles_list:
-        p._analysis_id = analysis_map.get(p.cv_document_id)
+        p.analysis_id = analysis_map.get(p.cv_document_id)
 
     active_positions = JobPosition.objects.filter(
         user=request.user, is_active=True,

@@ -105,8 +105,8 @@
                                            title="{% trans "View candidate" %}">
                                             <i class="bi bi-eye"></i>
                                         </a>
-                                        {% if profile._analysis_id %}
-                                        <a href="{% url 'analysis_result' profile._analysis_id %}"
+                                        {% if profile.analysis_id %}
+                                        <a href="{% url 'analysis_result' profile.analysis_id %}"
                                            class="btn btn-sm btn-outline-info me-1"
                                            title="{% trans "View CV Analysis" %}">
                                             <i class="bi bi-file-earmark-bar-graph"></i>
