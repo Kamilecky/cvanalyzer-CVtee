@@ -4,8 +4,14 @@
 {% block title %}Analysis History - CV Analyzer{% endblock %}
 
 {% block content %}
-<div class="page-header">
+<div class="page-header d-flex justify-content-between align-items-center">
     <h1><i class="bi bi-clock-history me-2"></i>Analysis History</h1>
+    {% if analyses %}
+    <button type="button" class="btn btn-outline-danger btn-sm"
+            data-bs-toggle="modal" data-bs-target="#deleteAllModal">
+        <i class="bi bi-trash3 me-1"></i>{% trans "Delete All" %}
+    </button>
+    {% endif %}
 </div>
 
 {% if analyses %}
@@ -92,6 +98,33 @@
     </p>
 </nav>
 {% endif %}
+
+<!-- Delete All Modal -->
+<div class="modal fade" id="deleteAllModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title text-danger">
+                    <i class="bi bi-exclamation-triangle me-2"></i>{% trans "Delete All History" %}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>{% trans "This will permanently delete" %} <strong>{% trans "all your analyses" %}</strong>{% trans ", including their problems, recommendations and skill gaps." %}</p>
+                <p class="text-danger mb-0"><strong>{% trans "This action cannot be undone." %}</strong></p>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans "Cancel" %}</button>
+                <form method="post" action="{% url 'analysis_delete_all' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash3 me-1"></i>{% trans "Yes, Delete All" %}
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 
 {% else %}
 <div class="card">

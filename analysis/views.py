@@ -174,6 +174,16 @@ def history_view(request):
 
 @login_required
 @require_POST
+def history_delete_all_view(request):
+    """Usuwa WSZYSTKIE analizy użytkownika z historii."""
+    deleted_count, _ = AnalysisResult.objects.filter(user=request.user).delete()
+    invalidate_history_cache(request.user.id)
+    messages.success(request, _('Deleted %(n)d analyses from history.') % {'n': deleted_count})
+    return redirect('analysis_history')
+
+
+@login_required
+@require_POST
 def analysis_delete_view(request, analysis_id):
     """Hard-delete wyniku analizy + powiazanych danych (CASCADE)."""
     analysis = get_object_or_404(AnalysisResult, id=analysis_id, user=request.user)

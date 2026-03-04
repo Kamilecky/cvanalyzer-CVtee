@@ -10,6 +10,7 @@ urlpatterns = [
     path('status/<uuid:analysis_id>/', views.analysis_status_api, name='analysis_status'),
     path('result/<uuid:analysis_id>/', views.result_view, name='analysis_result'),
     path('history/', views.history_view, name='analysis_history'),
+    path('history/delete-all/', views.history_delete_all_view, name='analysis_delete_all'),
     path('delete/<uuid:analysis_id>/', views.analysis_delete_view, name='analysis_delete'),
     path('rewrite/<uuid:analysis_id>/', views.rewrite_section_view, name='analysis_rewrite'),
 ]
