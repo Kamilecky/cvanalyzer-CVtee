@@ -8,9 +8,23 @@ jak i z recruitment/views.py. Obsługuje:
 - Inkrementację licznika (use_analysis)
 """
 
+from django.core.cache import cache
+
 from .models import AnalysisResult
 from .services.analyzer import CVAnalyzer
 from .tasks import run_analysis_in_thread
+
+HISTORY_CACHE_TTL = 60
+_HISTORY_MAX_PAGES = 26  # covers up to 25 pages × 20 items = 500 analyses
+
+
+def _history_cache_key(user_id, page):
+    return f"user_history_{user_id}_{page}"
+
+
+def invalidate_history_cache(user_id):
+    """Clear all cached history pages for a user."""
+    cache.delete_many([_history_cache_key(user_id, p) for p in range(1, _HISTORY_MAX_PAGES)])
 
 
 def start_cv_analysis(cv_doc, user, language='en'):
@@ -46,5 +60,6 @@ def start_cv_analysis(cv_doc, user, language='en'):
         status='pending',
         raw_ai_response={'_lang': lang},
     )
+    invalidate_history_cache(user.id)
     run_analysis_in_thread(str(analysis.id))
     return analysis, 'started'

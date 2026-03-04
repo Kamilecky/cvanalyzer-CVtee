@@ -292,6 +292,17 @@ OPENAI_TEMPERATURE = 0
 # Celery + Redis
 # ---------------------------------------------------------------------------
 REDIS_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
+
+# Django cache — uses Redis (built-in backend since Django 4.0, no extra package needed)
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+        'LOCATION': REDIS_URL,
+        'KEY_PREFIX': 'cveeto',
+        'TIMEOUT': 300,
+    }
+}
+
 CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', REDIS_URL)
 CELERY_RESULT_BACKEND = os.environ.get('CELERY_RESULT_BACKEND', REDIS_URL)
 CELERY_ACCEPT_CONTENT = ['json']

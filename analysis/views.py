@@ -1,5 +1,8 @@
 """analysis/views.py - Widoki aplikacji analizy AI CV."""
 
+from django.core.cache import cache
+from django.core.paginator import Paginator
+from django.db.models import Count
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -10,7 +13,7 @@ from django.views.decorators.http import require_POST
 from cv.models import CVDocument
 from .models import AnalysisResult
 from .tasks import run_analysis_in_thread, run_rewrite_in_thread
-from .utils import start_cv_analysis
+from .utils import start_cv_analysis, invalidate_history_cache, _history_cache_key, HISTORY_CACHE_TTL
 
 
 @login_required
@@ -135,12 +138,38 @@ def result_view(request, analysis_id):
 
 @login_required
 def history_view(request):
-    """Historia wszystkich analiz użytkownika."""
-    analyses = AnalysisResult.objects.filter(
-        user=request.user
-    ).select_related('cv_document').order_by('-created_at')
+    """Historia analiz użytkownika — paginacja 20/strona, cache Redis 60 s."""
+    try:
+        page_num = int(request.GET.get('page', 1))
+    except (ValueError, TypeError):
+        page_num = 1
 
-    return render(request, 'analysis/history.html', {'analyses': analyses})
+    cache_key = _history_cache_key(request.user.id, page_num)
+    ctx = cache.get(cache_key)
+
+    if ctx is None:
+        qs = (
+            AnalysisResult.objects
+            .filter(user=request.user)
+            .select_related('cv_document')
+            # Defer heavy fields not needed on the list page
+            .defer(
+                'raw_ai_response', 'summary', 'sections_detected',
+                'error_message', 'celery_task_id', 'openai_tokens_used',
+                'processing_time_seconds', 'percentile_rank', 'completed_at',
+            )
+            # Replace N+1 a.problems.count with a single annotated query
+            .annotate(problem_count=Count('problems'))
+            .order_by('-created_at')
+        )
+        paginator = Paginator(qs, 20)
+        page_obj = paginator.get_page(page_num)
+        # Force evaluation so the queryset is picklable for Redis
+        page_obj.object_list = list(page_obj.object_list)
+        ctx = {'page_obj': page_obj, 'analyses': page_obj}
+        cache.set(cache_key, ctx, HISTORY_CACHE_TTL)
+
+    return render(request, 'analysis/history.html', ctx)
 
 
 @login_required
@@ -150,6 +179,7 @@ def analysis_delete_view(request, analysis_id):
     analysis = get_object_or_404(AnalysisResult, id=analysis_id, user=request.user)
     cv_name = analysis.cv_document.original_filename
     analysis.delete()
+    invalidate_history_cache(request.user.id)
     messages.success(request, _('Analysis for "%(name)s" deleted.') % {'name': cv_name})
     return redirect('analysis_history')
 

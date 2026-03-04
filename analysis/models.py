@@ -54,6 +54,9 @@ class AnalysisResult(models.Model):
     class Meta:
         ordering = ['-created_at']
         db_table = 'analysis_result'
+        indexes = [
+            models.Index(fields=['user', 'created_at'], name='analysis_user_created_idx'),
+        ]
 
     def __str__(self):
         return f'Analysis {self.id} - {self.status}'
