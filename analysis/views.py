@@ -176,7 +176,7 @@ def history_view(request):
 @require_POST
 def history_delete_all_view(request):
     """Usuwa WSZYSTKIE analizy użytkownika z historii."""
-    deleted_count, _ = AnalysisResult.objects.filter(user=request.user).delete()
+    deleted_count, _details = AnalysisResult.objects.filter(user=request.user).delete()
     invalidate_history_cache(request.user.id)
     messages.success(request, _('Deleted %(n)d analyses from history.') % {'n': deleted_count})
     return redirect('analysis_history')
