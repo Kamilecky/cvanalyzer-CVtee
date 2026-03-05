@@ -223,34 +223,51 @@ body {
 [data-theme="dark"] .plan-badge.enterprise { background: #0d1642; color: #9fa8da; }
 
 /* ==============================
-   Stats dropdown (topbar)
+   Stats button (sidebar bottom) + dropdown
    ============================== */
-.stats-toggle {
-    background: none;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    padding: 6px 10px;
-    color: var(--text-primary);
-    cursor: pointer;
-    font-size: 1rem;
+.sidebar-stats-btn {
     display: flex;
     align-items: center;
-    gap: 4px;
-    transition: background 0.15s, border-color 0.15s;
+    width: 100%;
+    gap: 8px;
+    padding: 10px 16px;
+    background: none;
+    border: none;
+    border-top: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    font-size: 0.82rem;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.15s, color 0.15s;
 }
-.stats-toggle:hover {
+.sidebar-stats-btn:hover {
     background: var(--hover-bg);
-    border-color: var(--primary);
-    color: var(--primary);
+    color: var(--text-primary);
+}
+.sidebar-stats-btn .icon {
+    font-size: 1rem;
+    color: var(--accent);
+    flex-shrink: 0;
+}
+.sidebar-stats-btn-text {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 .stats-dropdown-menu {
-    min-width: 230px;
+    min-width: 240px;
     padding: 0;
     border: 1px solid var(--border-color);
     background: var(--bg-card);
     box-shadow: var(--shadow-lg);
     border-radius: 10px;
     overflow: hidden;
+    /* position just above the sidebar bottom button */
+    bottom: 100%;
+    top: auto !important;
+    left: 0 !important;
+    right: auto !important;
+    transform: none !important;
 }
 .stats-dropdown-menu .stats-plan-header {
     background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);

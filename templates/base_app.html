@@ -47,62 +47,6 @@
             {% endif %}
         </form>
 
-        <!-- Stats dropdown -->
-        {% if request.user.is_authenticated %}
-        <div class="dropdown">
-            <button class="stats-toggle" data-bs-toggle="dropdown" aria-expanded="false"
-                    title="{% trans "Usage stats" %}">
-                <i class="bi bi-speedometer2"></i>
-            </button>
-            <div class="dropdown-menu dropdown-menu-end stats-dropdown-menu">
-
-                <!-- Plan header -->
-                <div class="stats-plan-header">
-                    <span class="stats-plan-name">{{ request.user.get_plan_display }}</span>
-                    <a href="{% url 'subscription' %}" class="text-white opacity-75 text-decoration-none"
-                       style="font-size:0.7rem;">{% trans "Upgrade" %} →</a>
-                </div>
-
-                <!-- Analyses counter -->
-                <div class="stats-row">
-                    <div class="stats-label">
-                        <i class="bi bi-bar-chart-line me-1"></i>{% trans "Analyses this month" %}
-                    </div>
-                    {% with limit=request.user.get_plan_limit used=request.user.analyses_used_this_month %}
-                    <div class="d-flex justify-content-between align-items-center">
-                        <span class="stats-value">{{ used }}</span>
-                        <span class="stats-value text-muted">
-                            / {% if limit %}{{ limit }}{% else %}∞{% endif %}
-                        </span>
-                    </div>
-                    <div class="stats-mini-bar">
-                        {% if limit %}
-                            <div class="fill" style="width: {% widthratio used limit 100 %}%;"></div>
-                        {% else %}
-                            <div class="fill" style="width: 8%;"></div>
-                        {% endif %}
-                    </div>
-                    {% endwith %}
-                </div>
-
-                <!-- Positions counter -->
-                <div class="stats-row">
-                    <div class="stats-label">
-                        <i class="bi bi-briefcase me-1"></i>{% trans "Active job positions" %}
-                    </div>
-                    <div class="d-flex justify-content-between align-items-center">
-                        <span class="stats-value">{{ user_positions_count }}</span>
-                        <a href="{% url 'recruitment_position_list' %}"
-                           class="text-decoration-none" style="font-size:0.75rem;color:var(--accent);">
-                            {% trans "Manage" %} →
-                        </a>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-        {% endif %}
-
         <div class="dropdown">
             <button class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown">
                 <i class="bi bi-person-circle me-1"></i>
@@ -169,27 +113,73 @@
     </div>
 
     <div class="sidebar-section mt-auto">
-        <div class="px-3">
-            <div class="d-flex align-items-center justify-content-between mb-1">
-                <small class="text-muted">{% trans "Usage" %}</small>
-                <span class="plan-badge {{ request.user.plan }}">{{ request.user.plan }}</span>
+        <div class="dropup w-100">
+            <button class="sidebar-stats-btn" data-bs-toggle="dropdown" aria-expanded="false">
+                <span class="icon"><i class="bi bi-speedometer2"></i></span>
+                <span class="sidebar-stats-btn-text">
+                    {{ request.user.analyses_used_this_month }}
+                    {% with limit=request.user.get_plan_limit %}
+                        / {% if limit %}{{ limit }}{% else %}∞{% endif %}
+                    {% endwith %}
+                    {% trans "analyses" %}
+                </span>
+                <span class="plan-badge {{ request.user.plan }} ms-auto">{{ request.user.get_plan_display }}</span>
+            </button>
+
+            <div class="dropdown-menu stats-dropdown-menu mb-1">
+
+                <!-- Plan header -->
+                <div class="stats-plan-header">
+                    <span class="stats-plan-name">{{ request.user.get_plan_display }}</span>
+                    <a href="{% url 'subscription' %}" class="text-white opacity-75 text-decoration-none"
+                       style="font-size:0.7rem;">{% trans "Upgrade" %} →</a>
+                </div>
+
+                <!-- Analyses counter -->
+                <div class="stats-row">
+                    <div class="stats-label">
+                        <i class="bi bi-bar-chart-line me-1"></i>{% trans "Analyses this month" %}
+                    </div>
+                    {% with limit=request.user.get_plan_limit used=request.user.analyses_used_this_month %}
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="stats-value">{{ used }}</span>
+                        <span class="stats-value text-muted">/ {% if limit %}{{ limit }}{% else %}∞{% endif %}</span>
+                    </div>
+                    <div class="stats-mini-bar">
+                        {% if limit %}
+                            <div class="fill" style="width: {% widthratio used limit 100 %}%;"></div>
+                        {% else %}
+                            <div class="fill" style="width: 8%;"></div>
+                        {% endif %}
+                    </div>
+                    {% endwith %}
+                </div>
+
+                <!-- Positions counter -->
+                <div class="stats-row">
+                    <div class="stats-label">
+                        <i class="bi bi-briefcase me-1"></i>{% trans "Active job positions" %}
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="stats-value">
+                            {{ user_positions_count }}
+                            <span class="text-muted fw-normal">
+                                / {% if user_position_limit %}{{ user_position_limit }}{% else %}∞{% endif %}
+                            </span>
+                        </span>
+                        <a href="{% url 'recruitment_position_list' %}"
+                           class="text-decoration-none" style="font-size:0.75rem;color:var(--accent);">
+                            {% trans "Manage" %} →
+                        </a>
+                    </div>
+                    {% if user_position_limit %}
+                    <div class="stats-mini-bar">
+                        <div class="fill" style="width: {% widthratio user_positions_count user_position_limit 100 %}%;"></div>
+                    </div>
+                    {% endif %}
+                </div>
+
             </div>
-            <div class="usage-bar">
-                {% with limit=request.user.get_plan_limit %}
-                {% if limit %}
-                <div class="fill" style="width: {% widthratio request.user.analyses_used_this_month limit 100 %}%"></div>
-                {% else %}
-                <div class="fill" style="width: 5%"></div>
-                {% endif %}
-                {% endwith %}
-            </div>
-            <small class="text-muted d-block mt-1">
-                {{ request.user.analyses_used_this_month }}
-                {% with limit=request.user.get_plan_limit %}
-                {% if limit %}/ {{ limit }}{% else %}/ {% trans "Unlimited" %}{% endif %}
-                {% endwith %}
-                {% trans "analyses" %}
-            </small>
         </div>
     </div>
 </aside>

@@ -1,8 +1,10 @@
 """accounts/context_processors.py - Dane użytkownika dostępne w każdym szablonie."""
 
+from django.conf import settings
+
 
 def user_stats(request):
-    """Dodaje do kontekstu liczbę aktywnych stanowisk użytkownika.
+    """Dodaje do kontekstu statystyki użytkownika: liczba stanowisk + limit planu.
 
     Wywoływany raz na request; JobPosition importowane wewnątrz funkcji
     żeby uniknąć circular import (accounts ← recruitment).
@@ -15,4 +17,9 @@ def user_stats(request):
         user=request.user, is_active=True,
     ).count()
 
-    return {'user_positions_count': positions_count}
+    position_limit = settings.JOB_POSITION_LIMITS.get(request.user.plan)
+
+    return {
+        'user_positions_count': positions_count,
+        'user_position_limit': position_limit,   # None = unlimited
+    }
