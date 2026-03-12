@@ -16,6 +16,7 @@ Obsługuje pełny flow użytkownika:
 """
 
 import os
+import threading
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
@@ -123,20 +124,34 @@ def register_view(request):
             user.email_verified = False
             user.save()
 
-            try:
-                _send_verification_email(request, user)
-                messages.success(
-                    request,
-                    'Account created! A verification link has been sent to your email. '
-                    'Please check your inbox and click the link to activate your account.'
-                )
-            except Exception:
-                messages.warning(
-                    request,
-                    'Account created, but we could not send the verification email. '
-                    'Please try resending it from the login page.'
-                )
+            # Build verify URL before spawning thread (request not available in thread)
+            user.verification_tokens.filter(used=False).update(used=True)
+            from .models import EmailVerificationToken
+            token = EmailVerificationToken.objects.create(user=user)
+            verify_url = request.build_absolute_uri(f'/accounts/verify/{token.token}/')
 
+            def _send():
+                try:
+                    subject = 'CV Analyzer - Verify your email address'
+                    html_message = render_to_string('accounts/email/verification_email.html', {
+                        'user': user,
+                        'verify_url': verify_url,
+                        'expiry_hours': getattr(settings, 'EMAIL_VERIFICATION_TOKEN_EXPIRY_HOURS', 24),
+                    })
+                    send_mail(
+                        subject, strip_tags(html_message), settings.DEFAULT_FROM_EMAIL,
+                        [user.email], html_message=html_message, fail_silently=True,
+                    )
+                except Exception:
+                    pass
+
+            threading.Thread(target=_send, daemon=True).start()
+
+            messages.success(
+                request,
+                'Account created! A verification link has been sent to your email. '
+                'Please check your inbox and click the link to activate your account.'
+            )
             return redirect('registration_pending')
     else:
         form = RegisterForm()
@@ -205,11 +220,28 @@ def resend_verification_view(request):
             messages.info(request, 'This email is already verified. You can log in.')
             return redirect('login')
 
-        try:
-            _send_verification_email(request, user)
-            messages.success(request, 'A new verification link has been sent to your email.')
-        except Exception:
-            messages.error(request, 'Could not send the verification email. Please try again later.')
+        user.verification_tokens.filter(used=False).update(used=True)
+        from .models import EmailVerificationToken
+        resend_token = EmailVerificationToken.objects.create(user=user)
+        resend_verify_url = request.build_absolute_uri(f'/accounts/verify/{resend_token.token}/')
+
+        def _resend():
+            try:
+                subject = 'CV Analyzer - Verify your email address'
+                html_message = render_to_string('accounts/email/verification_email.html', {
+                    'user': user,
+                    'verify_url': resend_verify_url,
+                    'expiry_hours': getattr(settings, 'EMAIL_VERIFICATION_TOKEN_EXPIRY_HOURS', 24),
+                })
+                send_mail(
+                    subject, strip_tags(html_message), settings.DEFAULT_FROM_EMAIL,
+                    [user.email], html_message=html_message, fail_silently=True,
+                )
+            except Exception:
+                pass
+
+        threading.Thread(target=_resend, daemon=True).start()
+        messages.success(request, 'A new verification link has been sent to your email.')
 
         return render(request, 'accounts/resend_verification.html')
 
