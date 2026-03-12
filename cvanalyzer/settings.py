@@ -13,9 +13,6 @@ import dj_database_url
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / '.env')
 
-print("==== REDIS DEBUG START ====")
-print("REDIS_URL:", os.getenv("REDIS_URL"))
-print("==== REDIS DEBUG END ====")
 # ---------------------------------------------------------------------------
 # Bezpieczeństwo
 # ---------------------------------------------------------------------------
@@ -152,16 +149,22 @@ DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # ---------------------------------------------------------------------------
-# Email (Gmail SMTP)
+# Email — Mailgun SMTP
+# Wymagane zmienne środowiskowe na Railway:
+#   MAILGUN_SMTP_LOGIN    — np. postmaster@mg.cveeto.eu
+#   MAILGUN_SMTP_PASSWORD — klucz SMTP z panelu Mailgun
+#   DEFAULT_FROM_EMAIL    — np. CVeeto <noreply@mg.cveeto.eu>
+# Konto EU: użyj EMAIL_HOST = 'smtp.eu.mailgun.org'
 # ---------------------------------------------------------------------------
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_HOST = os.environ.get('MAILGUN_SMTP_HOST', 'smtp.mailgun.org')
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_USE_SSL = False
-EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'kpl50970@gmail.com')
-EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', 'iqfc nzmr hnrj xwai')
-DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'kpl50970@gmail.com')
+EMAIL_HOST_USER = os.environ.get('MAILGUN_SMTP_LOGIN', '')
+EMAIL_HOST_PASSWORD = os.environ.get('MAILGUN_SMTP_PASSWORD', '')
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'CVeeto <noreply@cveeto.eu>')
+SERVER_EMAIL = DEFAULT_FROM_EMAIL
 
 # Weryfikacja email
 REQUIRE_EMAIL_VERIFICATION = True

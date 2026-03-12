@@ -67,7 +67,7 @@ def _send_password_reset_email(request, user):
     token = default_token_generator.make_token(user)
     reset_url = request.build_absolute_uri(f'/accounts/reset/{uid}/{token}/')
 
-    subject = 'CV Analyzer - Reset your password'
+    subject = 'CVeeto — Reset your password'
     html_message = render_to_string('accounts/email/password_reset_email.html', {
         'user': user,
         'reset_url': reset_url,
@@ -77,6 +77,32 @@ def _send_password_reset_email(request, user):
     send_mail(
         subject, plain_message, settings.DEFAULT_FROM_EMAIL,
         [user.email], html_message=html_message, fail_silently=False,
+    )
+
+
+def _send_password_changed_email(user):
+    """Powiadomienie bezpieczeństwa po udanej zmianie hasła."""
+    subject = 'CVeeto — Your password has been changed'
+    html_message = render_to_string('accounts/email/password_changed_email.html', {
+        'user': user,
+    })
+    send_mail(
+        subject, strip_tags(html_message), settings.DEFAULT_FROM_EMAIL,
+        [user.email], html_message=html_message, fail_silently=True,
+    )
+
+
+def _send_email_changed_notification(old_email, new_email, user):
+    """Powiadomienie na STARY adres email o tym, że adres został zmieniony."""
+    subject = 'CVeeto — Your email address has been changed'
+    html_message = render_to_string('accounts/email/email_changed_email.html', {
+        'user': user,
+        'old_email': old_email,
+        'new_email': new_email,
+    })
+    send_mail(
+        subject, strip_tags(html_message), settings.DEFAULT_FROM_EMAIL,
+        [old_email], html_message=html_message, fail_silently=True,
     )
 
 
@@ -263,6 +289,7 @@ def change_password_view(request):
         if form.is_valid():
             user = form.save()
             update_session_auth_hash(request, user)
+            _send_password_changed_email(user)
             messages.success(request, 'Your password has been changed successfully.')
             return redirect('profile')
     else:
@@ -284,9 +311,12 @@ def change_email_view(request):
                 messages.error(request, 'Incorrect password.')
                 return render(request, 'accounts/change_email.html', {'form': form})
 
+            old_email = request.user.email
             request.user.email = new_email
             request.user.email_verified = False
             request.user.save(update_fields=['email', 'email_verified'])
+
+            _send_email_changed_notification(old_email, new_email, request.user)
 
             try:
                 _send_verification_email(request, request.user)
