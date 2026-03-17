@@ -15,8 +15,11 @@ Obsługuje pełny flow użytkownika:
 - Usuwanie konta z potwierdzeniem hasłem (delete_account_view)
 """
 
+import logging
 import os
 import threading
+
+logger = logging.getLogger(__name__)
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
@@ -142,8 +145,8 @@ def register_view(request):
                         subject, strip_tags(html_message), settings.DEFAULT_FROM_EMAIL,
                         [user.email], html_message=html_message, fail_silently=True,
                     )
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.warning(f"Unhandled exception: {e}")
 
             threading.Thread(target=_send, daemon=True).start()
 
@@ -237,8 +240,8 @@ def resend_verification_view(request):
                     subject, strip_tags(html_message), settings.DEFAULT_FROM_EMAIL,
                     [user.email], html_message=html_message, fail_silently=True,
                 )
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning(f"Unhandled exception: {e}")
 
         threading.Thread(target=_resend, daemon=True).start()
         messages.success(request, 'A new verification link has been sent to your email.')
@@ -446,8 +449,8 @@ def delete_account_view(request):
                 filepath = cv_doc.file.path
                 if os.path.exists(filepath):
                     os.remove(filepath)
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning(f"File operation failed: {e}")
 
     # Usuń pliki raportów PDF z dysku
     for report in user.reports.all():
@@ -456,8 +459,8 @@ def delete_account_view(request):
                 filepath = report.file.path
                 if os.path.exists(filepath):
                     os.remove(filepath)
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning(f"File operation failed: {e}")
 
     email = user.email
     logout(request)

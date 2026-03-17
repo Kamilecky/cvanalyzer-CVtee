@@ -282,12 +282,12 @@ class CVAnalyzer:
 
     @staticmethod
     def compute_file_hash(file_obj):
-        """Oblicza MD5 hash pliku."""
-        md5 = hashlib.md5()
+        """Oblicza SHA-256 hash pliku (streaming)."""
+        hash_obj = hashlib.sha256()
         for chunk in file_obj.chunks():
-            md5.update(chunk)
+            hash_obj.update(chunk)
         file_obj.seek(0)
-        return md5.hexdigest()
+        return hash_obj.hexdigest()
 
     # --- Helpery zapisu wynikow ---
 

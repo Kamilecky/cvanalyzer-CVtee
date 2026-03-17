@@ -3,13 +3,58 @@ cv/services/parser.py - Parser dokumentów CV.
 
 Obsługuje ekstrakcję tekstu z plików PDF, DOCX i TXT
 z automatycznym wykrywaniem kodowania (chardet).
+
+Parsing is protected by a 10-second timeout. On Linux/macOS signal.SIGALRM
+is used (accurate, works in the main request thread). On Windows a
+daemon-thread approach is used as a fallback.
 """
 
 import logging
+import platform
+import signal
+import threading
 
 import chardet
 
 logger = logging.getLogger(__name__)
+
+_PARSE_TIMEOUT_SECONDS = 10
+_IS_UNIX = platform.system() != 'Windows'
+
+
+def _parse_with_timeout(fn, *args):
+    """Run fn(*args) with a hard timeout. Raises TimeoutError on expiry."""
+    if _IS_UNIX:
+        # signal.SIGALRM is accurate and works in the main thread on Unix
+        def _handler(signum, frame):
+            raise TimeoutError("File processing timeout")
+
+        old_handler = signal.signal(signal.SIGALRM, _handler)
+        signal.alarm(_PARSE_TIMEOUT_SECONDS)
+        try:
+            return fn(*args)
+        finally:
+            signal.alarm(0)
+            signal.signal(signal.SIGALRM, old_handler)
+    else:
+        # Windows fallback: daemon thread with join timeout
+        result = [None]
+        exc = [None]
+
+        def target():
+            try:
+                result[0] = fn(*args)
+            except Exception as e:
+                exc[0] = e
+
+        t = threading.Thread(target=target, daemon=True)
+        t.start()
+        t.join(_PARSE_TIMEOUT_SECONDS)
+        if t.is_alive():
+            raise TimeoutError("File processing timeout")
+        if exc[0]:
+            raise exc[0]
+        return result[0]
 
 # Magic bytes for MIME type validation
 MIME_SIGNATURES = {
@@ -22,7 +67,7 @@ class CVParser:
     """Ekstrakcja tekstu z plików CV (PDF, DOCX, TXT)."""
 
     SUPPORTED_FORMATS = ['pdf', 'docx', 'txt']
-    MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB
+    MAX_FILE_SIZE = 5 * 1024 * 1024  # 5 MB
 
     @staticmethod
     def detect_format(filename):
@@ -71,16 +116,22 @@ class CVParser:
         if not fmt:
             return {'text': '', 'format': None, 'error': 'Unsupported format'}
 
-        try:
+        def _do_parse():
             if fmt == 'pdf':
-                text = CVParser.parse_pdf(file_obj)
+                return CVParser.parse_pdf(file_obj)
             elif fmt == 'docx':
-                text = CVParser.parse_docx(file_obj)
+                return CVParser.parse_docx(file_obj)
             else:
-                text = CVParser.parse_txt(file_obj)
+                return CVParser.parse_txt(file_obj)
 
+        try:
+            text = _parse_with_timeout(_do_parse)
             return {'text': text.strip(), 'format': fmt, 'error': ''}
+        except TimeoutError:
+            logger.warning(f"Parsing timeout exceeded for file format={fmt}")
+            return {'text': '', 'format': fmt, 'error': 'File processing timeout'}
         except Exception as e:
+            logger.warning(f"Parsing error for format={fmt}: {e}")
             return {'text': '', 'format': fmt, 'error': str(e)}
 
     @staticmethod

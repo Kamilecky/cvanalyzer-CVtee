@@ -13,9 +13,16 @@ from django.conf import settings
 
 
 def cv_upload_path(instance, filename):
-    """Generuje ścieżkę uploadu izolowaną per-użytkownik z UUID."""
+    """Generuje bezpieczną ścieżkę uploadu: UUID zamiast oryginalnej nazwy, izolacja per-użytkownik.
+
+    Original filename is intentionally NOT included in the path to prevent
+    path traversal and information disclosure. It is stored in CVDocument.original_filename.
+    """
     user_id = instance.user.id if instance.user else 'guest'
-    return f'cvs/{user_id}/{uuid.uuid4().hex}_{filename}'
+    # Derive extension from original name only for readability; default to .bin
+    raw_ext = filename.rsplit('.', 1)[-1].lower() if '.' in filename else ''
+    ext = raw_ext if raw_ext in ('pdf', 'docx') else 'bin'
+    return f'private/cvs/{user_id}/{uuid.uuid4().hex}.{ext}'
 
 
 class CVDocument(models.Model):

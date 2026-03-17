@@ -25,8 +25,8 @@ def _run_profile_extraction(cv_document_id, user_id, language='en'):
     from recruitment.services.profile_extractor import ProfileExtractor
 
     try:
-        cv_doc = CVDocument.objects.get(id=cv_document_id)
         user = User.objects.get(id=user_id)
+        cv_doc = CVDocument.objects.get(id=cv_document_id, user=user)
         extractor = ProfileExtractor()
         extractor.extract_profile(cv_doc, user, language=language)
     except Exception as e:
@@ -68,8 +68,8 @@ def _run_bulk_matching(candidate_profile_id, user_id):
     from recruitment.services.position_matcher import PositionMatcher
 
     try:
-        profile = CandidateProfile.objects.get(id=candidate_profile_id)
         user = User.objects.get(id=user_id)
+        profile = CandidateProfile.objects.get(id=candidate_profile_id, cv_document__user=user)
         matcher = PositionMatcher()
         matcher.match_all_positions(profile, user)
 
@@ -92,8 +92,8 @@ def _run_selective_matching(candidate_profile_id, user_id, position_ids):
     from recruitment.services.position_matcher import PositionMatcher
 
     try:
-        profile = CandidateProfile.objects.get(id=candidate_profile_id)
         user = User.objects.get(id=user_id)
+        profile = CandidateProfile.objects.get(id=candidate_profile_id, cv_document__user=user)
         matcher = PositionMatcher()
         matcher.match_selected_positions(profile, user, position_ids)
 

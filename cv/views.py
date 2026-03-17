@@ -11,6 +11,7 @@ from .services.parser import CVParser
 from .services.section_detector import SectionDetector
 from analysis.utils import start_cv_analysis
 from recruitment.tasks import run_profile_extraction_in_thread
+from core.security.file_validation import validate_uploaded_file
 
 
 def _process_uploaded_cv(uploaded_file, user):
@@ -20,6 +21,12 @@ def _process_uploaded_cv(uploaded_file, user):
         CVDocument instance or None (if validation/parsing failed)
     """
     filename = uploaded_file.name
+
+    # MIME + size check using libmagic (content-based, not extension-based)
+    try:
+        validate_uploaded_file(uploaded_file)
+    except ValueError:
+        return None
 
     is_valid, error = CVParser.validate_file(uploaded_file, filename)
     if not is_valid:

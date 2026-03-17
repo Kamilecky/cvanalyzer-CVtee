@@ -20,16 +20,33 @@ SECRET_KEY = os.environ.get(
     'DJANGO_SECRET_KEY',
     'django-insecure-cvanalyzer-dev-key-change-in-production'
 )
-DEBUG = True
+DEBUG = os.environ.get('DJANGO_DEBUG', 'False') == 'True'
 ALLOWED_HOSTS = ['*']
 CSRF_TRUSTED_ORIGINS = [
     "https://cveeto.eu",
     "https://www.cveeto.eu",
 ]
+
+# --- HTTPS / proxy ---
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-SECURE_HSTS_SECONDS = 3600  # 1 godzina
+SECURE_SSL_REDIRECT = True
+
+# --- HSTS ---
+SECURE_HSTS_SECONDS = 3600
 SECURE_HSTS_INCLUDE_SUBDOMAINS = False
 SECURE_HSTS_PRELOAD = False
+
+# --- Cookies ---
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_HTTPONLY = True
+CSRF_COOKIE_SAMESITE = "Lax"
+SESSION_COOKIE_SAMESITE = "Lax"
+
+# --- Security headers ---
+X_FRAME_OPTIONS = "DENY"
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_BROWSER_XSS_FILTER = True
 
 # ---------------------------------------------------------------------------
 # Aplikacje
