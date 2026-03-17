@@ -46,6 +46,7 @@
                     <thead class="table-dark">
                         <tr>
                             <th>{% trans "Candidate / CV" %}</th>
+                            <th>{% trans "Risk" %}</th>
                             <th>{% trans "Attack Types" %}</th>
                             <th>{% trans "Detected Fragments" %}</th>
                             <th>{% trans "Analysis Date" %}</th>
@@ -73,6 +74,15 @@
                                     </span>
                                     <br><small class="text-muted">{% trans "No candidate profile" %}</small>
                                 {% endif %}
+                            </td>
+
+                            <!-- Risk level -->
+                            <td class="text-nowrap">
+                                {% with risk=item.flags.0.risk_level|default:"LOW" %}
+                                <span class="badge {% if risk == 'HIGH' %}bg-danger{% elif risk == 'MEDIUM' %}bg-warning text-dark{% else %}bg-secondary{% endif %} fs-6">
+                                    {{ risk }}
+                                </span>
+                                {% endwith %}
                             </td>
 
                             <!-- Attack types -->

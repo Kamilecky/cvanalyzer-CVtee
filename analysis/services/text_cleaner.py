@@ -7,6 +7,7 @@ Usuwa: HTML, JS, base64, zero-width, stopki, powtórzenia. Skraca do max 4000 zn
 
 import logging
 import re
+import unicodedata
 
 logger = logging.getLogger(__name__)
 
@@ -49,37 +50,61 @@ class TextCleaner:
 
     @classmethod
     def clean(cls, text, max_length=4000):
-        """Czyści tekst CV: usuwa HTML, base64, zero-width, szum; normalizuje; skraca."""
+        """Czyści tekst CV: NFKC, HTML, base64, zero-width, szum; normalizuje; skraca."""
         if not text:
             return ''
 
-        # 1. Usuń komentarze HTML i tagi (mogą ukrywać instrukcje)
+        # 1. Unicode NFKC normalization (neutralizuje homoglify i anomalie kodowania)
+        text = unicodedata.normalize('NFKC', text)
+
+        # 2. Usuń komentarze HTML i tagi (mogą ukrywać instrukcje)
+        had_html = bool(cls._HTML_COMMENT.search(text) or cls._HTML_TAG.search(text))
         text = cls._HTML_COMMENT.sub('', text)
         text = cls._HTML_TAG.sub('', text)
+        if had_html:
+            text = '[HTML CONTENT REMOVED]\n' + text
 
-        # 2. Usuń znaki zero-width (steganografia)
+        # 3. Usuń znaki zero-width (steganografia)
         text = cls._ZERO_WIDTH.sub('', text)
 
-        # 3. Usuń duże bloki base64 (zakodowane ukryte instrukcje)
-        text = cls._BASE64_BLOB.sub('[removed]', text)
+        # 4. Usuń duże bloki base64 (zakodowane ukryte instrukcje)
+        text = cls._BASE64_BLOB.sub('[base64 removed]', text)
 
-        # 4. Usuń wzorce szumu (stopki, numery stron)
+        # 5. Usuń wzorce szumu (stopki, numery stron)
         for pattern in cls.NOISE_PATTERNS:
             text = re.sub(pattern, '', text, flags=re.MULTILINE)
 
-        # 5. Normalizuj białe znaki
+        # 6. Normalizuj białe znaki
         text = re.sub(r'\n{3,}', '\n\n', text)
         text = re.sub(r'[ \t]{2,}', ' ', text)
 
-        # 6. Usuń puste linie na początku/końcu
+        # 7. Usuń puste linie na początku/końcu
         lines = text.strip().splitlines()
         text = '\n'.join(line.rstrip() for line in lines if line.strip())
 
-        # 7. Skróć do max_length
+        # 8. Skróć do max_length z markerem
         if len(text) > max_length:
-            text = text[:max_length]
+            text = text[:max_length] + '\n[INPUT TRUNCATED FOR SAFETY]'
 
         return text
+
+    @staticmethod
+    def risk_level(flags):
+        """
+        Oblicza poziom ryzyka na podstawie listy security_flags.
+
+        Zwraca: 'LOW' | 'MEDIUM' | 'HIGH'
+        """
+        if not flags:
+            return 'LOW'
+        high_risk = {'jailbreak_attempt', 'code_execution', 'external_request',
+                     'prompt_extraction', 'secret_extraction'}
+        types = {f.get('type', '') for f in flags}
+        if types & high_risk:
+            return 'HIGH'
+        if len(flags) >= 2:
+            return 'MEDIUM'
+        return 'LOW'
 
     @classmethod
     def scan_for_injection(cls, text):

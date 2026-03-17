@@ -22,6 +22,7 @@ from analysis.models import (
 from .openai_client import OpenAIClient
 from .prompts import SYSTEM_PROMPT, EXTRACTION_PROMPT, SECTION_ANALYSIS_PROMPT
 from .text_cleaner import TextCleaner
+from core.security.output_filter import filter_dict
 
 logger = logging.getLogger(__name__)
 
@@ -93,6 +94,9 @@ class CVAnalyzer:
                 if not extraction_data:
                     raise Exception("Failed to parse extraction response")
 
+                # Output filter — blokuje wyciek danych przed zapisem
+                extraction_data = filter_dict(extraction_data)
+
                 total_tokens += extraction_result['tokens_used']
                 self._save_problems(analysis, extraction_data.get('problems', []))
                 extracted = extraction_data.get('extracted', {})
@@ -102,9 +106,13 @@ class CVAnalyzer:
                 ai_flags = extraction_data.get('security_flags', [])
                 all_flags = backend_flags + [f for f in ai_flags if f.get('fragment')]
                 if all_flags:
+                    risk = TextCleaner.risk_level(all_flags)
+                    for flag in all_flags:
+                        flag['risk_level'] = risk
                     analysis.security_flags = all_flags
                     logger.warning(
-                        f"Analysis {analysis_id}: {len(all_flags)} security flag(s) detected "
+                        f"Analysis {analysis_id}: {len(all_flags)} security flag(s) "
+                        f"risk={risk} "
                         f"(backend={len(backend_flags)}, ai={len(ai_flags)})"
                     )
 
@@ -151,6 +159,9 @@ class CVAnalyzer:
                 analysis_data = self.client.parse_json_response(analysis_result['content'])
                 if not analysis_data:
                     raise Exception("Failed to parse section analysis response")
+
+                # Output filter
+                analysis_data = filter_dict(analysis_data)
 
                 total_tokens += analysis_result['tokens_used']
 
