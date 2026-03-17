@@ -43,6 +43,10 @@ SESSION_COOKIE_HTTPONLY = True
 CSRF_COOKIE_SAMESITE = "Lax"
 SESSION_COOKIE_SAMESITE = "Lax"
 
+# --- Rate limiting (django-ratelimit) — uses default Redis cache ---
+RATELIMIT_USE_CACHE = 'default'
+RATELIMIT_FAIL_OPEN = False   # blokuj przy braku cache, nie przepuszczaj
+
 # --- Security headers ---
 X_FRAME_OPTIONS = "DENY"
 SECURE_CONTENT_TYPE_NOSNIFF = True
@@ -59,6 +63,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     # Third-party
+    'django_ratelimit',
     'rest_framework',
     # Local apps
     'accounts',

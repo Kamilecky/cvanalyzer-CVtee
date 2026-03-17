@@ -1,12 +1,18 @@
 """cv/views.py - Widoki aplikacji CV (upload, podgląd, lista, usuwanie)."""
 
+import logging
+import os
+
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.http import FileResponse, Http404
 from django.utils.translation import gettext as _, get_language
 from django.views.decorators.http import require_POST
 
 from .models import CVDocument, CVSection
+
+logger = logging.getLogger(__name__)
 from .services.parser import CVParser
 from .services.section_detector import SectionDetector
 from analysis.utils import start_cv_analysis
@@ -208,6 +214,31 @@ def bulk_analyze_start_api(request):
             })
 
     return JsonResponse({'analyses': results})
+
+
+@login_required
+def download_cv_view(request, cv_id):
+    """Bezpieczne pobieranie oryginalnego pliku CV.
+
+    Dostęp tylko dla właściciela dokumentu — filtr user=request.user zapobiega IDOR.
+    Plik serwowany przez Django (nie przez URL media), więc nigdy nie jest publicznie dostępny.
+    """
+    cv_doc = get_object_or_404(CVDocument, id=cv_id, user=request.user, is_active=True)
+
+    if not cv_doc.file:
+        raise Http404('File not found.')
+
+    filepath = cv_doc.file.path
+    if not os.path.exists(filepath):
+        logger.warning(f'CV file missing on disk: cv_id={cv_id} user={request.user.id} path={filepath}')
+        raise Http404('File not found.')
+
+    logger.info(f'User {request.user.id} downloaded CV file cv_id={cv_id}')
+    return FileResponse(
+        open(filepath, 'rb'),
+        as_attachment=True,
+        filename=cv_doc.original_filename,
+    )
 
 
 @login_required

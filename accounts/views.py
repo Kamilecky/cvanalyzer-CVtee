@@ -23,8 +23,10 @@ logger = logging.getLogger(__name__)
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.forms import SetPasswordForm
 from django.contrib.auth.tokens import default_token_generator
 from django.contrib import messages
+from django_ratelimit.decorators import ratelimit
 from django.conf import settings
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
@@ -255,6 +257,8 @@ def resend_verification_view(request):
 # Logowanie / Wylogowanie
 # ---------------------------------------------------------------------------
 
+@ratelimit(key='ip', rate='10/m', block=True)
+@ratelimit(key='post:email', rate='10/m', block=True)
 def login_view(request):
     """Logowanie użytkownika z kontrolą weryfikacji email."""
     if request.user.is_authenticated:
@@ -370,6 +374,8 @@ def change_email_view(request):
 # Reset hasła
 # ---------------------------------------------------------------------------
 
+@ratelimit(key='ip', rate='5/h', block=True)
+@ratelimit(key='post:email', rate='5/h', block=True)
 def password_reset_view(request):
     """Żądanie resetu hasła - podanie adresu email."""
     if request.method == 'POST':
@@ -393,33 +399,29 @@ def password_reset_done_view(request):
 
 
 def password_reset_confirm_view(request, uidb64, token):
-    """Ustawianie nowego hasła z linku resetowego."""
+    """Ustawianie nowego hasła z linku resetowego — walidacja przez SetPasswordForm."""
     try:
         uid = force_str(urlsafe_base64_decode(uidb64))
         user = User.objects.get(pk=uid)
     except (TypeError, ValueError, OverflowError, User.DoesNotExist):
         user = None
 
-    if user is not None and default_token_generator.check_token(user, token):
-        if request.method == 'POST':
-            password1 = request.POST.get('new_password1', '')
-            password2 = request.POST.get('new_password2', '')
+    if user is None or not default_token_generator.check_token(user, token):
+        return render(request, 'accounts/password_reset_confirm.html', {'validlink': False})
 
-            if password1 and password1 == password2:
-                user.set_password(password1)
-                user.save()
-                messages.success(request, 'Your password has been reset. You can now log in.')
-                return redirect('login')
-            else:
-                messages.error(request, 'Passwords do not match.')
-
-        return render(request, 'accounts/password_reset_confirm.html', {
-            'validlink': True, 'uidb64': uidb64, 'token': token,
-        })
+    if request.method == 'POST':
+        form = SetPasswordForm(user, request.POST)
+        if form.is_valid():
+            form.save()  # waliduje przez AUTH_PASSWORD_VALIDATORS, wywołuje user.set_password()
+            logger.info(f'Password reset completed for user_id={user.pk}')
+            messages.success(request, 'Your password has been reset. You can now log in.')
+            return redirect('login')
     else:
-        return render(request, 'accounts/password_reset_confirm.html', {
-            'validlink': False,
-        })
+        form = SetPasswordForm(user)
+
+    return render(request, 'accounts/password_reset_confirm.html', {
+        'validlink': True, 'uidb64': uidb64, 'token': token, 'form': form,
+    })
 
 
 def password_reset_complete_view(request):

@@ -96,6 +96,10 @@
         <a href="{% url 'recruitment_candidate_list' %}" class="sidebar-link {% if uname == 'recruitment_candidate_list' or uname == 'recruitment_candidate_detail' or uname == 'recruitment_select_positions' %}active{% endif %}">
             <span class="icon"><i class="bi bi-person-lines-fill"></i></span> {% trans "Candidates" %}
         </a>
+        <a href="{% url 'recruitment_flagged_cvs' %}" class="sidebar-link {% if uname == 'recruitment_flagged_cvs' %}active{% endif %}">
+            <span class="icon"><i class="bi bi-shield-exclamation text-danger"></i></span>
+            <span>{% trans "Flagged CVs" %}</span>
+        </a>
         <a href="{% url 'recruitment_position_ranks' %}" class="sidebar-link {% if uname == 'recruitment_position_ranks' %}active{% endif %}">
             <span class="icon"><i class="bi bi-trophy"></i></span> {% trans "Position Ranks" %}
         </a>

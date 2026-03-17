@@ -39,6 +39,9 @@ class AnalysisResult(models.Model):
     raw_ai_response = models.JSONField(default=dict, blank=True)
     percentile_rank = models.PositiveIntegerField(null=True, blank=True)
 
+    # Prompt Injection flags — wypełniane przez TextCleaner.scan_for_injection() i model AI
+    security_flags = models.JSONField(default=list, blank=True)
+
     celery_task_id = models.CharField(max_length=255, blank=True, default='')
     processing_time_seconds = models.FloatField(null=True, blank=True)
     openai_tokens_used = models.PositiveIntegerField(default=0)

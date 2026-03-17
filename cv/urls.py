@@ -10,4 +10,5 @@ urlpatterns = [
     path('bulk-analyze/', views.bulk_analyze_view, name='cv_bulk_analyze'),
     path('bulk-analyze/start/', views.bulk_analyze_start_api, name='cv_bulk_analyze_start'),
     path('<int:cv_id>/delete/', views.cv_delete_view, name='cv_delete'),
+    path('<int:cv_id>/download/', views.download_cv_view, name='cv_download'),
 ]

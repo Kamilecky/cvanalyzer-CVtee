@@ -34,6 +34,7 @@ django-cors-headers==4.9.0
 django-crispy-forms==2.4
 django-login-required-middleware==0.9.0
 django-timezone-field==7.1
+django-ratelimit==4.1.0
 django-widget-tweaks==1.5.0
 djangorestframework==3.16.1
 djangorestframework_simplejwt==5.5.1

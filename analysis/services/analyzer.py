@@ -64,13 +64,17 @@ class CVAnalyzer:
 
             cleaned_text = TextCleaner.clean(cv_text, max_length=4000)
 
-            # Short text warning
+            # Short text warning + Prompt Injection scan (backend-side, niezależny od AI)
             metadata = {}
             if len(cleaned_text) < 200:
                 metadata['short_text_warning'] = True
                 logger.warning(
                     f"Analysis {analysis_id}: short CV text ({len(cleaned_text)} chars)"
                 )
+
+            backend_flags = TextCleaner.scan_for_injection(cleaned_text)
+            if backend_flags:
+                metadata['backend_injection_scan'] = backend_flags
 
             analysis.progress = 30
             analysis.save(update_fields=['progress'])
@@ -93,6 +97,16 @@ class CVAnalyzer:
                 self._save_problems(analysis, extraction_data.get('problems', []))
                 extracted = extraction_data.get('extracted', {})
                 analysis.sections_detected = extracted.get('sections_detected', [])
+
+                # Merge AI-reported security flags with backend scan flags
+                ai_flags = extraction_data.get('security_flags', [])
+                all_flags = backend_flags + [f for f in ai_flags if f.get('fragment')]
+                if all_flags:
+                    analysis.security_flags = all_flags
+                    logger.warning(
+                        f"Analysis {analysis_id}: {len(all_flags)} security flag(s) detected "
+                        f"(backend={len(backend_flags)}, ai={len(ai_flags)})"
+                    )
 
             except Exception as ext_err:
                 logger.error(f"Analysis {analysis_id} extraction failed: {ext_err}")

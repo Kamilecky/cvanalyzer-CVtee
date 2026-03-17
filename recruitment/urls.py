@@ -37,6 +37,9 @@ urlpatterns = [
     # Position Ranks
     path('position-ranks/', views.position_ranks_view, name='recruitment_position_ranks'),
 
+    # Security — Flagged CVs (Prompt Injection)
+    path('flagged-cvs/', views.flagged_cvs_view, name='recruitment_flagged_cvs'),
+
     # Fit results
     path('fit/<uuid:fit_id>/', views.fit_result_detail_view, name='recruitment_fit_result'),
     path('fit/<uuid:fit_id>/status/', views.fit_status_api, name='recruitment_fit_status'),

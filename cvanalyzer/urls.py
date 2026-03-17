@@ -17,6 +17,7 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from django.http import HttpResponse
 from django.shortcuts import redirect
 
 urlpatterns = [
@@ -31,6 +32,15 @@ urlpatterns = [
     path('recruitment/', include('recruitment.urls')),
     path('', lambda request: redirect('dashboard'), name='home'),
 ]
+
+def _ratelimited_view(request, exception):
+    return HttpResponse(
+        'Too many attempts. Please wait and try again.',
+        status=429,
+        content_type='text/plain',
+    )
+
+handler429 = _ratelimited_view
 
 # Serwowanie plików media w trybie deweloperskim
 if settings.DEBUG:

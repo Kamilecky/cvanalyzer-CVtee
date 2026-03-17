@@ -769,3 +769,45 @@ def position_weights_api(request, position_id):
     # GET
     template, _ = PositionWeightTemplate.objects.get_or_create(position=position)
     return JsonResponse({'weights': template.to_dict()})
+
+
+# ---------------------------------------------------------------------------
+# Flagged CVs — Prompt Injection Security
+# ---------------------------------------------------------------------------
+
+@login_required
+def flagged_cvs_view(request):
+    """Lista CV z wykrytymi próbami Prompt Injection."""
+    if not request.user.has_feature('recruitment'):
+        messages.error(request, _('Recruitment module requires a Pro plan or higher.'))
+        return redirect('billing_plans')
+
+    # Analizy użytkownika z niepustymi security_flags
+    flagged_analyses = (
+        AnalysisResult.objects
+        .filter(user=request.user)
+        .exclude(security_flags=[])
+        .select_related('cv_document')
+        .order_by('-created_at')
+    )
+
+    # Dołącz profil kandydata (jeśli istnieje) przez CVDocument
+    results = []
+    for analysis in flagged_analyses:
+        profile = None
+        try:
+            profile = analysis.cv_document.candidate_profile
+        except Exception:
+            pass
+        results.append({
+            'analysis': analysis,
+            'cv_document': analysis.cv_document,
+            'profile': profile,
+            'flags': analysis.security_flags,
+            'flag_types': list({f.get('type', 'unknown') for f in analysis.security_flags}),
+        })
+
+    return render(request, 'recruitment/flagged_cvs.html', {
+        'results': results,
+        'total': len(results),
+    })
