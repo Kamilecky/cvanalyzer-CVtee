@@ -166,63 +166,79 @@ Flow 2: Rekrutacja
 ================================================================================
 🔹 Plan działania na jutro
 
-Sprawdź, jak wychodzą maile w lokalnym Django
+1️⃣ Sprawdź SMTP credentials w Mailgun
 
-Otwórz terminal i wpisz:
+Wejdź w panel Mailgun:
 
-python manage.py shell
+Sending
+→ Domains
+→ mg.cveeto.eu
+→ SMTP credentials
+
+Powinieneś zobaczyć login:
+
+postmaster@mg.cveeto.eu
+
+Jeśli go tam nie ma, kliknij:
+
+Add new SMTP user
+
+i utwórz np.:
+
+postmaster@mg.cveeto.eu
+
+Mailgun wygeneruje hasło SMTP.
+
+2️⃣ Zmień zmienne w Railway
+
+W Railway ustaw:
+
+MAILGUN_SMTP_HOST=smtp.eu.mailgun.org
+MAILGUN_SMTP_LOGIN=postmaster@mg.cveeto.eu
+MAILGUN_SMTP_PASSWORD=<hasło SMTP z Mailgun>
+MAILGUN_SMTP_PORT=587
+MAILGUN_SMTP_TLS=True
+3️⃣ Redeploy aplikacji
+
+Po zmianie variables zrób:
+
+Railway → Deployments → Redeploy
+
+bo inaczej aplikacja używa starych zmiennych środowiskowych.
+
+4️⃣ Sprawdź konfigurację Django
+
+Twój settings.py jest OK:
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = os.environ.get('MAILGUN_SMTP_HOST')
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = os.environ.get('MAILGUN_SMTP_LOGIN')
+EMAIL_HOST_PASSWORD = os.environ.get('MAILGUN_SMTP_PASSWORD')
+DEFAULT_FROM_EMAIL = "CVeeto <noreply@mg.cveeto.eu>"
+5️⃣ Test po deploy
 from django.core.mail import send_mail
 
 send_mail(
-    "Test",
-    "To jest testowy mail",
-    "no-reply@cveeto.eu",
-    ["twój@email.com"],
-    fail_silently=False
+    "Test CVeeto",
+    "Mailgun działa",
+    "noreply@mg.cveeto.eu",
+    ["merceke@interia.pl"],
+    fail_silently=False,
 )
 
-Jeśli wychodzi błąd – zanotuj go, będziesz wiedział, co poprawić w produkcji.
+Powinno zwrócić:
 
-Załóż konto w profesjonalnej usłudze mailowej
+1
+Jeśli nadal będzie błąd
 
-np. SendGrid (łatwy w integracji z Django/AnyMail)
+Pokaż screen z sekcji SMTP credentials w Mailgun dla domeny mg.cveeto.eu, bo najczęściej problemem jest:
 
-Zweryfikuj domenę cveeto.eu w SendGrid (będą potrzebne rekordy DNS SPF/DKIM).
+używanie loginu z sandbox
 
-Dodaj API key do zmiennych środowiskowych na Railway
+brak użytkownika SMTP dla nowej domeny
 
-W panelu projektu Railway dodaj np.:
+stare hasło SMTP w Railway.
 
-SENDGRID_API_KEY = "<twój_sendgrid_api_key>"
-
-Skonfiguruj Django do produkcji
-
-W settings.py:
-
-EMAIL_BACKEND = "anymail.backends.sendgrid.EmailBackend"
-ANYMAIL = {
-    "SENDGRID_API_KEY": "<twój_sendgrid_api_key>"
-}
-DEFAULT_FROM_EMAIL = "no-reply@cveeto.eu"
-
-Dodaj rekordy SPF/DKIM do DNS domeny
-
-W panelu OVH lub gdzie masz domenę:
-
-SPF: v=spf1 include:sendgrid.net ~all
-
-DKIM: SendGrid poda Ci dokładny rekord TXT
-
-Dzięki temu maile nie będą trafiać do SPAMU.
-
-Przetestuj wysyłkę w produkcji
-
-Po wdrożeniu na Railway, w konsoli lub przez resend-verification sprawdź, czy mail dochodzi.
-
-Sprawdź foldery SPAM i promocje.
-
-(Opcjonalnie) Loguj błędy wysyłki
-
-W widoku resend-verification ustaw fail_silently=False lub łap wyjątki i zapisuj je do logów.
-
-Dzięki temu, jeśli coś pójdzie nie tak, od razu widać problem.
+I kup ten dentosept w końcu

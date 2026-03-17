@@ -27,6 +27,9 @@ CSRF_TRUSTED_ORIGINS = [
     "https://www.cveeto.eu",
 ]
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+SECURE_HSTS_SECONDS = 3600  # 1 godzina
+SECURE_HSTS_INCLUDE_SUBDOMAINS = False
+SECURE_HSTS_PRELOAD = False
 
 # ---------------------------------------------------------------------------
 # Aplikacje
