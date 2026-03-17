@@ -1,6 +1,10 @@
 """recruitment/views.py - Widoki modułu rekrutacji HR."""
 
+import logging
+
 from django.conf import settings
+
+logger = logging.getLogger(__name__)
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -782,30 +786,31 @@ def flagged_cvs_view(request):
         messages.error(request, _('Recruitment module requires a Pro plan or higher.'))
         return redirect('billing_plans')
 
-    # Analizy użytkownika z niepustymi security_flags
-    flagged_analyses = (
-        AnalysisResult.objects
-        .filter(user=request.user)
-        .exclude(security_flags=[])
-        .select_related('cv_document')
-        .order_by('-created_at')
-    )
-
-    # Dołącz profil kandydata (jeśli istnieje) przez CVDocument
     results = []
-    for analysis in flagged_analyses:
-        profile = None
-        try:
-            profile = analysis.cv_document.candidate_profile
-        except Exception:
-            pass
-        results.append({
-            'analysis': analysis,
-            'cv_document': analysis.cv_document,
-            'profile': profile,
-            'flags': analysis.security_flags,
-            'flag_types': list({f.get('type', 'unknown') for f in analysis.security_flags}),
-        })
+    try:
+        flagged_analyses = (
+            AnalysisResult.objects
+            .filter(user=request.user)
+            .exclude(security_flags=[])
+            .select_related('cv_document')
+            .order_by('-created_at')
+        )
+        for analysis in flagged_analyses:
+            profile = None
+            try:
+                profile = analysis.cv_document.candidate_profile
+            except Exception:
+                pass
+            flags = analysis.security_flags or []
+            results.append({
+                'analysis': analysis,
+                'cv_document': analysis.cv_document,
+                'profile': profile,
+                'flags': flags,
+                'flag_types': sorted({f.get('type', 'unknown') for f in flags}),
+            })
+    except Exception as e:
+        logger.warning(f"flagged_cvs_view query error: {e}")
 
     return render(request, 'recruitment/flagged_cvs.html', {
         'results': results,
