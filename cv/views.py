@@ -15,9 +15,14 @@ from .models import CVDocument, CVSection
 logger = logging.getLogger(__name__)
 from .services.parser import CVParser
 from .services.section_detector import SectionDetector
+from .services.cv_normalizer import normalize_text as _normalize_for_detection
 from analysis.utils import start_cv_analysis
+from analysis.services.injection_detector import detect_injection
 from recruitment.tasks import run_profile_extraction_in_thread
 from core.security.file_validation import validate_uploaded_file
+
+# Upload is rejected only when injection is absolutely unambiguous and extreme.
+_UPLOAD_REJECT_THRESHOLD = 80
 
 
 def _process_uploaded_cv(uploaded_file, user):
@@ -42,6 +47,28 @@ def _process_uploaded_cv(uploaded_file, user):
     if result['error'] or not result['text']:
         return None
 
+    # ── Upload-time injection detection ─────────────────────────────────────
+    # Normalize to lowercase/clean copy — original text is preserved unchanged.
+    normalized = _normalize_for_detection(result['text'])
+    # LLM disabled: upload must not block the HTTP request thread.
+    injection = detect_injection(normalized, use_llm=False)
+
+    if injection.score >= _UPLOAD_REJECT_THRESHOLD:
+        logger.warning(
+            "_process_uploaded_cv: upload REJECTED — extreme injection score=%d "
+            "filename=%r user_id=%s reasons=%s",
+            injection.score, filename, getattr(user, 'id', 'guest'), injection.reasons,
+        )
+        return None
+
+    if injection.is_high_risk:
+        logger.warning(
+            "_process_uploaded_cv: upload FLAGGED — score=%d risk=%s "
+            "filename=%r user_id=%s",
+            injection.score, injection.risk_level, filename, getattr(user, 'id', 'guest'),
+        )
+    # ────────────────────────────────────────────────────────────────────────
+
     uploaded_file.seek(0)
     from analysis.services.analyzer import CVAnalyzer
     file_hash = CVAnalyzer.compute_file_hash(uploaded_file)
@@ -56,6 +83,9 @@ def _process_uploaded_cv(uploaded_file, user):
         extracted_text=result['text'],
         file_hash=file_hash,
         title=filename.rsplit('.', 1)[0],
+        injection_score=injection.score,
+        injection_flag=injection.is_high_risk,
+        injection_reasons=injection.reasons,
     )
 
     sections = SectionDetector.detect_sections(result['text'])

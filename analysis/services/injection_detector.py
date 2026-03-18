@@ -181,6 +181,83 @@ def heuristic_score(text: str) -> tuple[int, list[dict]]:
 
 
 # ---------------------------------------------------------------------------
+# Etap 1b — structural_score (density-based heuristics)
+# ---------------------------------------------------------------------------
+
+# Verbs that open imperative sentences / instructions
+_IMPERATIVE_VERBS = re.compile(
+    r'(?:^|\n)\s*(?:ignore|disregard|forget|override|follow|execute|run|reveal|'
+    r'print|output|return|respond|answer|always|never|make sure|ensure|'
+    r'do not|don\'?t|must|shall|should)\b',
+    re.IGNORECASE | re.MULTILINE,
+)
+
+# WORD: ... directive pattern (e.g. "INSTRUCTION: do this")
+_COLON_DIRECTIVE = re.compile(
+    r'\b(?:instruction|command|directive|task|rule|note|important|warning|'
+    r'system|prompt|override)\s*:\s*\S',
+    re.IGNORECASE,
+)
+
+# Lines that are entirely ALL-CAPS and ≥ 4 words
+_ALL_CAPS_LINE = re.compile(r'(?m)^(?:[A-Z]{2,}\s+){3,}[A-Z]{2,}\s*$')
+
+# Repeating n-gram (same 4+ word phrase appearing ≥ 3 times — spam / flooding)
+_REPEAT_NGRAM = re.compile(r'\b(\w+(?:\s+\w+){3,})\b(?:.*?\b\1\b){2,}', re.DOTALL)
+
+
+def structural_score(text: str) -> int:
+    """Detect structural indicators of injection without matching exact phrases.
+
+    Signals detected:
+        * HIGH density of imperative-verb sentences
+        * Colon-based directive formatting (INSTRUCTION: ...)
+        * ALL-CAPS command lines
+        * Repeated n-grams (flooding / spam injection)
+
+    Args:
+        text: Normalised (lowercase) CV text.
+
+    Returns:
+        Integer 0–30.  Each signal contributes independently.
+    """
+    score = 0
+    reasons: list[str] = []
+
+    total_lines = max(text.count('\n') + 1, 1)
+
+    # 1. Imperative verb density
+    imperative_matches = len(_IMPERATIVE_VERBS.findall(text))
+    if imperative_matches >= 3:
+        contrib = min(imperative_matches * 3, 15)
+        score += contrib
+        reasons.append(f"high imperative density ({imperative_matches} hits)")
+
+    # 2. Colon directives
+    directive_matches = len(_COLON_DIRECTIVE.findall(text))
+    if directive_matches >= 2:
+        contrib = min(directive_matches * 4, 12)
+        score += contrib
+        reasons.append(f"colon-based directives ({directive_matches} hits)")
+
+    # 3. ALL-CAPS lines
+    caps_matches = len(_ALL_CAPS_LINE.findall(text))
+    if caps_matches >= 1:
+        score += min(caps_matches * 5, 10)
+        reasons.append(f"all-caps command lines ({caps_matches})")
+
+    # 4. Repeated n-grams (flooding)
+    if _REPEAT_NGRAM.search(text):
+        score += 8
+        reasons.append("repeated n-grams detected")
+
+    if score > 0:
+        logger.debug("structural_score=%d reasons=%s", score, reasons)
+
+    return min(score, 30)
+
+
+# ---------------------------------------------------------------------------
 # Etap 2 — LLM-based classification (opcjonalny)
 # ---------------------------------------------------------------------------
 
@@ -265,11 +342,23 @@ def detect_injection(text: str, use_llm: bool = True, client=None) -> InjectionR
     """
     result = InjectionResult()
 
-    # ---- Etap 1: heurystyki ----
+    # ---- Etap 1a: heurystyki regex ----
     h_score, h_flags = heuristic_score(text)
-    result.score = h_score
     result.flags = h_flags
     result.reasons = [f"{f['type']}: {f['fragment'][:60]}" for f in h_flags]
+
+    # ---- Etap 1b: analiza strukturalna ----
+    s_score = structural_score(text)
+    if s_score > 0:
+        result.reasons.append(f"structural_score={s_score}")
+        result.flags.append({
+            'type': 'structural_anomaly',
+            'fragment': f'structural_score={s_score}',
+            'action': 'content_flagged',
+            'source': 'structural',
+        })
+
+    result.score = min(h_score + s_score, _MAX_HEURISTIC_SCORE)
 
     detected_types = {f['type'] for f in h_flags}
 

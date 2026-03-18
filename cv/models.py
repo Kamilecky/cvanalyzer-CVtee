@@ -46,6 +46,11 @@ class CVDocument(models.Model):
     extracted_text = models.TextField(blank=True, default='')
     file_hash = models.CharField(max_length=64, blank=True, default='', db_index=True)
     is_active = models.BooleanField(default=True)
+
+    # Upload-time injection detection (runs before any AI analysis)
+    injection_score   = models.IntegerField(default=0)         # 0–100 combined score
+    injection_flag    = models.BooleanField(default=False)      # True = suspicious
+    injection_reasons = models.JSONField(default=list, blank=True)  # list[str] of reasons
     uploaded_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
