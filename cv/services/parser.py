@@ -149,9 +149,56 @@ class CVParser:
         return '\n\n'.join(text_parts)
 
     @staticmethod
+    def _check_zip_bomb(file_obj, max_ratio: float = 100.0, max_uncompressed: int = 50 * 1024 * 1024):
+        """Sprawdza DOCX (ZIP) pod kątem zip bomb.
+
+        Args:
+            file_obj:         plik do sprawdzenia
+            max_ratio:        maksymalny stosunek rozmiar_rozpakowany / rozmiar_skompresowany
+            max_uncompressed: maksymalny łączny rozmiar rozpakowanej zawartości (50 MB)
+
+        Raises:
+            ValueError: gdy wykryto potencjalną zip bomb
+        """
+        import zipfile
+        file_obj.seek(0)
+        try:
+            with zipfile.ZipFile(file_obj) as zf:
+                total_compressed   = sum(info.compress_size   for info in zf.infolist())
+                total_uncompressed = sum(info.file_size        for info in zf.infolist())
+
+                if total_uncompressed > max_uncompressed:
+                    logger.warning(
+                        f"Zip bomb detected: uncompressed={total_uncompressed} bytes "
+                        f"> max={max_uncompressed}"
+                    )
+                    raise ValueError(
+                        f"File rejected: uncompressed size {total_uncompressed // 1024 // 1024} MB "
+                        f"exceeds limit."
+                    )
+
+                if total_compressed > 0:
+                    ratio = total_uncompressed / total_compressed
+                    if ratio > max_ratio:
+                        logger.warning(
+                            f"Zip bomb detected: compression ratio={ratio:.1f} > max={max_ratio}"
+                        )
+                        raise ValueError(
+                            f"File rejected: suspicious compression ratio {ratio:.0f}:1."
+                        )
+        except zipfile.BadZipFile as e:
+            logger.warning(f"DOCX is not a valid ZIP: {e}")
+            raise ValueError("File is not a valid DOCX (bad ZIP structure).") from e
+        finally:
+            file_obj.seek(0)
+
+    @staticmethod
     def parse_docx(file_obj):
-        """Ekstrakcja tekstu z DOCX przy użyciu python-docx."""
+        """Ekstrakcja tekstu z DOCX przy użyciu python-docx (z detekcją zip bomb)."""
         from docx import Document
+
+        # Sprawdź zip bomb przed parsowaniem
+        CVParser._check_zip_bomb(file_obj)
 
         file_obj.seek(0)
         doc = Document(file_obj)

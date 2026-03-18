@@ -22,6 +22,7 @@ from analysis.models import (
 from .openai_client import OpenAIClient
 from .prompts import SYSTEM_PROMPT, EXTRACTION_PROMPT, SECTION_ANALYSIS_PROMPT
 from .text_cleaner import TextCleaner
+from .injection_detector import detect_injection
 from core.security.output_filter import filter_dict
 
 logger = logging.getLogger(__name__)
@@ -73,9 +74,14 @@ class CVAnalyzer:
                     f"Analysis {analysis_id}: short CV text ({len(cleaned_text)} chars)"
                 )
 
-            backend_flags = TextCleaner.scan_for_injection(cleaned_text)
+            # Injection detection — heuristic + optional LLM classifier
+            injection = detect_injection(cleaned_text, use_llm=True, client=self.client)
+            backend_flags = injection.flags
             if backend_flags:
                 metadata['backend_injection_scan'] = backend_flags
+                analysis.risk_score = injection.score
+                analysis.is_flagged  = injection.is_high_risk
+                analysis.save(update_fields=['risk_score', 'is_flagged'])
 
             analysis.progress = 30
             analysis.save(update_fields=['progress'])
@@ -102,18 +108,20 @@ class CVAnalyzer:
                 extracted = extraction_data.get('extracted', {})
                 analysis.sections_detected = extracted.get('sections_detected', [])
 
-                # Merge AI-reported security flags with backend scan flags
+                # Merge AI-reported security flags with backend/injection scan flags
                 ai_flags = extraction_data.get('security_flags', [])
                 all_flags = backend_flags + [f for f in ai_flags if f.get('fragment')]
                 if all_flags:
-                    risk = TextCleaner.risk_level(all_flags)
                     for flag in all_flags:
-                        flag['risk_level'] = risk
+                        flag.setdefault('risk_level', injection.risk_level)
                     analysis.security_flags = all_flags
+                    analysis.risk_score = injection.score
+                    analysis.is_flagged  = injection.is_high_risk
                     logger.warning(
                         f"Analysis {analysis_id}: {len(all_flags)} security flag(s) "
-                        f"risk={risk} "
-                        f"(backend={len(backend_flags)}, ai={len(ai_flags)})"
+                        f"risk={injection.risk_level} score={injection.score} "
+                        f"(heuristic={len(backend_flags)}, ai={len(ai_flags)}, "
+                        f"llm_used={injection.llm_used})"
                     )
 
             except Exception as ext_err:
