@@ -172,9 +172,51 @@ def position_detail_view(request, position_id):
 
 @login_required
 def candidate_list_view(request):
-    """Lista kandydatów z wyszukiwaniem."""
+    """Lista kandydatów z wyszukiwaniem.
+
+    Kandydaci powiązani z oflagowanym CV (security_flags != []) są automatycznie
+    wykluczani z listy i pokazywani w ostrzeżeniu modalnym.
+    """
+    # 1. Wykryj CV z flagami bezpieczeństwa należące do tego użytkownika
+    flagged_cv_doc_ids = set(
+        AnalysisResult.objects
+        .filter(user=request.user)
+        .exclude(security_flags=[])
+        .values_list('cv_document_id', flat=True)
+    )
+
+    # 2. Pobierz oflagowanych kandydatów (do modala ostrzeżenia)
+    flagged_profiles = []
+    if flagged_cv_doc_ids:
+        flagged_profiles = list(
+            CandidateProfile.objects
+            .filter(user=request.user, cv_document_id__in=flagged_cv_doc_ids)
+            .select_related('cv_document')
+            .order_by('-created_at')
+        )
+        # Dołącz flagi do każdego profilu (do wyświetlenia w modalu)
+        flagged_analyses = {
+            a.cv_document_id: a
+            for a in AnalysisResult.objects
+            .filter(user=request.user, cv_document_id__in=flagged_cv_doc_ids)
+            .exclude(security_flags=[])
+            .order_by('-created_at')
+        }
+        for p in flagged_profiles:
+            analysis = flagged_analyses.get(p.cv_document_id)
+            p.flagged_analysis = analysis
+            p.flagged_types = sorted({
+                f.get('type', 'unknown')
+                for f in (analysis.security_flags if analysis else [])
+            })
+            p.flagged_risk = (analysis.security_flags[0].get('risk_level', 'LOW')
+                              if analysis and analysis.security_flags else 'LOW')
+
+    # 3. Lista kandydatów BEZ oflagowanych
     profiles = CandidateProfile.objects.filter(
         user=request.user, status__in=['done', 'partial'],
+    ).exclude(
+        cv_document_id__in=flagged_cv_doc_ids,
     ).order_by('-created_at')
 
     q = request.GET.get('q', '').strip()
@@ -183,7 +225,7 @@ def candidate_list_view(request):
 
     profiles_list = list(profiles)
 
-    # Attach latest completed analysis ID to each profile (single query)
+    # 4. Attach latest completed analysis ID to each profile (single query)
     cv_doc_ids = [p.cv_document_id for p in profiles_list if p.cv_document_id]
     analysis_map = {}
     for a in AnalysisResult.objects.filter(
@@ -199,8 +241,11 @@ def candidate_list_view(request):
     ).order_by('-created_at')
 
     return render(request, 'recruitment/candidate_list.html', {
-        'profiles': profiles_list, 'query': q,
+        'profiles': profiles_list,
+        'query': q,
         'active_positions': active_positions,
+        'flagged_profiles': flagged_profiles,
+        'flagged_count': len(flagged_profiles),
     })
 
 

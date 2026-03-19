@@ -99,6 +99,10 @@
         <a href="{% url 'recruitment_flagged_cvs' %}" class="sidebar-link {% if uname == 'recruitment_flagged_cvs' %}active{% endif %}">
             <span class="icon"><i class="bi bi-shield-exclamation text-danger"></i></span>
             <span>{% trans "Flagged CVs" %}</span>
+            {% if flagged_cvs_count %}
+            <span class="badge rounded-pill bg-danger ms-auto"
+                  title="{% blocktrans with n=flagged_cvs_count %}{{ n }} suspicious CV(s) detected{% endblocktrans %}">{{ flagged_cvs_count }}</span>
+            {% endif %}
         </a>
         <a href="{% url 'recruitment_position_ranks' %}" class="sidebar-link {% if uname == 'recruitment_position_ranks' %}active{% endif %}">
             <span class="icon"><i class="bi bi-trophy"></i></span> {% trans "Position Ranks" %}

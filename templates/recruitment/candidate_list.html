@@ -4,9 +4,83 @@
 {% block title %}{% trans "Candidates" %} - CV Analyzer{% endblock %}
 
 {% block content %}
+
+{# ── Modal: Flagged CVs warning ───────────────────────────────────────────── #}
+{% if flagged_profiles %}
+<div class="modal fade" id="flaggedCVsModal" tabindex="-1" aria-labelledby="flaggedCVsModalLabel" aria-modal="true" role="dialog">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content border-danger">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="flaggedCVsModalLabel">
+                    <i class="bi bi-shield-exclamation me-2"></i>
+                    {% blocktrans with n=flagged_count %}{{ n }} Suspicious CV(s) Detected{% endblocktrans %}
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="{% trans 'Close' %}"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-danger fw-semibold mb-3">
+                    <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                    {% trans "The following CVs contain content that may attempt to manipulate the AI analysis system (Prompt Injection). These candidates have been removed from the candidate list." %}
+                </p>
+                <div class="list-group">
+                {% for profile in flagged_profiles %}
+                    <div class="list-group-item list-group-item-danger py-3">
+                        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                            <div>
+                                <h6 class="mb-1 fw-bold">
+                                    <i class="bi bi-person-fill me-1"></i>
+                                    {{ profile.name|default:profile.cv_document.original_filename }}
+                                </h6>
+                                <small class="text-muted">
+                                    <i class="bi bi-file-earmark me-1"></i>{{ profile.cv_document.original_filename }}
+                                </small>
+                            </div>
+                            <div class="d-flex gap-2 flex-wrap">
+                                {# Risk level badge #}
+                                <span class="badge {% if profile.flagged_risk == 'HIGH' %}bg-danger{% elif profile.flagged_risk == 'MEDIUM' %}bg-warning text-dark{% else %}bg-secondary{% endif %}">
+                                    {{ profile.flagged_risk }}
+                                </span>
+                                {# Link to flagged CVs detail #}
+                                <a href="{% url 'recruitment_flagged_cvs' %}" class="btn btn-sm btn-outline-danger py-0">
+                                    <i class="bi bi-shield-exclamation"></i> {% trans "Details" %}
+                                </a>
+                            </div>
+                        </div>
+                        {# Attack types #}
+                        {% if profile.flagged_types %}
+                        <div class="mt-2 d-flex flex-wrap gap-1">
+                            {% for ftype in profile.flagged_types %}
+                            <span class="badge bg-dark text-white">{{ ftype }}</span>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+                </div>
+            </div>
+            <div class="modal-footer">
+                <a href="{% url 'recruitment_flagged_cvs' %}" class="btn btn-danger">
+                    <i class="bi bi-shield-exclamation me-1"></i>{% trans "View Flagged CVs" %}
+                </a>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans "Close" %}</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{# ─────────────────────────────────────────────────────────────────────────── #}
+
 <div class="container-fluid py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2><i class="bi bi-people"></i> {% trans "Candidates" %}</h2>
+        <h2>
+            <i class="bi bi-people"></i> {% trans "Candidates" %}
+            {% if flagged_count %}
+            <button type="button" class="btn btn-sm btn-danger ms-2" data-bs-toggle="modal" data-bs-target="#flaggedCVsModal"
+                    title="{% blocktrans with n=flagged_count %}{{ n }} flagged CV(s){% endblocktrans %}">
+                <i class="bi bi-shield-exclamation me-1"></i>{{ flagged_count }}
+            </button>
+            {% endif %}
+        </h2>
         <div>
             {% if profiles and active_positions %}
             <button type="button" class="btn btn-outline-success me-2" data-bs-toggle="modal" data-bs-target="#bulkAnalysisModal">
@@ -310,6 +384,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Check on page load if there's an ongoing bulk analysis
     checkBulkStatus();
+
+    {% if flagged_profiles %}
+    // Auto-show flagged CVs warning modal on first page load
+    const flaggedModal = new bootstrap.Modal(document.getElementById('flaggedCVsModal'));
+    flaggedModal.show();
+    {% endif %}
 });
 </script>
 {% endblock %}
