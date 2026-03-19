@@ -111,10 +111,12 @@ class CVParser:
 
     @staticmethod
     def parse(file_obj, filename):
-        """Główna metoda parsowania. Zwraca dict z text, format, page_count."""
+        """Główna metoda parsowania. Zwraca dict z text, format, error, hidden_text."""
+        from .hidden_text_detector import detect_hidden_text
+
         fmt = CVParser.detect_format(filename)
         if not fmt:
-            return {'text': '', 'format': None, 'error': 'Unsupported format'}
+            return {'text': '', 'format': None, 'error': 'Unsupported format', 'hidden_text': []}
 
         def _do_parse():
             if fmt == 'pdf':
@@ -126,13 +128,28 @@ class CVParser:
 
         try:
             text = _parse_with_timeout(_do_parse)
-            return {'text': text.strip(), 'format': fmt, 'error': ''}
         except TimeoutError:
             logger.warning(f"Parsing timeout exceeded for file format={fmt}")
-            return {'text': '', 'format': fmt, 'error': 'File processing timeout'}
+            return {'text': '', 'format': fmt, 'error': 'File processing timeout', 'hidden_text': []}
         except Exception as e:
             logger.warning(f"Parsing error for format={fmt}: {e}")
-            return {'text': '', 'format': fmt, 'error': str(e)}
+            return {'text': '', 'format': fmt, 'error': str(e), 'hidden_text': []}
+
+        # Skanuj ukryty tekst po udanym parsowaniu (osobny seek, nie blokuje tekstu)
+        hidden_findings = []
+        try:
+            hidden_findings = _parse_with_timeout(detect_hidden_text, file_obj, fmt)
+        except TimeoutError:
+            logger.warning(f"Hidden text detection timeout for format={fmt}")
+        except Exception as e:
+            logger.warning(f"Hidden text detection error for format={fmt}: {e}")
+
+        return {
+            'text':        text.strip(),
+            'format':      fmt,
+            'error':       '',
+            'hidden_text': hidden_findings,
+        }
 
     @staticmethod
     def parse_pdf(file_obj):

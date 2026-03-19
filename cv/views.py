@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 from .services.parser import CVParser
 from .services.section_detector import SectionDetector
 from .services.cv_normalizer import normalize_text as _normalize_for_detection
+from .services.hidden_text_detector import findings_to_injection_flags
 from analysis.utils import start_cv_analysis
 from analysis.services.injection_detector import detect_injection
 from recruitment.tasks import run_profile_extraction_in_thread
@@ -52,6 +53,25 @@ def _process_uploaded_cv(uploaded_file, user):
     normalized = _normalize_for_detection(result['text'])
     # LLM disabled: upload must not block the HTTP request thread.
     injection = detect_injection(normalized, use_llm=False)
+
+    # Merge hidden text findings into injection result
+    hidden_findings = result.get('hidden_text', [])
+    if hidden_findings:
+        hidden_flags = findings_to_injection_flags(hidden_findings)
+        injection.flags.extend(hidden_flags)
+        injection.reasons.extend(
+            f"hidden_text:{f['subtype']} ({f['char_count']} chars, p.{f['page']})"
+            for f in hidden_flags
+        )
+        # Each hidden text finding adds 25 pts to score (capped at 100)
+        injection.score = min(injection.score + len(hidden_findings) * 25, 100)
+        if injection.score >= 25:
+            injection.is_high_risk = True
+        logger.warning(
+            "_process_uploaded_cv: hidden text detected — %d finding(s) "
+            "filename=%r user_id=%s",
+            len(hidden_findings), filename, getattr(user, 'id', 'guest'),
+        )
 
     if injection.score >= _UPLOAD_REJECT_THRESHOLD:
         logger.warning(
