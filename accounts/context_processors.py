@@ -22,11 +22,10 @@ def user_stats(request):
 
     position_limit = settings.JOB_POSITION_LIMITS.get(request.user.plan)
 
-    # Liczba analiz z wykrytymi flagami (security_flags != [])
-    # Używane przez badge w sidebarze obok "Flagged CVs"
+    # Liczba aktywnych (nie odwołanych) alertów injection — badge w sidebarze
     flagged_count = (
         AnalysisResult.objects
-        .filter(user=request.user)
+        .filter(user=request.user, injection_dismissed=False)
         .exclude(security_flags=[])
         .count()
         if request.user.has_feature('recruitment')

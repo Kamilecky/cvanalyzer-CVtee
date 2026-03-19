@@ -35,7 +35,7 @@
                                     <i class="bi bi-file-earmark me-1"></i>{{ profile.cv_document.original_filename }}
                                 </small>
                             </div>
-                            <div class="d-flex gap-2 flex-wrap">
+                            <div class="d-flex gap-2 flex-wrap align-items-center">
                                 {# Risk level badge #}
                                 <span class="badge {% if profile.flagged_risk == 'HIGH' %}bg-danger{% elif profile.flagged_risk == 'MEDIUM' %}bg-warning text-dark{% else %}bg-secondary{% endif %}">
                                     {{ profile.flagged_risk }}
@@ -44,6 +44,16 @@
                                 <a href="{% url 'recruitment_flagged_cvs' %}" class="btn btn-sm btn-outline-danger py-0">
                                     <i class="bi bi-shield-exclamation"></i> {% trans "Details" %}
                                 </a>
+                                {# Dismiss pojedynczy alert #}
+                                {% if profile.flagged_analysis %}
+                                <form method="post" action="{% url 'recruitment_flagged_cv_dismiss' profile.flagged_analysis.id %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-warning py-0"
+                                            title="{% trans 'Dismiss alert' %}">
+                                        <i class="bi bi-bell-slash"></i>
+                                    </button>
+                                </form>
+                                {% endif %}
                             </div>
                         </div>
                         {# Attack types #}
@@ -62,6 +72,13 @@
                 <a href="{% url 'recruitment_flagged_cvs' %}" class="btn btn-danger">
                     <i class="bi bi-shield-exclamation me-1"></i>{% trans "View Flagged CVs" %}
                 </a>
+                <form method="post" action="{% url 'recruitment_flagged_cvs_dismiss_all' %}"
+                      onsubmit="return confirm('{% trans "Dismiss all active alerts?" %}')">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-warning">
+                        <i class="bi bi-bell-slash me-1"></i>{% trans "Dismiss all" %}
+                    </button>
+                </form>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{% trans "Close" %}</button>
             </div>
         </div>

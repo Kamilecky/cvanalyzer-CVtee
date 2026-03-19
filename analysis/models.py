@@ -40,9 +40,10 @@ class AnalysisResult(models.Model):
     percentile_rank = models.PositiveIntegerField(null=True, blank=True)
 
     # Prompt Injection — wykrywanie i ocena ryzyka
-    security_flags = models.JSONField(default=list, blank=True)
-    risk_score     = models.IntegerField(default=0)       # 0–100 (InjectionResult.score)
-    is_flagged     = models.BooleanField(default=False)   # True gdy risk_level HIGH
+    security_flags      = models.JSONField(default=list, blank=True)
+    risk_score          = models.IntegerField(default=0)      # 0–100 (InjectionResult.score)
+    is_flagged          = models.BooleanField(default=False)  # True gdy risk_level HIGH
+    injection_dismissed = models.BooleanField(default=False)  # True = alert odwołany przez rekrutera
 
     celery_task_id = models.CharField(max_length=255, blank=True, default='')
     processing_time_seconds = models.FloatField(null=True, blank=True)

@@ -177,10 +177,10 @@ def candidate_list_view(request):
     Kandydaci powiązani z oflagowanym CV (security_flags != []) są automatycznie
     wykluczani z listy i pokazywani w ostrzeżeniu modalnym.
     """
-    # 1. Wykryj CV z flagami bezpieczeństwa należące do tego użytkownika
+    # 1. Wykryj CV z aktywnymi (nie odwołanymi) flagami bezpieczeństwa
     flagged_cv_doc_ids = set(
         AnalysisResult.objects
-        .filter(user=request.user)
+        .filter(user=request.user, injection_dismissed=False)
         .exclude(security_flags=[])
         .values_list('cv_document_id', flat=True)
     )
@@ -826,12 +826,21 @@ def position_weights_api(request, position_id):
 
 @login_required
 def flagged_cvs_view(request):
-    """Lista CV z wykrytymi próbami Prompt Injection."""
+    """Lista CV z wykrytymi próbami Prompt Injection.
+
+    Pokazuje dwie sekcje:
+    - Aktywne (injection_dismissed=False) — wymagają uwagi
+    - Odwołane (injection_dismissed=True) — zarchiwizowane przez rekrutera
+    """
     if not request.user.has_feature('recruitment'):
         messages.error(request, _('Recruitment module requires a Pro plan or higher.'))
         return redirect('billing_plans')
 
-    results = []
+    show_dismissed = request.GET.get('show_dismissed') == '1'
+
+    active_results    = []
+    dismissed_results = []
+
     try:
         flagged_analyses = (
             AnalysisResult.objects
@@ -847,17 +856,67 @@ def flagged_cvs_view(request):
             except Exception:
                 pass
             flags = analysis.security_flags or []
-            results.append({
-                'analysis': analysis,
+            item = {
+                'analysis':    analysis,
                 'cv_document': analysis.cv_document,
-                'profile': profile,
-                'flags': flags,
-                'flag_types': sorted({f.get('type', 'unknown') for f in flags}),
-            })
+                'profile':     profile,
+                'flags':       flags,
+                'flag_types':  sorted({f.get('type', 'unknown') for f in flags}),
+            }
+            if analysis.injection_dismissed:
+                dismissed_results.append(item)
+            else:
+                active_results.append(item)
     except Exception as e:
         logger.warning(f"flagged_cvs_view query error: {e}")
 
     return render(request, 'recruitment/flagged_cvs.html', {
-        'results': results,
-        'total': len(results),
+        'results':          active_results,
+        'dismissed':        dismissed_results,
+        'total':            len(active_results),
+        'dismissed_count':  len(dismissed_results),
+        'show_dismissed':   show_dismissed,
     })
+
+
+@login_required
+@require_POST
+def flagged_cv_dismiss_view(request, analysis_id):
+    """Odwołuje (dismissuje) alert dla pojedynczego CV."""
+    analysis = get_object_or_404(
+        AnalysisResult, id=analysis_id, user=request.user,
+    )
+    analysis.injection_dismissed = True
+    analysis.save(update_fields=['injection_dismissed'])
+    messages.success(request, _('Alert dismissed. The CV will no longer appear in the warning badge.'))
+    return redirect('recruitment_flagged_cvs')
+
+
+@login_required
+@require_POST
+def flagged_cv_restore_view(request, analysis_id):
+    """Przywraca odwołany alert dla pojedynczego CV."""
+    analysis = get_object_or_404(
+        AnalysisResult, id=analysis_id, user=request.user,
+    )
+    analysis.injection_dismissed = False
+    analysis.save(update_fields=['injection_dismissed'])
+    messages.success(request, _('Alert restored. The CV will appear in the warning badge again.'))
+    return redirect('recruitment_flagged_cvs')
+
+
+@login_required
+@require_POST
+def flagged_cvs_dismiss_all_view(request):
+    """Odwołuje wszystkie aktywne alerty (zbiorczo)."""
+    updated = (
+        AnalysisResult.objects
+        .filter(user=request.user, injection_dismissed=False)
+        .exclude(security_flags=[])
+        .update(injection_dismissed=True)
+    )
+    messages.success(
+        request,
+        _('%(n)d alert(s) dismissed. The badge and warnings will no longer appear.') % {'n': updated},
+    )
+    return redirect('recruitment_flagged_cvs')

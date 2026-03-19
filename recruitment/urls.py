@@ -38,7 +38,10 @@ urlpatterns = [
     path('position-ranks/', views.position_ranks_view, name='recruitment_position_ranks'),
 
     # Security — Flagged CVs (Prompt Injection)
-    path('flagged-cvs/', views.flagged_cvs_view, name='recruitment_flagged_cvs'),
+    path('flagged-cvs/',                              views.flagged_cvs_view,            name='recruitment_flagged_cvs'),
+    path('flagged-cvs/dismiss-all/',                  views.flagged_cvs_dismiss_all_view, name='recruitment_flagged_cvs_dismiss_all'),
+    path('flagged-cvs/<uuid:analysis_id>/dismiss/',   views.flagged_cv_dismiss_view,     name='recruitment_flagged_cv_dismiss'),
+    path('flagged-cvs/<uuid:analysis_id>/restore/',   views.flagged_cv_restore_view,     name='recruitment_flagged_cv_restore'),
 
     # Fit results
     path('fit/<uuid:fit_id>/', views.fit_result_detail_view, name='recruitment_fit_result'),

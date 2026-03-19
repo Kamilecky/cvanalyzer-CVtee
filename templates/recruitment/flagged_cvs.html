@@ -6,7 +6,7 @@
 {% block content %}
 <div class="container-fluid py-4">
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
         <div>
             <h2><i class="bi bi-shield-exclamation text-danger"></i> {% trans "Flagged CVs" %}</h2>
             <p class="text-muted mb-0">
@@ -14,7 +14,25 @@
                 {% trans "These candidates attempted to manipulate the AI analysis engine." %}
             </p>
         </div>
-        <span class="badge bg-danger fs-6">{{ total }} {% trans "flagged" %}</span>
+        <div class="d-flex gap-2 align-items-center flex-wrap">
+            {% if dismissed_count %}
+            <a href="?show_dismissed={% if show_dismissed %}0{% else %}1{% endif %}"
+               class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-archive me-1"></i>
+                {% if show_dismissed %}{% trans "Hide dismissed" %}{% else %}{% blocktrans with n=dismissed_count %}Show dismissed ({{ n }}){% endblocktrans %}{% endif %}
+            </a>
+            {% endif %}
+            {% if total %}
+            <form method="post" action="{% url 'recruitment_flagged_cvs_dismiss_all' %}"
+                  onsubmit="return confirm('{% trans "Dismiss all active alerts? They will no longer appear in the badge or candidate warnings." %}')">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-outline-warning">
+                    <i class="bi bi-bell-slash me-1"></i>{% trans "Dismiss all" %}
+                </button>
+            </form>
+            {% endif %}
+            <span class="badge bg-danger fs-6">{{ total }} {% trans "active" %}</span>
+        </div>
     </div>
 
     {% if total == 0 %}
@@ -130,7 +148,7 @@
                             </td>
 
                             <!-- Actions -->
-                            <td>
+                            <td class="text-nowrap">
                                 <a href="{% url 'analysis_result' item.analysis.id %}"
                                    class="btn btn-sm btn-outline-info me-1"
                                    title="{% trans 'View Analysis' %}">
@@ -138,11 +156,18 @@
                                 </a>
                                 {% if item.profile %}
                                 <a href="{% url 'recruitment_candidate_detail' item.profile.id %}"
-                                   class="btn btn-sm btn-outline-primary"
+                                   class="btn btn-sm btn-outline-primary me-1"
                                    title="{% trans 'Candidate Profile' %}">
                                     <i class="bi bi-person-fill"></i>
                                 </a>
                                 {% endif %}
+                                <form method="post" action="{% url 'recruitment_flagged_cv_dismiss' item.analysis.id %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-warning"
+                                            title="{% trans 'Dismiss alert — remove from badge and candidate warnings' %}">
+                                        <i class="bi bi-bell-slash"></i>
+                                    </button>
+                                </form>
                             </td>
                         </tr>
                         {% endfor %}
@@ -151,6 +176,59 @@
             </div>
         </div>
     </div>
+
+    {% if show_dismissed and dismissed %}
+    <h5 class="mt-5 text-muted"><i class="bi bi-archive me-1"></i> {% trans "Dismissed alerts" %}</h5>
+    <div class="card mt-2 border-secondary opacity-75">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-sm mb-0 text-muted">
+                    <thead class="table-secondary">
+                        <tr>
+                            <th>{% trans "Candidate / CV" %}</th>
+                            <th>{% trans "Attack Types" %}</th>
+                            <th>{% trans "Date" %}</th>
+                            <th>{% trans "Actions" %}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for item in dismissed %}
+                        <tr>
+                            <td>
+                                {% if item.profile %}
+                                    <i class="bi bi-person me-1"></i>{{ item.profile.name|default:item.cv_document.original_filename }}
+                                {% else %}
+                                    <i class="bi bi-file-earmark me-1"></i>{{ item.cv_document.original_filename|default:"Unknown" }}
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% for ft in item.flag_types %}
+                                <span class="badge bg-secondary me-1">{{ ft }}</span>
+                                {% endfor %}
+                            </td>
+                            <td><small>{{ item.analysis.created_at|date:"d M Y" }}</small></td>
+                            <td class="text-nowrap">
+                                <a href="{% url 'analysis_result' item.analysis.id %}"
+                                   class="btn btn-sm btn-outline-secondary me-1"
+                                   title="{% trans 'View Analysis' %}">
+                                    <i class="bi bi-bar-chart-fill"></i>
+                                </a>
+                                <form method="post" action="{% url 'recruitment_flagged_cv_restore' item.analysis.id %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-danger"
+                                            title="{% trans 'Restore alert' %}">
+                                        <i class="bi bi-bell"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 
     <!-- Info box -->
     <div class="card mt-4 border-warning">
