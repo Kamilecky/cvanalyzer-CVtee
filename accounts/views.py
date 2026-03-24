@@ -50,12 +50,14 @@ from .models import User, EmailVerificationToken
 # ---------------------------------------------------------------------------
 
 def _send_verification_email_mailgun(to_email, subject, html_message):
-    """Wysyła email przez Mailgun HTTP API (nie przez SMTP).
+    """Wysyła email przez Mailgun HTTP API EU (nie przez SMTP).
 
-    Używa zmiennych środowiskowych:
-        MAILGUN_API_KEY    — klucz API (nie SMTP password)
+    Wymagane zmienne środowiskowe:
+        MAILGUN_API_KEY    — Private API Key z panelu Mailgun (zaczyna się od 'key-')
         MAILGUN_DOMAIN     — domena Mailgun (np. mg.cveeto.eu)
         DEFAULT_FROM_EMAIL — nadawca (np. CVeeto <noreply@cveeto.eu>)
+
+    Endpoint: https://api.eu.mailgun.net/v3/{MAILGUN_DOMAIN}/messages
     """
     api_key = os.environ.get('MAILGUN_API_KEY', '')
     domain  = os.environ.get('MAILGUN_DOMAIN', '')
@@ -65,11 +67,15 @@ def _send_verification_email_mailgun(to_email, subject, html_message):
                 to_email, domain, bool(api_key))
 
     if not api_key or not domain:
-        logger.warning("Mailgun not configured (MAILGUN_API_KEY or MAILGUN_DOMAIN missing) — skipping send")
+        logger.warning("Mailgun not configured (MAILGUN_API_KEY or MAILGUN_DOMAIN missing) - skipping send")
         print("[MAILGUN] WARNING: Missing MAILGUN_API_KEY or MAILGUN_DOMAIN - email NOT sent")
         return
 
-    url = f"https://api.mailgun.net/v3/{domain}/messages"
+    url = f"https://api.eu.mailgun.net/v3/{domain}/messages"
+
+    print(f"[MAILGUN] POST {url}")
+    logger.debug("Mailgun POST url=%s from=%s", url, settings.DEFAULT_FROM_EMAIL)
+
     response = _http_requests.post(
         url,
         auth=("api", api_key),
@@ -83,13 +89,14 @@ def _send_verification_email_mailgun(to_email, subject, html_message):
         timeout=10,
     )
 
-    print(f"[MAILGUN] Response: status={response.status_code} body={response.text[:200]}")
-    logger.info("Mailgun response: status=%s body=%s", response.status_code, response.text[:200])
+    print(f"[MAILGUN] status_code={response.status_code}")
+    print(f"[MAILGUN] response.text={response.text[:500]}")
+    logger.info("Mailgun response: status=%s body=%s", response.status_code, response.text[:500])
 
-    if response.status_code != 200:
+    if response.status_code not in (200, 202):
         logger.warning("Mailgun delivery failed: status=%s body=%s",
-                       response.status_code, response.text[:400])
-        raise RuntimeError(f"Mailgun error {response.status_code}: {response.text[:200]}")
+                       response.status_code, response.text[:500])
+        raise RuntimeError(f"Mailgun error {response.status_code}: {response.text[:300]}")
 
 
 def _send_verification_email(request, user):
