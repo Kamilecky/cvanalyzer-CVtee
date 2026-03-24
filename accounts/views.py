@@ -19,6 +19,8 @@ import logging
 import os
 import threading
 
+import requests as _http_requests
+
 logger = logging.getLogger(__name__)
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, logout, update_session_auth_hash
@@ -47,24 +49,63 @@ from .models import User, EmailVerificationToken
 # Helpery
 # ---------------------------------------------------------------------------
 
+def _send_verification_email_mailgun(to_email, subject, html_message):
+    """Wysyła email przez Mailgun HTTP API (nie przez SMTP).
+
+    Używa zmiennych środowiskowych:
+        MAILGUN_API_KEY    — klucz API (nie SMTP password)
+        MAILGUN_DOMAIN     — domena Mailgun (np. mg.cveeto.eu)
+        DEFAULT_FROM_EMAIL — nadawca (np. CVeeto <noreply@cveeto.eu>)
+    """
+    api_key = os.environ.get('MAILGUN_API_KEY', '')
+    domain  = os.environ.get('MAILGUN_DOMAIN', '')
+
+    print(f"[MAILGUN] SEND TRIGGERED | to={to_email} domain={domain!r} api_key_set={bool(api_key)}")
+    logger.info("Mailgun send triggered: to=%s domain=%s api_key_set=%s",
+                to_email, domain, bool(api_key))
+
+    if not api_key or not domain:
+        logger.warning("Mailgun not configured (MAILGUN_API_KEY or MAILGUN_DOMAIN missing) — skipping send")
+        print("[MAILGUN] WARNING: Missing MAILGUN_API_KEY or MAILGUN_DOMAIN - email NOT sent")
+        return
+
+    url = f"https://api.mailgun.net/v3/{domain}/messages"
+    response = _http_requests.post(
+        url,
+        auth=("api", api_key),
+        data={
+            "from":    settings.DEFAULT_FROM_EMAIL,
+            "to":      [to_email],
+            "subject": subject,
+            "text":    strip_tags(html_message),
+            "html":    html_message,
+        },
+        timeout=10,
+    )
+
+    print(f"[MAILGUN] Response: status={response.status_code} body={response.text[:200]}")
+    logger.info("Mailgun response: status=%s body=%s", response.status_code, response.text[:200])
+
+    if response.status_code != 200:
+        logger.warning("Mailgun delivery failed: status=%s body=%s",
+                       response.status_code, response.text[:400])
+        raise RuntimeError(f"Mailgun error {response.status_code}: {response.text[:200]}")
+
+
 def _send_verification_email(request, user):
     """Tworzy token weryfikacyjny i wysyła email z linkiem aktywacyjnym."""
     user.verification_tokens.filter(used=False).update(used=True)
     token = EmailVerificationToken.objects.create(user=user)
     verify_url = request.build_absolute_uri(f'/accounts/verify/{token.token}/')
 
-    subject = 'CV Analyzer - Verify your email address'
+    subject = 'CVeeto — Verify your email address'
     html_message = render_to_string('accounts/email/verification_email.html', {
         'user': user,
         'verify_url': verify_url,
         'expiry_hours': getattr(settings, 'EMAIL_VERIFICATION_TOKEN_EXPIRY_HOURS', 24),
     })
-    plain_message = strip_tags(html_message)
 
-    send_mail(
-        subject, plain_message, settings.DEFAULT_FROM_EMAIL,
-        [user.email], html_message=html_message, fail_silently=False,
-    )
+    _send_verification_email_mailgun(user.email, subject, html_message)
 
 
 def _send_password_reset_email(request, user):
@@ -131,24 +172,21 @@ def register_view(request):
 
             # Build verify URL before spawning thread (request not available in thread)
             user.verification_tokens.filter(used=False).update(used=True)
-            from .models import EmailVerificationToken
             token = EmailVerificationToken.objects.create(user=user)
             verify_url = request.build_absolute_uri(f'/accounts/verify/{token.token}/')
+            subject = 'CVeeto — Verify your email address'
+            html_message = render_to_string('accounts/email/verification_email.html', {
+                'user': user,
+                'verify_url': verify_url,
+                'expiry_hours': getattr(settings, 'EMAIL_VERIFICATION_TOKEN_EXPIRY_HOURS', 24),
+            })
+            _to = user.email
 
             def _send():
                 try:
-                    subject = 'CV Analyzer - Verify your email address'
-                    html_message = render_to_string('accounts/email/verification_email.html', {
-                        'user': user,
-                        'verify_url': verify_url,
-                        'expiry_hours': getattr(settings, 'EMAIL_VERIFICATION_TOKEN_EXPIRY_HOURS', 24),
-                    })
-                    send_mail(
-                        subject, strip_tags(html_message), settings.DEFAULT_FROM_EMAIL,
-                        [user.email], html_message=html_message, fail_silently=True,
-                    )
+                    _send_verification_email_mailgun(_to, subject, html_message)
                 except Exception as e:
-                    logger.warning(f"Unhandled exception: {e}")
+                    logger.warning(f"Verification email failed: {e}")
 
             threading.Thread(target=_send, daemon=True).start()
 
@@ -226,24 +264,21 @@ def resend_verification_view(request):
             return redirect('login')
 
         user.verification_tokens.filter(used=False).update(used=True)
-        from .models import EmailVerificationToken
         resend_token = EmailVerificationToken.objects.create(user=user)
         resend_verify_url = request.build_absolute_uri(f'/accounts/verify/{resend_token.token}/')
+        resend_subject = 'CVeeto — Verify your email address'
+        resend_html = render_to_string('accounts/email/verification_email.html', {
+            'user': user,
+            'verify_url': resend_verify_url,
+            'expiry_hours': getattr(settings, 'EMAIL_VERIFICATION_TOKEN_EXPIRY_HOURS', 24),
+        })
+        _resend_to = user.email
 
         def _resend():
             try:
-                subject = 'CV Analyzer - Verify your email address'
-                html_message = render_to_string('accounts/email/verification_email.html', {
-                    'user': user,
-                    'verify_url': resend_verify_url,
-                    'expiry_hours': getattr(settings, 'EMAIL_VERIFICATION_TOKEN_EXPIRY_HOURS', 24),
-                })
-                send_mail(
-                    subject, strip_tags(html_message), settings.DEFAULT_FROM_EMAIL,
-                    [user.email], html_message=html_message, fail_silently=True,
-                )
+                _send_verification_email_mailgun(_resend_to, resend_subject, resend_html)
             except Exception as e:
-                logger.warning(f"Unhandled exception: {e}")
+                logger.warning(f"Resend verification email failed: {e}")
 
         threading.Thread(target=_resend, daemon=True).start()
         messages.success(request, 'A new verification link has been sent to your email.')
