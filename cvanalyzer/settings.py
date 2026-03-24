@@ -188,7 +188,7 @@ EMAIL_USE_TLS = True
 EMAIL_USE_SSL = False
 EMAIL_HOST_USER = os.environ.get('MAILGUN_SMTP_LOGIN', '')
 EMAIL_HOST_PASSWORD = os.environ.get('MAILGUN_SMTP_PASSWORD', '')
-DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'CVeeto <noreply@cveeto.eu>')
+DEFAULT_FROM_EMAIL = "CVeeto <postmaster@mg.cveeto.eu>"
 SERVER_EMAIL = DEFAULT_FROM_EMAIL
 
 # Weryfikacja email
