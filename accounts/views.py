@@ -19,6 +19,8 @@ import logging
 import os
 import threading
 
+import requests
+
 logger = logging.getLogger(__name__)
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, logout, update_session_auth_hash
@@ -28,7 +30,6 @@ from django.contrib.auth.tokens import default_token_generator
 from django.contrib import messages
 from django_ratelimit.decorators import ratelimit
 from django.conf import settings
-from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
@@ -41,6 +42,33 @@ from .forms import (
     ChangePasswordForm, ChangeEmailForm,
 )
 from .models import User, EmailVerificationToken
+
+
+# ---------------------------------------------------------------------------
+# Mailgun HTTP API helper
+# ---------------------------------------------------------------------------
+
+def _mailgun_send(subject, html_message, to, fail_silently=False):
+    """Wysyła email przez Mailgun HTTP API (EU)."""
+    try:
+        response = requests.post(
+            settings.MAILGUN_API_URL,
+            auth=("api", settings.MAILGUN_API_KEY),
+            data={
+                "from": settings.DEFAULT_FROM_EMAIL,
+                "to": [to] if isinstance(to, str) else to,
+                "subject": subject,
+                "text": strip_tags(html_message),
+                "html": html_message,
+            },
+            timeout=10,
+        )
+        response.raise_for_status()
+        logger.info(f"Mailgun sent to {to}: {response.status_code}")
+    except Exception as e:
+        logger.error(f"Mailgun send failed to {to}: {e}")
+        if not fail_silently:
+            raise
 
 
 # ---------------------------------------------------------------------------
@@ -60,13 +88,7 @@ def _send_verification_email(request, user):
         'expiry_hours': getattr(settings, 'EMAIL_VERIFICATION_TOKEN_EXPIRY_HOURS', 24),
     })
 
-    send_mail(
-        subject,
-        strip_tags(html_message),
-        settings.DEFAULT_FROM_EMAIL,
-        [user.email],
-        html_message=html_message,
-    )
+    _mailgun_send(subject, html_message, user.email)
 
 
 def _send_password_reset_email(request, user):
@@ -80,12 +102,7 @@ def _send_password_reset_email(request, user):
         'user': user,
         'reset_url': reset_url,
     })
-    plain_message = strip_tags(html_message)
-
-    send_mail(
-        subject, plain_message, settings.DEFAULT_FROM_EMAIL,
-        [user.email], html_message=html_message, fail_silently=False,
-    )
+    _mailgun_send(subject, html_message, user.email)
 
 
 def _send_password_changed_email(user):
@@ -94,10 +111,7 @@ def _send_password_changed_email(user):
     html_message = render_to_string('accounts/email/password_changed_email.html', {
         'user': user,
     })
-    send_mail(
-        subject, strip_tags(html_message), settings.DEFAULT_FROM_EMAIL,
-        [user.email], html_message=html_message, fail_silently=True,
-    )
+    _mailgun_send(subject, html_message, user.email, fail_silently=True)
 
 
 def _send_email_changed_notification(old_email, new_email, user):
@@ -108,10 +122,7 @@ def _send_email_changed_notification(old_email, new_email, user):
         'old_email': old_email,
         'new_email': new_email,
     })
-    send_mail(
-        subject, strip_tags(html_message), settings.DEFAULT_FROM_EMAIL,
-        [old_email], html_message=html_message, fail_silently=True,
-    )
+    _mailgun_send(subject, html_message, old_email, fail_silently=True)
 
 
 # ---------------------------------------------------------------------------
@@ -145,14 +156,7 @@ def register_view(request):
 
             def _send():
                 try:
-                    send_mail(
-                        subject,
-                        strip_tags(html_message),
-                        settings.DEFAULT_FROM_EMAIL,
-                        [_to],
-                        html_message=html_message,
-                        fail_silently=False,
-                    )
+                    _mailgun_send(subject, html_message, _to)
                 except Exception as e:
                     logger.warning(f"Verification email failed: {e}")
 
@@ -244,14 +248,7 @@ def resend_verification_view(request):
 
         def _resend():
             try:
-                send_mail(
-                    resend_subject,
-                    strip_tags(resend_html),
-                    settings.DEFAULT_FROM_EMAIL,
-                    [_resend_to],
-                    html_message=resend_html,
-                    fail_silently=False,
-                )
+                _mailgun_send(resend_subject, resend_html, _resend_to)
             except Exception as e:
                 logger.warning(f"Resend verification email failed: {e}")
 

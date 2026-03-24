@@ -174,23 +174,17 @@ DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # ---------------------------------------------------------------------------
-# Email — Mailgun SMTP
+# Email — Mailgun HTTP API (EU)
 # Wymagane zmienne środowiskowe na Railway:
-#   MAILGUN_SMTP_LOGIN    — np. postmaster@mg.cveeto.eu
-#   MAILGUN_SMTP_PASSWORD — klucz SMTP z panelu Mailgun
-#   DEFAULT_FROM_EMAIL    — np. CVeeto <noreply@mg.cveeto.eu>
-# Konto EU: użyj EMAIL_HOST = 'smtp.eu.mailgun.org'
+#   MAILGUN_API_KEY  — API Key z panelu Mailgun (Sending → Domain Settings → API Keys)
+#   MAILGUN_DOMAIN   — mg.cveeto.eu
 # ---------------------------------------------------------------------------
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = os.environ.get('MAILGUN_SMTP_HOST', 'smtp.eu.mailgun.org')
-EMAIL_PORT = 465
-EMAIL_USE_TLS = False
-EMAIL_USE_SSL = True
-EMAIL_HOST_USER = os.environ.get('MAILGUN_SMTP_LOGIN', '')
-EMAIL_HOST_PASSWORD = os.environ.get('MAILGUN_SMTP_PASSWORD', '')
-DEFAULT_FROM_EMAIL = "CVeeto <postmaster@mg.cveeto.eu>"
-SERVER_EMAIL = DEFAULT_FROM_EMAIL
+MAILGUN_API_KEY = os.environ.get('MAILGUN_API_KEY', '')
+MAILGUN_DOMAIN  = os.environ.get('MAILGUN_DOMAIN', 'mg.cveeto.eu')
+MAILGUN_API_URL = f"https://api.eu.mailgun.net/v3/{MAILGUN_DOMAIN}/messages"
 
+DEFAULT_FROM_EMAIL = "CVeeto <postmaster@mg.cveeto.eu>"
+SERVER_EMAIL       = DEFAULT_FROM_EMAIL
 # Weryfikacja email
 REQUIRE_EMAIL_VERIFICATION = True
 EMAIL_VERIFICATION_TOKEN_EXPIRY_HOURS = 24
