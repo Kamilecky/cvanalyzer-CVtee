@@ -78,7 +78,7 @@ def _send_verification_email_mailgun(to_email, subject, html_message):
 
     response = _http_requests.post(
         url,
-        auth=("api", api_key),
+        headers={"Authorization": f"Bearer {api_key}"},
         data={
             "from":    settings.DEFAULT_FROM_EMAIL,
             "to":      [to_email],
