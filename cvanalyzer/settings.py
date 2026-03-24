@@ -182,7 +182,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Konto EU: użyj EMAIL_HOST = 'smtp.eu.mailgun.org'
 # ---------------------------------------------------------------------------
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = os.environ.get('MAILGUN_SMTP_HOST', 'smtp.mailgun.org')
+EMAIL_HOST = os.environ.get('MAILGUN_SMTP_HOST', 'smtp.eu.mailgun.org')
 EMAIL_PORT = 465
 EMAIL_USE_TLS = False
 EMAIL_USE_SSL = True
