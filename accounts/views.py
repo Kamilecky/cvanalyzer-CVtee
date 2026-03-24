@@ -19,8 +19,6 @@ import logging
 import os
 import threading
 
-import requests as _http_requests
-
 logger = logging.getLogger(__name__)
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, logout, update_session_auth_hash
@@ -49,56 +47,6 @@ from .models import User, EmailVerificationToken
 # Helpery
 # ---------------------------------------------------------------------------
 
-def _send_verification_email_mailgun(to_email, subject, html_message):
-    """Wysyła email przez Mailgun HTTP API EU (nie przez SMTP).
-
-    Wymagane zmienne środowiskowe:
-        MAILGUN_API_KEY    — Private API Key z panelu Mailgun (zaczyna się od 'key-')
-        MAILGUN_DOMAIN     — domena Mailgun (np. mg.cveeto.eu)
-        DEFAULT_FROM_EMAIL — nadawca (np. CVeeto <noreply@cveeto.eu>)
-
-    Endpoint: https://api.eu.mailgun.net/v3/{MAILGUN_DOMAIN}/messages
-    """
-    api_key = os.environ.get('MAILGUN_API_KEY', '')
-    domain  = os.environ.get('MAILGUN_DOMAIN', '')
-
-    print(f"[MAILGUN] SEND TRIGGERED | to={to_email} domain={domain!r} api_key_set={bool(api_key)}")
-    logger.info("Mailgun send triggered: to=%s domain=%s api_key_set=%s",
-                to_email, domain, bool(api_key))
-
-    if not api_key or not domain:
-        logger.warning("Mailgun not configured (MAILGUN_API_KEY or MAILGUN_DOMAIN missing) - skipping send")
-        print("[MAILGUN] WARNING: Missing MAILGUN_API_KEY or MAILGUN_DOMAIN - email NOT sent")
-        return
-
-    url = f"https://api.eu.mailgun.net/v3/{domain}/messages"
-
-    print(f"[MAILGUN] POST {url}")
-    logger.debug("Mailgun POST url=%s from=%s", url, settings.DEFAULT_FROM_EMAIL)
-
-    response = _http_requests.post(
-        url,
-        headers={"Authorization": f"Bearer {api_key}"},
-        data={
-            "from":    settings.DEFAULT_FROM_EMAIL,
-            "to":      [to_email],
-            "subject": subject,
-            "text":    strip_tags(html_message),
-            "html":    html_message,
-        },
-        timeout=10,
-    )
-
-    print(f"[MAILGUN] status_code={response.status_code}")
-    print(f"[MAILGUN] response.text={response.text[:500]}")
-    logger.info("Mailgun response: status=%s body=%s", response.status_code, response.text[:500])
-
-    if response.status_code not in (200, 202):
-        logger.warning("Mailgun delivery failed: status=%s body=%s",
-                       response.status_code, response.text[:500])
-        raise RuntimeError(f"Mailgun error {response.status_code}: {response.text[:300]}")
-
-
 def _send_verification_email(request, user):
     """Tworzy token weryfikacyjny i wysyła email z linkiem aktywacyjnym."""
     user.verification_tokens.filter(used=False).update(used=True)
@@ -112,7 +60,13 @@ def _send_verification_email(request, user):
         'expiry_hours': getattr(settings, 'EMAIL_VERIFICATION_TOKEN_EXPIRY_HOURS', 24),
     })
 
-    _send_verification_email_mailgun(user.email, subject, html_message)
+    send_mail(
+        subject,
+        strip_tags(html_message),
+        settings.DEFAULT_FROM_EMAIL,
+        [user.email],
+        html_message=html_message,
+    )
 
 
 def _send_password_reset_email(request, user):
@@ -191,7 +145,14 @@ def register_view(request):
 
             def _send():
                 try:
-                    _send_verification_email_mailgun(_to, subject, html_message)
+                    send_mail(
+                        subject,
+                        strip_tags(html_message),
+                        settings.DEFAULT_FROM_EMAIL,
+                        [_to],
+                        html_message=html_message,
+                        fail_silently=False,
+                    )
                 except Exception as e:
                     logger.warning(f"Verification email failed: {e}")
 
@@ -283,7 +244,14 @@ def resend_verification_view(request):
 
         def _resend():
             try:
-                _send_verification_email_mailgun(_resend_to, resend_subject, resend_html)
+                send_mail(
+                    resend_subject,
+                    strip_tags(resend_html),
+                    settings.DEFAULT_FROM_EMAIL,
+                    [_resend_to],
+                    html_message=resend_html,
+                    fail_silently=False,
+                )
             except Exception as e:
                 logger.warning(f"Resend verification email failed: {e}")
 
