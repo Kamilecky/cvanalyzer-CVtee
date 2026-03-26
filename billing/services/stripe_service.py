@@ -179,8 +179,12 @@ class StripeService:
     def sync_from_checkout_session(user, session_id):
         """
         Używa session_id z success_url (?session_id=cs_...) żeby natychmiast
-        pobrać customer_id i zaktualizować plan — nie czeka na webhook.
+        zaktualizować plan — odczytuje subskrypcję BEZPOŚREDNIO z sesji,
+        nie z listy (list() może zwrócić starą subskrypcję jeśli nowa jest
+        jeszcze w statusie incomplete w chwili przekierowania).
         """
+        from billing.models import Subscription, Plan
+
         session = stripe.checkout.Session.retrieve(
             session_id,
             expand=['subscription', 'subscription.items.data.price'],
@@ -193,7 +197,44 @@ class StripeService:
             user.save(update_fields=['stripe_customer_id'])
             logger.info(f"sync_from_checkout: linked customer {customer_id} to {user.email}")
 
-        return StripeService.sync_subscription_for_user(user)
+        # Użyj subskrypcji z tej konkretnej sesji — pomija problemy z race
+        # condition i wieloma subskrypcjami (np. stara Basic + nowa Enterprise)
+        stripe_sub = session.get('subscription')
+        if not stripe_sub or isinstance(stripe_sub, str):
+            # Subskrypcja nie jest rozwinięta — fallback do listy
+            logger.warning(f"sync_from_checkout: subscription not expanded for session {session_id}, falling back to list")
+            return StripeService.sync_subscription_for_user(user)
+
+        try:
+            price_id = stripe_sub['items']['data'][0]['price']['id']
+        except (KeyError, IndexError, TypeError):
+            logger.error(f"sync_from_checkout: cannot extract price_id from session {session_id}")
+            return StripeService.sync_subscription_for_user(user)
+
+        plan_slug = _price_id_to_plan_slug(price_id)
+        if not plan_slug:
+            logger.error(
+                f"sync_from_checkout: unknown price_id={price_id!r} for {user.email} "
+                "— run 'python manage.py sync_stripe_prices'"
+            )
+            return user.plan, False
+
+        plan_obj = Plan.objects.filter(name=plan_slug).first()
+        Subscription.objects.update_or_create(
+            stripe_subscription_id=stripe_sub['id'],
+            defaults={
+                'user': user,
+                'plan': plan_obj,
+                'status': stripe_sub.get('status', 'active'),
+                'cancel_at_period_end': stripe_sub.get('cancel_at_period_end', False),
+            },
+        )
+
+        old = user.plan
+        user.plan = plan_slug
+        user.save(update_fields=['plan'])
+        logger.info(f"sync_from_checkout: {user.email} {old} → {plan_slug} (price={price_id})")
+        return plan_slug, old != plan_slug
 
     @staticmethod
     def create_billing_portal_session(user, return_url):
