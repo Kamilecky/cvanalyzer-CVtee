@@ -80,6 +80,73 @@ def billing_portal_view(request):
 
 @login_required
 @require_POST
+def sync_subscription_view(request):
+    """Synchronizuje plan użytkownika bezpośrednio ze Stripe API."""
+    import stripe
+    from .models import Subscription, Plan
+
+    user = request.user
+
+    if not user.stripe_customer_id:
+        messages.error(request, _('No Stripe customer linked to this account.'))
+        return redirect('subscription')
+
+    try:
+        stripe.api_key = settings.STRIPE_SECRET_KEY
+        subs = stripe.Subscription.list(
+            customer=user.stripe_customer_id,
+            status='active',
+            limit=1,
+            expand=['data.items.data.price'],
+        )
+
+        if not subs.data:
+            # No active subscription — downgrade to free
+            Subscription.objects.filter(user=user).update(status='canceled')
+            user.plan = 'free'
+            user.save(update_fields=['plan'])
+            messages.warning(request, _('No active Stripe subscription found. Plan reset to Free.'))
+            return redirect('subscription')
+
+        stripe_sub = subs.data[0]
+        price_id = stripe_sub['items']['data'][0]['price']['id']
+
+        price_ids = getattr(settings, 'STRIPE_PRICE_IDS', {})
+        plan_slug = next((slug for slug, pid in price_ids.items() if pid == price_id), None)
+
+        if not plan_slug:
+            # Fallback: match via Plan model
+            plan_obj = Plan.objects.filter(stripe_price_id=price_id).first()
+            plan_slug = plan_obj.name.lower() if plan_obj else 'basic'
+
+        plan_obj = Plan.objects.filter(name=plan_slug).first()
+
+        Subscription.objects.update_or_create(
+            stripe_subscription_id=stripe_sub['id'],
+            defaults={
+                'user': user,
+                'plan': plan_obj,
+                'status': stripe_sub['status'],
+                'cancel_at_period_end': stripe_sub.get('cancel_at_period_end', False),
+            },
+        )
+
+        old_plan = user.plan
+        user.plan = plan_slug
+        user.save(update_fields=['plan'])
+
+        logger.info(f"sync_subscription: {user.email} {old_plan} → {plan_slug}")
+        messages.success(request, _('Subscription synced! Your plan is now: %(plan)s.') % {'plan': plan_slug.title()})
+
+    except Exception as e:
+        logger.error(f"sync_subscription error for {user.email}: {e}")
+        messages.error(request, _('Could not sync subscription. Please try again.'))
+
+    return redirect('subscription')
+
+
+@login_required
+@require_POST
 def reset_usage_view(request):
     """Resetuje licznik analiz do 0 — tylko dla superusera."""
     if not request.user.is_superuser:
