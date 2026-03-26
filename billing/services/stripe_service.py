@@ -327,9 +327,21 @@ class StripeService:
 
             if plan and data['status'] == 'active':
                 plan_slug = plan.name.lower()
-                user.plan = plan_slug
-                user.save(update_fields=['plan'])
-                logger.info(f"Subscription updated for {user.email}: plan={plan_slug}, status=active")
+                # Only update user.plan when this is the user's current (newest) subscription.
+                # Prevents old subscription webhooks from downgrading the plan after an upgrade,
+                # e.g. Basic sub fires subscription.updated AFTER Premium was already set.
+                current_sub = getattr(user, 'subscription', None)
+                is_current = (current_sub is None or current_sub.stripe_subscription_id == data['id'])
+                if is_current:
+                    user.plan = plan_slug
+                    user.save(update_fields=['plan'])
+                    logger.info(f"Subscription updated for {user.email}: plan={plan_slug}, status=active")
+                else:
+                    logger.info(
+                        f"Skipped plan downgrade for {user.email}: webhook for old sub {data['id']!r} "
+                        f"({plan_slug}), current sub is {current_sub.stripe_subscription_id!r} "
+                        f"({getattr(current_sub.plan, 'name', '?')})"
+                    )
 
         elif event_type == 'customer.subscription.deleted':
             sub_id = data['id']
@@ -400,14 +412,26 @@ class StripeService:
                     },
                 )
 
-            # Activate user's plan
-            previous_plan = user.plan
-            user.plan = plan_slug
-            user.save(update_fields=['plan'])
-            logger.info(f"invoice.paid: {user.email} plan={plan_slug} (was {previous_plan})")
-
-            # Post-payment side effects (fire-and-forget)
-            _send_activation_email(user, plan_slug)
+            # Activate user's plan — only if this invoice belongs to the current subscription.
+            # Prevents old Basic invoice webhooks from downgrading after an upgrade to Premium+.
+            current_sub = getattr(user, 'subscription', None)
+            is_current = (
+                current_sub is None
+                or subscription_id is None
+                or current_sub.stripe_subscription_id == subscription_id
+            )
+            if is_current:
+                previous_plan = user.plan
+                user.plan = plan_slug
+                user.save(update_fields=['plan'])
+                logger.info(f"invoice.paid: {user.email} plan={plan_slug} (was {previous_plan})")
+                _send_activation_email(user, plan_slug)
+            else:
+                logger.info(
+                    f"invoice.paid: skipped plan update for {user.email} — "
+                    f"invoice for old sub {subscription_id!r} ({plan_slug}), "
+                    f"current sub is {current_sub.stripe_subscription_id!r}"
+                )
 
         elif event_type == 'invoice.payment_failed':
             subscription_id = data.get('subscription')
