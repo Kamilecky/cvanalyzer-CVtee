@@ -170,27 +170,26 @@ def create_checkout_session_api(request):
         return JsonResponse({'error': 'Invalid JSON'}, status=400)
 
     plan_slug = body.get('plan', '').lower()
-    price_ids = getattr(settings, 'STRIPE_PRICE_IDS', {})
-    price_id = price_ids.get(plan_slug)
 
-    if not price_id or price_id.startswith('price_') and '_ID' in price_id:
-        # Fallback: look up Plan model by name slug
-        plan_obj = Plan.objects.filter(name=plan_slug, is_active=True).first()
-        if plan_obj and plan_obj.stripe_price_id:
-            price_id = plan_obj.stripe_price_id
-        else:
-            return JsonResponse({'error': f'Unknown or unconfigured plan: {plan_slug}'}, status=400)
+    # Single source of truth: Plan model in the database
+    plan_obj = Plan.objects.filter(name=plan_slug, is_active=True).first()
+    if not plan_obj:
+        return JsonResponse({'error': f'Unknown plan: {plan_slug}'}, status=400)
+    if not plan_obj.stripe_price_id:
+        logger.error(f"Plan '{plan_slug}' has no stripe_price_id set in database")
+        return JsonResponse({'error': f'Plan {plan_slug} is not configured for purchase'}, status=400)
 
     success_url = request.build_absolute_uri('/billing/success/') + '?session_id={CHECKOUT_SESSION_ID}'
-    cancel_url = request.build_absolute_uri('/billing/cancel/')
+    cancel_url  = request.build_absolute_uri('/billing/cancel/')
 
     try:
         session = StripeService.create_checkout_session(
-            request.user, price_id, success_url, cancel_url
+            request.user, plan_obj.stripe_price_id, success_url, cancel_url
         )
+        logger.info(f"Checkout session created: user={request.user.email} plan={plan_slug} price={plan_obj.stripe_price_id}")
         return JsonResponse({'url': session.url})
     except Exception as e:
-        logger.error(f"create_checkout_session_api error: {e}")
+        logger.error(f"create_checkout_session_api error for {plan_slug}: {e}")
         return JsonResponse({'error': 'Could not create checkout session'}, status=500)
 
 

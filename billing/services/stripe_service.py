@@ -15,30 +15,21 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
 # Helpers
 # ---------------------------------------------------------------------------
 
-def _price_id_to_plan_slug(price_id: str) -> str:
-    """Map a Stripe price_id → plan slug.
+def _price_id_to_plan_slug(price_id: str) -> str | None:
+    """Map a Stripe price_id → plan slug using Plan.stripe_price_id from the database.
 
-    Resolution order:
-      1. STRIPE_PRICE_IDS env vars (settings)
-      2. Plan.stripe_price_id in the database
-      3. Returns None — caller must handle the miss explicitly
+    Single source of truth: billing_plan table (populated by migration 0002).
+    Returns None when price_id is unknown — caller must handle the miss explicitly.
     """
     from billing.models import Plan
 
-    # 1. env / settings mapping
-    price_ids = getattr(settings, 'STRIPE_PRICE_IDS', {})
-    for slug, pid in price_ids.items():
-        if pid == price_id:
-            return slug
-
-    # 2. database fallback
     plan_obj = Plan.objects.filter(stripe_price_id=price_id).first()
     if plan_obj:
         return plan_obj.name.lower()
 
     logger.error(
         f"_price_id_to_plan_slug: unknown price_id={price_id!r} — "
-        "run 'python manage.py sync_stripe_prices' to populate the mapping"
+        "check /admin/billing/plan/ and verify stripe_price_id fields"
     )
     return None
 
