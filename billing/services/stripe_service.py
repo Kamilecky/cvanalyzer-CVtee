@@ -15,13 +15,26 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
 # Helpers
 # ---------------------------------------------------------------------------
 
-def _price_id_to_plan_slug(price_id: str) -> str | None:
-    """Map a Stripe price_id → plan slug using Plan.stripe_price_id from the database.
+_HARDCODED_PRICE_MAP = {
+    'price_1TFJTSG1hKAqWyd8x6CBuvXM': 'basic',
+    'price_1TFJT3G1hKAqWyd807KxvltD': 'premium',
+    'price_1TFJSdG1hKAqWyd8mWE7460C': 'enterprise',
+}
 
-    Single source of truth: billing_plan table (populated by migration 0002).
-    Returns None when price_id is unknown — caller must handle the miss explicitly.
+
+def _price_id_to_plan_slug(price_id: str) -> str | None:
+    """Map a Stripe price_id → plan slug.
+
+    Resolution order:
+      1. Hardcoded map (always reliable, no DB/env dependency)
+      2. Plan.stripe_price_id in the database (for dynamically added plans)
+    Returns None when price_id is unknown.
     """
     from billing.models import Plan
+
+    slug = _HARDCODED_PRICE_MAP.get(price_id)
+    if slug:
+        return slug
 
     plan_obj = Plan.objects.filter(stripe_price_id=price_id).first()
     if plan_obj:
@@ -29,7 +42,7 @@ def _price_id_to_plan_slug(price_id: str) -> str | None:
 
     logger.error(
         f"_price_id_to_plan_slug: unknown price_id={price_id!r} — "
-        "check /admin/billing/plan/ and verify stripe_price_id fields"
+        "add it to _HARDCODED_PRICE_MAP in stripe_service.py"
     )
     return None
 

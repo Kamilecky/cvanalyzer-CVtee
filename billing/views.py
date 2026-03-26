@@ -160,6 +160,14 @@ def change_plan_view(request):
     return redirect('subscription')
 
 
+# Stripe Price IDs — hardcoded as single source of truth
+STRIPE_PRICE_IDS = {
+    'basic':      'price_1TFJTSG1hKAqWyd8x6CBuvXM',
+    'premium':    'price_1TFJT3G1hKAqWyd807KxvltD',
+    'enterprise': 'price_1TFJSdG1hKAqWyd8mWE7460C',
+}
+
+
 @login_required
 @require_POST
 def create_checkout_session_api(request):
@@ -170,23 +178,19 @@ def create_checkout_session_api(request):
         return JsonResponse({'error': 'Invalid JSON'}, status=400)
 
     plan_slug = body.get('plan', '').lower()
+    price_id = STRIPE_PRICE_IDS.get(plan_slug)
 
-    # Single source of truth: Plan model in the database
-    plan_obj = Plan.objects.filter(name=plan_slug, is_active=True).first()
-    if not plan_obj:
+    if not price_id:
         return JsonResponse({'error': f'Unknown plan: {plan_slug}'}, status=400)
-    if not plan_obj.stripe_price_id:
-        logger.error(f"Plan '{plan_slug}' has no stripe_price_id set in database")
-        return JsonResponse({'error': f'Plan {plan_slug} is not configured for purchase'}, status=400)
 
     success_url = request.build_absolute_uri('/billing/success/') + '?session_id={CHECKOUT_SESSION_ID}'
     cancel_url  = request.build_absolute_uri('/billing/cancel/')
 
     try:
         session = StripeService.create_checkout_session(
-            request.user, plan_obj.stripe_price_id, success_url, cancel_url
+            request.user, price_id, success_url, cancel_url
         )
-        logger.info(f"Checkout session created: user={request.user.email} plan={plan_slug} price={plan_obj.stripe_price_id}")
+        logger.info(f"Checkout session: user={request.user.email} plan={plan_slug} price={price_id}")
         return JsonResponse({'url': session.url})
     except Exception as e:
         logger.error(f"create_checkout_session_api error for {plan_slug}: {e}")
