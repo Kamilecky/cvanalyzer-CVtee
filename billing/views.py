@@ -78,8 +78,8 @@ def subscription_view(request):
 
 @login_required
 def billing_portal_view(request):
-    """Przekierowuje do Stripe Billing Portal."""
-    return_url = request.build_absolute_uri('/billing/subscription/')
+    """Przekierowuje do Stripe Billing Portal. Po powrocie plan zostaje zsynchronizowany."""
+    return_url = request.build_absolute_uri('/billing/portal-return/')
     try:
         session = StripeService.create_billing_portal_session(request.user, return_url)
         return redirect(session.url)
@@ -87,6 +87,22 @@ def billing_portal_view(request):
         logger.error(f"Billing portal failed: {e}")
         messages.error(request, _('Could not open billing portal. Please try again.'))
         return redirect('subscription')
+
+
+@login_required
+def portal_return_view(request):
+    """Powrót ze Stripe Billing Portal — synchronizuje plan i przekierowuje na subscription."""
+    if request.user.stripe_customer_id:
+        try:
+            plan_slug, changed = StripeService.sync_subscription_for_user(request.user)
+            if changed:
+                messages.success(
+                    request,
+                    _('Plan updated to %(plan)s.') % {'plan': plan_slug.title()}
+                )
+        except Exception as e:
+            logger.error(f"portal_return sync error for {request.user.email}: {e}")
+    return redirect('subscription')
 
 
 @login_required

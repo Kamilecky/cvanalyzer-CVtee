@@ -10,6 +10,7 @@ urlpatterns = [
     path('cancel/', views.checkout_cancel_view, name='checkout_cancel'),
     path('subscription/', views.subscription_view, name='subscription'),
     path('portal/', views.billing_portal_view, name='billing_portal'),
+    path('portal-return/', views.portal_return_view, name='portal_return'),
     path('webhook/', views.stripe_webhook_view, name='stripe_webhook'),
     path('sync/', views.sync_subscription_view, name='sync_subscription'),
     path('reset-usage/', views.reset_usage_view, name='reset_usage'),
