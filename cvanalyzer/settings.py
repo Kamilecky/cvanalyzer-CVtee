@@ -231,6 +231,7 @@ PLAN_FEATURES = {
         'sla_flag': False,
         'custom_prompts': False,
         'api_access': False,
+        'prompt_injection_scan': False,   # heuristic only; LLM scan = premium+
     },
     'basic': {
         'basic_scoring': True,
@@ -254,6 +255,7 @@ PLAN_FEATURES = {
         'sla_flag': False,
         'custom_prompts': False,
         'api_access': False,
+        'prompt_injection_scan': False,   # heuristic only; LLM scan = premium+
     },
     'premium': {
         'basic_scoring': True,
@@ -277,6 +279,7 @@ PLAN_FEATURES = {
         'sla_flag': False,
         'custom_prompts': False,
         'api_access': False,
+        'prompt_injection_scan': True,    # full LLM-based injection + hidden text scan
     },
     'enterprise': {
         'basic_scoring': True,
@@ -300,6 +303,7 @@ PLAN_FEATURES = {
         'sla_flag': True,
         'custom_prompts': True,
         'api_access': True,
+        'prompt_injection_scan': True,    # full LLM-based injection + hidden text scan
     },
 }
 

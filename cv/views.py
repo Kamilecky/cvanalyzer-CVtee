@@ -51,8 +51,10 @@ def _process_uploaded_cv(uploaded_file, user):
     # ── Upload-time injection detection ─────────────────────────────────────
     # Normalize to lowercase/clean copy — original text is preserved unchanged.
     normalized = _normalize_for_detection(result['text'])
-    # LLM disabled: upload must not block the HTTP request thread.
-    injection = detect_injection(normalized, use_llm=False)
+    # LLM scan enabled only for premium/enterprise — adds GPT classification on
+    # top of heuristics (white-text + regex run for everyone as a security baseline).
+    use_llm_scan = getattr(user, 'has_feature', lambda f: False)('prompt_injection_scan')
+    injection = detect_injection(normalized, use_llm=use_llm_scan)
 
     # Merge hidden text findings into injection result
     hidden_findings = result.get('hidden_text', [])
