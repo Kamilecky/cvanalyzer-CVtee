@@ -32,7 +32,7 @@ def checkout_view(request, plan_id):
         messages.error(request, _('This plan is not available for purchase.'))
         return redirect('pricing')
 
-    success_url = request.build_absolute_uri('/billing/success/')
+    success_url = request.build_absolute_uri('/billing/success/') + '?session_id={CHECKOUT_SESSION_ID}'
     cancel_url = request.build_absolute_uri('/billing/cancel/')
 
     try:
@@ -48,8 +48,19 @@ def checkout_view(request, plan_id):
 
 @login_required
 def checkout_success_view(request):
-    """Strona sukcesu po zakupie subskrypcji."""
-    return render(request, 'billing/checkout_success.html')
+    """Strona sukcesu — natychmiast synchronizuje plan ze Stripe."""
+    session_id = request.GET.get('session_id', '')
+    plan_slug = None
+
+    if session_id and request.user.is_authenticated:
+        try:
+            plan_slug, _ = StripeService.sync_from_checkout_session(request.user, session_id)
+            logger.info(f"checkout_success: plan synced to {plan_slug} for {request.user.email}")
+        except Exception as e:
+            logger.error(f"checkout_success sync error: {e}")
+            # Webhook będzie fallbackiem — nie blokuj strony sukcesu
+
+    return render(request, 'billing/checkout_success.html', {'synced_plan': plan_slug})
 
 
 @login_required
@@ -82,9 +93,6 @@ def billing_portal_view(request):
 @require_POST
 def sync_subscription_view(request):
     """Synchronizuje plan użytkownika bezpośrednio ze Stripe API."""
-    import stripe
-    from .models import Subscription, Plan
-
     user = request.user
 
     if not user.stripe_customer_id:
@@ -92,52 +100,14 @@ def sync_subscription_view(request):
         return redirect('subscription')
 
     try:
-        stripe.api_key = settings.STRIPE_SECRET_KEY
-        subs = stripe.Subscription.list(
-            customer=user.stripe_customer_id,
-            status='active',
-            limit=1,
-            expand=['data.items.data.price'],
-        )
-
-        if not subs.data:
-            # No active subscription — downgrade to free
-            Subscription.objects.filter(user=user).update(status='canceled')
-            user.plan = 'free'
-            user.save(update_fields=['plan'])
+        plan_slug, changed = StripeService.sync_subscription_for_user(user)
+        if plan_slug == 'free':
             messages.warning(request, _('No active Stripe subscription found. Plan reset to Free.'))
-            return redirect('subscription')
-
-        stripe_sub = subs.data[0]
-        price_id = stripe_sub['items']['data'][0]['price']['id']
-
-        price_ids = getattr(settings, 'STRIPE_PRICE_IDS', {})
-        plan_slug = next((slug for slug, pid in price_ids.items() if pid == price_id), None)
-
-        if not plan_slug:
-            # Fallback: match via Plan model
-            plan_obj = Plan.objects.filter(stripe_price_id=price_id).first()
-            plan_slug = plan_obj.name.lower() if plan_obj else 'basic'
-
-        plan_obj = Plan.objects.filter(name=plan_slug).first()
-
-        Subscription.objects.update_or_create(
-            stripe_subscription_id=stripe_sub['id'],
-            defaults={
-                'user': user,
-                'plan': plan_obj,
-                'status': stripe_sub['status'],
-                'cancel_at_period_end': stripe_sub.get('cancel_at_period_end', False),
-            },
-        )
-
-        old_plan = user.plan
-        user.plan = plan_slug
-        user.save(update_fields=['plan'])
-
-        logger.info(f"sync_subscription: {user.email} {old_plan} → {plan_slug}")
-        messages.success(request, _('Subscription synced! Your plan is now: %(plan)s.') % {'plan': plan_slug.title()})
-
+        else:
+            messages.success(
+                request,
+                _('Subscription synced! Your plan is now: %(plan)s.') % {'plan': plan_slug.title()}
+            )
     except Exception as e:
         logger.error(f"sync_subscription error for {user.email}: {e}")
         messages.error(request, _('Could not sync subscription. Please try again.'))
@@ -195,7 +165,7 @@ def create_checkout_session_api(request):
         else:
             return JsonResponse({'error': f'Unknown or unconfigured plan: {plan_slug}'}, status=400)
 
-    success_url = request.build_absolute_uri('/billing/success/')
+    success_url = request.build_absolute_uri('/billing/success/') + '?session_id={CHECKOUT_SESSION_ID}'
     cancel_url = request.build_absolute_uri('/billing/cancel/')
 
     try:

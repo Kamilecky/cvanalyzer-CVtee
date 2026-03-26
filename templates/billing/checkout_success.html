@@ -1,7 +1,7 @@
 {% extends "base_app.html" %}
 {% load i18n %}
 
-{% block title %}Payment Successful - CV Analyzer{% endblock %}
+{% block title %}Payment Successful - CVeeto{% endblock %}
 
 {% block content %}
 <div class="text-center py-5">
@@ -9,7 +9,14 @@
         <i class="bi bi-check-circle text-success" style="font-size: 4rem;"></i>
     </div>
     <h2>Payment Successful!</h2>
+    {% if synced_plan %}
+    <p class="text-muted">
+        Your <strong>{{ synced_plan|title }}</strong> plan is now active.
+        You have full access to all features included in your plan.
+    </p>
+    {% else %}
     <p class="text-muted">Your subscription has been activated. You now have access to all features of your plan.</p>
+    {% endif %}
     <div class="mt-4">
         <a href="{% url 'dashboard' %}" class="btn btn-accent me-2">
             <i class="bi bi-grid me-1"></i> Go to Dashboard
