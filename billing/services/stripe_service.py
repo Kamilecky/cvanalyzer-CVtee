@@ -16,12 +16,31 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
 # ---------------------------------------------------------------------------
 
 def _price_id_to_plan_slug(price_id: str) -> str:
-    """Map a Stripe price_id → plan slug using STRIPE_PRICE_IDS from settings."""
+    """Map a Stripe price_id → plan slug.
+
+    Resolution order:
+      1. STRIPE_PRICE_IDS env vars (settings)
+      2. Plan.stripe_price_id in the database
+      3. Returns None — caller must handle the miss explicitly
+    """
+    from billing.models import Plan
+
+    # 1. env / settings mapping
     price_ids = getattr(settings, 'STRIPE_PRICE_IDS', {})
     for slug, pid in price_ids.items():
         if pid == price_id:
             return slug
-    return 'basic'   # safe default
+
+    # 2. database fallback
+    plan_obj = Plan.objects.filter(stripe_price_id=price_id).first()
+    if plan_obj:
+        return plan_obj.name.lower()
+
+    logger.error(
+        f"_price_id_to_plan_slug: unknown price_id={price_id!r} — "
+        "run 'python manage.py sync_stripe_prices' to populate the mapping"
+    )
+    return None
 
 
 
@@ -131,10 +150,13 @@ class StripeService:
         price_id = stripe_sub['items']['data'][0]['price']['id']
 
         price_ids = getattr(settings, 'STRIPE_PRICE_IDS', {})
-        plan_slug = next((s for s, pid in price_ids.items() if pid == price_id), None)
+        plan_slug = _price_id_to_plan_slug(price_id)
         if not plan_slug:
-            plan_obj = Plan.objects.filter(stripe_price_id=price_id).first()
-            plan_slug = plan_obj.name.lower() if plan_obj else 'basic'
+            logger.error(
+                f"sync_subscription_for_user: cannot map price_id={price_id!r} "
+                f"for user {user.email} — keeping current plan={user.plan!r}"
+            )
+            return user.plan, False
 
         plan_obj = Plan.objects.filter(name=plan_slug).first()
         Subscription.objects.update_or_create(
@@ -327,6 +349,12 @@ class StripeService:
                     break
 
             plan_slug = _price_id_to_plan_slug(price_id)
+            if not plan_slug:
+                logger.error(
+                    f"invoice.paid: cannot map price_id={price_id!r} for {user.email} "
+                    "— run 'python manage.py sync_stripe_prices'"
+                )
+                return
             plan = Plan.objects.filter(name=plan_slug).first()
 
             # Update or create Subscription record
