@@ -1,7 +1,7 @@
 {% extends "base_app.html" %}
 {% load i18n %}
 
-{% block title %}Pricing - CV Analyzer{% endblock %}
+{% block title %}Pricing - CVeeto{% endblock %}
 
 {% block content %}
 <div class="page-header text-center">
@@ -9,13 +9,16 @@
     <p class="text-muted">Choose the plan that fits your needs</p>
 </div>
 
+<div id="pricing-error" class="alert alert-danger d-none mx-auto" style="max-width:480px;" role="alert"></div>
+
 <div class="row g-4 justify-content-center">
+
     <!-- Free Plan -->
     <div class="col-md-6 col-lg-3">
         <div class="pricing-card">
             <div class="pricing-header">
                 <h3>{% trans "Free" %}</h3>
-                <div class="pricing-price">0 zl<span>/month</span></div>
+                <div class="pricing-price">0 zł<span>/month</span></div>
             </div>
             <div class="pricing-body">
                 <ul class="pricing-features">
@@ -35,7 +38,7 @@
                 {% if request.user.is_authenticated and request.user.plan == 'free' %}
                 <button class="btn btn-outline-secondary w-100" disabled>Current Plan</button>
                 {% else %}
-                <span class="text-muted">Default plan</span>
+                <span class="text-muted small">Default plan — no payment needed</span>
                 {% endif %}
             </div>
         </div>
@@ -47,7 +50,7 @@
             <div class="pricing-badge">Most Popular</div>
             <div class="pricing-header">
                 <h3>{% trans "Basic" %}</h3>
-                <div class="pricing-price">79 zl<span>/month</span></div>
+                <div class="pricing-price">79 zł<span>/month</span></div>
             </div>
             <div class="pricing-body">
                 <ul class="pricing-features">
@@ -65,12 +68,13 @@
                 </ul>
                 {% if request.user.is_authenticated and request.user.plan == 'basic' %}
                 <button class="btn btn-outline-secondary w-100" disabled>Current Plan</button>
+                {% elif request.user.is_authenticated %}
+                <button class="btn btn-accent w-100 plan-btn" data-plan="basic" onclick="buy('basic', this)">
+                    <span class="btn-label">{% trans "Upgrade to Basic" %}</span>
+                    <span class="btn-spinner d-none"><span class="spinner-border spinner-border-sm me-1"></span> Redirecting…</span>
+                </button>
                 {% else %}
-                {% for plan in plans %}
-                {% if plan.name == 'basic' and plan.stripe_price_id %}
-                <a href="{% url 'checkout' plan.id %}" class="btn btn-accent w-100">{% trans "Upgrade to Basic" %}</a>
-                {% endif %}
-                {% endfor %}
+                <a href="{% url 'login' %}?next={% url 'pricing' %}" class="btn btn-accent w-100">{% trans "Get Started" %}</a>
                 {% endif %}
             </div>
         </div>
@@ -81,7 +85,7 @@
         <div class="pricing-card">
             <div class="pricing-header">
                 <h3>{% trans "Premium" %}</h3>
-                <div class="pricing-price">199 zl<span>/month</span></div>
+                <div class="pricing-price">199 zł<span>/month</span></div>
             </div>
             <div class="pricing-body">
                 <ul class="pricing-features">
@@ -97,12 +101,13 @@
                 </ul>
                 {% if request.user.is_authenticated and request.user.plan == 'premium' %}
                 <button class="btn btn-outline-secondary w-100" disabled>Current Plan</button>
+                {% elif request.user.is_authenticated %}
+                <button class="btn btn-outline-primary w-100 plan-btn" data-plan="premium" onclick="buy('premium', this)">
+                    <span class="btn-label">{% trans "Upgrade to Premium" %}</span>
+                    <span class="btn-spinner d-none"><span class="spinner-border spinner-border-sm me-1"></span> Redirecting…</span>
+                </button>
                 {% else %}
-                {% for plan in plans %}
-                {% if plan.name == 'premium' and plan.stripe_price_id %}
-                <a href="{% url 'checkout' plan.id %}" class="btn btn-outline-primary w-100">{% trans "Upgrade to Premium" %}</a>
-                {% endif %}
-                {% endfor %}
+                <a href="{% url 'login' %}?next={% url 'pricing' %}" class="btn btn-outline-primary w-100">{% trans "Get Started" %}</a>
                 {% endif %}
             </div>
         </div>
@@ -113,7 +118,7 @@
         <div class="pricing-card">
             <div class="pricing-header">
                 <h3>{% trans "Enterprise" %}</h3>
-                <div class="pricing-price">999 zl<span>/month</span></div>
+                <div class="pricing-price">999 zł<span>/month</span></div>
             </div>
             <div class="pricing-body">
                 <ul class="pricing-features">
@@ -127,15 +132,55 @@
                 </ul>
                 {% if request.user.is_authenticated and request.user.plan == 'enterprise' %}
                 <button class="btn btn-outline-secondary w-100" disabled>Current Plan</button>
+                {% elif request.user.is_authenticated %}
+                <button class="btn btn-outline-primary w-100 plan-btn" data-plan="enterprise" onclick="buy('enterprise', this)">
+                    <span class="btn-label">{% trans "Upgrade to Enterprise" %}</span>
+                    <span class="btn-spinner d-none"><span class="spinner-border spinner-border-sm me-1"></span> Redirecting…</span>
+                </button>
                 {% else %}
-                {% for plan in plans %}
-                {% if plan.name == 'enterprise' and plan.stripe_price_id %}
-                <a href="{% url 'checkout' plan.id %}" class="btn btn-outline-primary w-100">{% trans "Upgrade to Enterprise" %}</a>
-                {% endif %}
-                {% endfor %}
+                <a href="{% url 'login' %}?next={% url 'pricing' %}" class="btn btn-outline-primary w-100">{% trans "Get Started" %}</a>
                 {% endif %}
             </div>
         </div>
     </div>
-</div>
+
+</div><!-- .row -->
+
+<script>
+async function buy(plan, btn) {
+    // Disable all plan buttons and show spinner on clicked one
+    document.querySelectorAll('.plan-btn').forEach(b => b.disabled = true);
+    btn.querySelector('.btn-label').classList.add('d-none');
+    btn.querySelector('.btn-spinner').classList.remove('d-none');
+    document.getElementById('pricing-error').classList.add('d-none');
+
+    try {
+        const res = await fetch('{% url "create_checkout_session_api" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}',
+            },
+            body: JSON.stringify({ plan }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || !data.url) {
+            throw new Error(data.error || 'Could not start checkout.');
+        }
+
+        window.location.href = data.url;
+
+    } catch (err) {
+        const errEl = document.getElementById('pricing-error');
+        errEl.textContent = err.message || 'An error occurred. Please try again.';
+        errEl.classList.remove('d-none');
+        // Re-enable buttons
+        document.querySelectorAll('.plan-btn').forEach(b => b.disabled = false);
+        btn.querySelector('.btn-label').classList.remove('d-none');
+        btn.querySelector('.btn-spinner').classList.add('d-none');
+    }
+}
+</script>
 {% endblock %}

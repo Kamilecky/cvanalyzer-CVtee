@@ -1,13 +1,15 @@
 """billing/views.py - Widoki systemu płatności Stripe."""
 
+import json
 import logging
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.utils.translation import gettext as _
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
+from django.conf import settings
 
 from .models import Plan
 from .services.stripe_service import StripeService
@@ -105,10 +107,44 @@ def change_plan_view(request):
     return redirect('subscription')
 
 
+@login_required
+@require_POST
+def create_checkout_session_api(request):
+    """JSON API: POST {"plan": "basic"} → {"url": "https://checkout.stripe.com/..."}"""
+    try:
+        body = json.loads(request.body)
+    except (json.JSONDecodeError, ValueError):
+        return JsonResponse({'error': 'Invalid JSON'}, status=400)
+
+    plan_slug = body.get('plan', '').lower()
+    price_ids = getattr(settings, 'STRIPE_PRICE_IDS', {})
+    price_id = price_ids.get(plan_slug)
+
+    if not price_id or price_id.startswith('price_') and '_ID' in price_id:
+        # Fallback: look up Plan model by name slug
+        plan_obj = Plan.objects.filter(name=plan_slug, is_active=True).first()
+        if plan_obj and plan_obj.stripe_price_id:
+            price_id = plan_obj.stripe_price_id
+        else:
+            return JsonResponse({'error': f'Unknown or unconfigured plan: {plan_slug}'}, status=400)
+
+    success_url = request.build_absolute_uri('/billing/success/')
+    cancel_url = request.build_absolute_uri('/billing/cancel/')
+
+    try:
+        session = StripeService.create_checkout_session(
+            request.user, price_id, success_url, cancel_url
+        )
+        return JsonResponse({'url': session.url})
+    except Exception as e:
+        logger.error(f"create_checkout_session_api error: {e}")
+        return JsonResponse({'error': 'Could not create checkout session'}, status=500)
+
+
 @csrf_exempt
 @require_POST
 def stripe_webhook_view(request):
-    """Endpoint webhook Stripe."""
+    """Endpoint webhook Stripe — handles all subscription lifecycle events."""
     payload = request.body
     sig_header = request.META.get('HTTP_STRIPE_SIGNATURE', '')
 
@@ -117,10 +153,25 @@ def stripe_webhook_view(request):
         return HttpResponse(status=400)
 
     event_type = event['type']
+    logger.info(f"Stripe webhook received: {event_type} (id={event.get('id', '-')})")
 
-    if event_type.startswith('customer.subscription.'):
-        StripeService.process_subscription_event(event)
-    elif event_type.startswith('invoice.'):
-        StripeService.process_invoice_event(event)
+    handlers = {
+        'checkout.session.completed':        StripeService.process_checkout_completed,
+        'customer.subscription.created':     StripeService.process_subscription_event,
+        'customer.subscription.updated':     StripeService.process_subscription_event,
+        'customer.subscription.deleted':     StripeService.process_subscription_event,
+        'invoice.paid':                      StripeService.process_invoice_event,
+        'invoice.payment_failed':            StripeService.process_invoice_event,
+        'invoice.finalized':                 StripeService.process_invoice_event,
+    }
+
+    handler = handlers.get(event_type)
+    if handler:
+        try:
+            handler(event)
+        except Exception as e:
+            logger.error(f"Webhook handler error for {event_type}: {e}", exc_info=True)
+            # Return 200 so Stripe doesn't retry on logic errors; return 500 only on infra failures
+            return HttpResponse(status=200)
 
     return HttpResponse(status=200)

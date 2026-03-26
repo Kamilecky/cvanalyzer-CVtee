@@ -19,6 +19,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.http import HttpResponse
 from django.shortcuts import redirect
+from billing import views as billing_views
 
 urlpatterns = [
     path('i18n/', include('django.conf.urls.i18n')),
@@ -30,6 +31,9 @@ urlpatterns = [
     path('billing/', include('billing.urls')),
     path('reports/', include('reports.urls')),
     path('recruitment/', include('recruitment.urls')),
+    # API endpoints (Stripe webhook registered at this URL in Stripe dashboard)
+    path('api/stripe/webhook/', billing_views.stripe_webhook_view, name='stripe_webhook_api'),
+    path('api/create-checkout-session/', billing_views.create_checkout_session_api, name='create_checkout_session_api'),
     path('', lambda request: redirect('dashboard'), name='home'),
 ]
 

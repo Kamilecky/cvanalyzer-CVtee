@@ -348,9 +348,16 @@ except ImportError:
 # ---------------------------------------------------------------------------
 # Stripe
 # ---------------------------------------------------------------------------
-STRIPE_PUBLIC_KEY = os.environ.get('STRIPE_PUBLIC_KEY', '')
-STRIPE_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY', '')
-STRIPE_WEBHOOK_SECRET = os.environ.get('STRIPE_WEBHOOK_SECRET', '')
+STRIPE_PUBLIC_KEY      = os.environ.get('STRIPE_PUBLIC_KEY', '')
+STRIPE_SECRET_KEY      = os.environ.get('STRIPE_SECRET_KEY', '')
+STRIPE_WEBHOOK_SECRET  = os.environ.get('STRIPE_WEBHOOK_SECRET', '')
+
+# Map plan slugs → Stripe Price IDs (set real IDs in environment or here)
+STRIPE_PRICE_IDS = {
+    'basic':      os.environ.get('STRIPE_PRICE_BASIC',      'price_BASIC_ID'),
+    'premium':    os.environ.get('STRIPE_PRICE_PREMIUM',    'price_PREMIUM_ID'),
+    'enterprise': os.environ.get('STRIPE_PRICE_ENTERPRISE', 'price_ENTERPRISE_ID'),
+}
 
 # ---------------------------------------------------------------------------
 # Django REST Framework (przygotowane na przyszłe API)
