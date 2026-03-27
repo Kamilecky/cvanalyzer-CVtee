@@ -14,8 +14,9 @@
             <div class="card-body">
                 <h5>Current Plan: <span class="text-primary">{{ request.user.get_plan_display }}</span></h5>
 
-                {% if subscription %}
+                {% if request.user.plan != 'free' %}
                 <div class="mt-3">
+                    {% if subscription %}
                     <p><strong>{% trans "Status:" %}</strong> <span class="status-badge status-{{ subscription.status }}">{{ subscription.get_status_display }}</span></p>
                     {% if subscription.current_period_end %}
                     <p><strong>{% trans "Current period ends:" %}</strong> {{ subscription.current_period_end|date:"M d, Y" }}</p>
@@ -23,8 +24,8 @@
                     {% if subscription.cancel_at_period_end %}
                     <p class="text-warning"><i class="bi bi-exclamation-triangle me-1"></i>Your subscription will cancel at the end of the current period.</p>
                     {% endif %}
+                    {% endif %}
                 </div>
-
                 <div class="alert alert-info mt-3 mb-0">
                     <i class="bi bi-info-circle me-1"></i>
                     To switch to a different plan, first cancel your current subscription below. You will be returned to the Free plan and can then purchase any paid plan.
@@ -59,7 +60,7 @@
             </div>
         </div>
 
-        {% if subscription and request.user.plan != 'free' %}
+        {% if request.user.plan != 'free' %}
         <div class="card mt-4 border-danger">
             <div class="card-header text-danger">Cancel Subscription</div>
             <div class="card-body">
