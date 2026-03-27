@@ -31,8 +31,8 @@ urlpatterns = [
     path('billing/', include('billing.urls')),
     path('reports/', include('reports.urls')),
     path('recruitment/', include('recruitment.urls')),
-    # API endpoints (Stripe webhook registered at this URL in Stripe dashboard)
-    path('api/stripe/webhook/', billing_views.stripe_webhook_view, name='stripe_webhook_api'),
+    # Production Stripe webhook — single source of truth for subscription state
+    path('api/stripe/webhook/', billing_views.stripe_webhook_api_view, name='stripe_webhook_api'),
     path('api/create-checkout-session/', billing_views.create_checkout_session_api, name='create_checkout_session_api'),
     path('', lambda request: redirect('dashboard'), name='home'),
 ]

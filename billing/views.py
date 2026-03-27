@@ -240,6 +240,33 @@ def create_checkout_session_api(request):
 
 @csrf_exempt
 @require_POST
+def stripe_webhook_api_view(request):
+    """
+    Production Stripe webhook — /api/stripe/webhook/
+    Single source of truth for subscription state changes.
+    No authentication, no CSRF, raw body only.
+    """
+    from billing.webhook_handler import verify_and_parse, dispatch
+
+    payload = request.body
+    sig_header = request.META.get('HTTP_STRIPE_SIGNATURE', '')
+
+    event = verify_and_parse(payload, sig_header)
+    if event is None:
+        return HttpResponse(status=400)
+
+    try:
+        dispatch(event)
+    except Exception:
+        # dispatch() already logged the error; return 200 so Stripe doesn't
+        # retry indefinitely on logic errors. Infrastructure errors bubble up.
+        pass
+
+    return HttpResponse(status=200)
+
+
+@csrf_exempt
+@require_POST
 def stripe_webhook_view(request):
     """Endpoint webhook Stripe — handles all subscription lifecycle events."""
     payload = request.body

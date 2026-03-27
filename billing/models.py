@@ -41,6 +41,7 @@ class Subscription(models.Model):
     )
     plan = models.ForeignKey(Plan, on_delete=models.SET_NULL, null=True)
     stripe_subscription_id = models.CharField(max_length=255, unique=True)
+    current_price_id = models.CharField(max_length=255, blank=True, default='')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active')
     current_period_start = models.DateTimeField(null=True, blank=True)
     current_period_end = models.DateTimeField(null=True, blank=True)
@@ -53,6 +54,20 @@ class Subscription(models.Model):
 
     def __str__(self):
         return f'{self.user.email} - {self.plan} ({self.status})'
+
+
+class StripeWebhookEvent(models.Model):
+    """Processed Stripe webhook events — used for idempotency."""
+
+    event_id = models.CharField(max_length=255, unique=True)
+    event_type = models.CharField(max_length=100)
+    processed_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'billing_stripe_webhook_event'
+
+    def __str__(self):
+        return f'{self.event_type} ({self.event_id})'
 
 
 class UsageRecord(models.Model):
