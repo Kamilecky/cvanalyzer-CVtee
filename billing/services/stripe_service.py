@@ -16,9 +16,9 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
 # ---------------------------------------------------------------------------
 
 _HARDCODED_PRICE_MAP = {
-    'price_1TFJTSG1hKAqWyd8x6CBuvXM': 'basic',
-    'price_1TFJT3G1hKAqWyd807KxvltD': 'premium',
-    'price_1TFJSdG1hKAqWyd8mWE7460C': 'enterprise',
+    'price_1TFXopG1hKAqWyd8acz7fkRX': 'basic',
+    'price_1TFXpRG1hKAqWyd8PVsqyYVM': 'premium',
+    'price_1TFXpwG1hKAqWyd893ZswyqO': 'enterprise',
 }
 
 
@@ -254,6 +254,19 @@ class StripeService:
                 'cancel_at_period_end': stripe_sub.get('cancel_at_period_end', False),
             },
         )
+
+        # Anuluj stare subskrypcje tego klienta (zmiana planu tworzy nową)
+        if user.stripe_customer_id:
+            old_subs = stripe.Subscription.list(
+                customer=user.stripe_customer_id,
+                status='active',
+                limit=10,
+            )
+            for old_sub in old_subs.data:
+                if old_sub['id'] != stripe_sub['id']:
+                    stripe.Subscription.cancel(old_sub['id'])
+                    Subscription.objects.filter(stripe_subscription_id=old_sub['id']).update(status='canceled')
+                    logger.info(f"sync_from_checkout: canceled old subscription {old_sub['id']} for {user.email}")
 
         old = user.plan
         user.plan = plan_slug
