@@ -255,7 +255,7 @@ class StripeService:
             },
         )
 
-        # Anuluj stare subskrypcje tego klienta (zmiana planu tworzy nową)
+        # Anuluj stare subskrypcje → ustaw free → ustaw nowy plan
         if user.stripe_customer_id:
             old_subs = stripe.Subscription.list(
                 customer=user.stripe_customer_id,
@@ -267,6 +267,11 @@ class StripeService:
                     stripe.Subscription.cancel(old_sub['id'])
                     Subscription.objects.filter(stripe_subscription_id=old_sub['id']).update(status='canceled')
                     logger.info(f"sync_from_checkout: canceled old subscription {old_sub['id']} for {user.email}")
+            # Ustaw free jako punkt przejściowy — nowy plan zostanie nadany poniżej
+            if old_subs.data:
+                user.plan = 'free'
+                user.save(update_fields=['plan'])
+                logger.info(f"sync_from_checkout: {user.email} → free (przejściowo przed nowym planem)")
 
         old = user.plan
         user.plan = plan_slug
@@ -374,18 +379,19 @@ class StripeService:
 
             if plan and data['status'] == 'active':
                 plan_slug = plan.name.lower()
-                # Only update user.plan when this is the user's current (newest) subscription.
-                # Prevents old subscription webhooks from downgrading the plan after an upgrade,
-                # e.g. Basic sub fires subscription.updated AFTER Premium was already set.
+                # Aktualizuj plan gdy:
+                # 1. To jest bieżąca subskrypcja użytkownika (current_sub), LUB
+                # 2. user.plan == 'free' — użytkownik właśnie zmienił plan (stara sub
+                #    została skasowana → free), teraz nowa sub nadaje właściwy plan.
                 current_sub = getattr(user, 'subscription', None)
                 is_current = (current_sub is None or current_sub.stripe_subscription_id == data['id'])
-                if is_current:
+                if is_current or user.plan == 'free':
                     user.plan = plan_slug
                     user.save(update_fields=['plan'])
                     logger.info(f"Subscription updated for {user.email}: plan={plan_slug}, status=active")
                 else:
                     logger.info(
-                        f"Skipped plan downgrade for {user.email}: webhook for old sub {data['id']!r} "
+                        f"Skipped plan update for {user.email}: webhook for sub {data['id']!r} "
                         f"({plan_slug}), current sub is {current_sub.stripe_subscription_id!r} "
                         f"({getattr(current_sub.plan, 'name', '?')})"
                     )
@@ -395,18 +401,11 @@ class StripeService:
             Subscription.objects.filter(stripe_subscription_id=sub_id).update(status='canceled')
 
             customer_id = data['customer']
-            # Ustaw free TYLKO jeśli nie ma żadnej innej aktywnej subskrypcji.
-            # Gdy użytkownik zmienia plan, stara jest kasowana (deleted webhook),
-            # ale nowa jest już aktywna — nie wolno cofać do free.
-            active_subs = stripe.Subscription.list(customer=customer_id, status='active', limit=1)
-            if not active_subs.data:
-                updated = User.objects.filter(stripe_customer_id=customer_id).update(plan='free')
-                logger.info(f"Subscription deleted, brak aktywnych → free dla customer {customer_id} ({updated} user(s))")
-            else:
-                logger.info(
-                    f"Subscription {sub_id!r} deleted dla customer {customer_id}, "
-                    f"ale jest aktywna subskrypcja {active_subs.data[0]['id']!r} — plan bez zmian"
-                )
+            # Zawsze wróć do free po usunięciu subskrypcji.
+            # Jeśli użytkownik kupił nowy plan, webhook customer.subscription.created/updated
+            # nada właściwy plan zaraz po tym (reguła: free → nowy plan bez blokad).
+            updated = User.objects.filter(stripe_customer_id=customer_id).update(plan='free')
+            logger.info(f"Subscription {sub_id!r} deleted → free dla customer {customer_id} ({updated} user(s))")
 
     # ------------------------------------------------------------------
     # invoice.*
