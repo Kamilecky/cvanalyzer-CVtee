@@ -25,9 +25,10 @@
                     {% endif %}
                 </div>
 
-                <a href="{% url 'pricing' %}" class="btn btn-outline-primary mt-3">
-                    <i class="bi bi-arrow-up-circle me-1"></i> Change plan
-                </a>
+                <div class="alert alert-info mt-3 mb-0">
+                    <i class="bi bi-info-circle me-1"></i>
+                    To switch to a different plan, first cancel your current subscription below. You will be returned to the Free plan and can then purchase any paid plan.
+                </div>
                 {% else %}
                 <p class="text-muted mt-3">You are on the Free plan. Upgrade to unlock more features.</p>
                 <div class="d-flex gap-2 mt-2 flex-wrap">
@@ -42,11 +43,12 @@
         <div class="card mt-4">
             <div class="card-header">Usage This Month</div>
             <div class="card-body">
-                <p>Analyses used: <strong>{{ request.user.analyses_used_this_month }}</strong>
+                <p class="mb-1">Analyses used: <strong>{{ request.user.analyses_used_this_month }}</strong>
                     {% with limit=request.user.get_plan_limit %}
                     {% if limit %}/ {{ limit }}{% else %}/ Unlimited{% endif %}
                     {% endwith %}
                 </p>
+                <p class="mb-0">Active job positions: <strong>{{ active_job_positions }}</strong></p>
 
                 {% if request.user.is_superuser %}
                 <form method="post" action="{% url 'reset_usage' %}" class="mt-3">
@@ -56,6 +58,21 @@
                 {% endif %}
             </div>
         </div>
+
+        {% if subscription and request.user.plan != 'free' %}
+        <div class="card mt-4 border-danger">
+            <div class="card-header text-danger">Cancel Subscription</div>
+            <div class="card-body">
+                <p class="text-muted mb-3">Canceling your subscription will immediately return you to the Free plan. You will lose access to all paid features.</p>
+                <form method="post" action="{% url 'cancel_subscription' %}" onsubmit="return confirm('Are you sure you want to cancel your subscription and return to the Free plan?');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline-danger">
+                        <i class="bi bi-x-circle me-1"></i> Cancel Subscription
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% endif %}
 
         {% if request.user.is_superuser %}
         <div class="card mt-4">

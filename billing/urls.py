@@ -15,4 +15,5 @@ urlpatterns = [
     path('sync/', views.sync_subscription_view, name='sync_subscription'),
     path('reset-usage/', views.reset_usage_view, name='reset_usage'),
     path('change-plan/', views.change_plan_view, name='change_plan'),
+    path('cancel/', views.cancel_subscription_view, name='cancel_subscription'),
 ]

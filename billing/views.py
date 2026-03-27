@@ -72,8 +72,41 @@ def checkout_cancel_view(request):
 @login_required
 def subscription_view(request):
     """Strona zarządzania subskrypcją."""
+    from recruitment.models import JobPosition
     sub = getattr(request.user, 'subscription', None)
-    return render(request, 'billing/subscription.html', {'subscription': sub})
+    active_job_positions = JobPosition.objects.filter(created_by=request.user, is_active=True).count()
+    return render(request, 'billing/subscription.html', {
+        'subscription': sub,
+        'active_job_positions': active_job_positions,
+    })
+
+
+@login_required
+@require_POST
+def cancel_subscription_view(request):
+    """Anuluje aktywną subskrypcję i wraca do planu free."""
+    user = request.user
+    if user.stripe_customer_id:
+        try:
+            import stripe as stripe_lib
+            active_subs = stripe_lib.Subscription.list(
+                customer=user.stripe_customer_id,
+                status='active',
+                limit=10,
+            )
+            for sub in active_subs.data:
+                stripe_lib.Subscription.cancel(sub['id'])
+            from .models import Subscription
+            Subscription.objects.filter(user=user).update(status='canceled')
+        except Exception as e:
+            logger.error(f"cancel_subscription error for {user.email}: {e}")
+            messages.error(request, _('Could not cancel subscription. Please try again.'))
+            return redirect('subscription')
+
+    user.plan = 'free'
+    user.save(update_fields=['plan'])
+    messages.success(request, _('Your subscription has been canceled. You are now on the Free plan.'))
+    return redirect('subscription')
 
 
 @login_required
@@ -176,6 +209,12 @@ def create_checkout_session_api(request):
         body = json.loads(request.body)
     except (json.JSONDecodeError, ValueError):
         return JsonResponse({'error': 'Invalid JSON'}, status=400)
+
+    if request.user.plan != 'free':
+        return JsonResponse(
+            {'error': 'You already have an active subscription. Cancel your current plan first to purchase a new one.'},
+            status=403,
+        )
 
     plan_slug = body.get('plan', '').lower()
     price_id = STRIPE_PRICE_IDS.get(plan_slug)

@@ -11,6 +11,14 @@
 
 <div id="pricing-error" class="alert alert-danger d-none mx-auto" style="max-width:480px;" role="alert"></div>
 
+{% if request.user.is_authenticated and request.user.plan != 'free' %}
+<div class="alert alert-info mx-auto text-center mb-4" style="max-width:600px;">
+    <i class="bi bi-info-circle me-1"></i>
+    You currently have an active <strong>{{ request.user.get_plan_display }}</strong> plan.
+    To switch to a different plan, first <a href="{% url 'subscription' %}">cancel your current subscription</a>.
+</div>
+{% endif %}
+
 <div class="row g-4 justify-content-center">
 
     <!-- Free Plan -->
@@ -68,6 +76,8 @@
                 </ul>
                 {% if request.user.is_authenticated and request.user.plan == 'basic' %}
                 <button class="btn btn-outline-secondary w-100" disabled>Current Plan</button>
+                {% elif request.user.is_authenticated and request.user.plan != 'free' %}
+                <button class="btn btn-outline-secondary w-100" disabled title="Cancel your current plan first">Unavailable</button>
                 {% elif request.user.is_authenticated %}
                 <button class="btn btn-accent w-100 plan-btn" data-plan="basic" onclick="buy('basic', this)">
                     <span class="btn-label">{% trans "Upgrade to Basic" %}</span>
@@ -101,6 +111,8 @@
                 </ul>
                 {% if request.user.is_authenticated and request.user.plan == 'premium' %}
                 <button class="btn btn-outline-secondary w-100" disabled>Current Plan</button>
+                {% elif request.user.is_authenticated and request.user.plan != 'free' %}
+                <button class="btn btn-outline-secondary w-100" disabled title="Cancel your current plan first">Unavailable</button>
                 {% elif request.user.is_authenticated %}
                 <button class="btn btn-outline-primary w-100 plan-btn" data-plan="premium" onclick="buy('premium', this)">
                     <span class="btn-label">{% trans "Upgrade to Premium" %}</span>
@@ -132,6 +144,8 @@
                 </ul>
                 {% if request.user.is_authenticated and request.user.plan == 'enterprise' %}
                 <button class="btn btn-outline-secondary w-100" disabled>Current Plan</button>
+                {% elif request.user.is_authenticated and request.user.plan != 'free' %}
+                <button class="btn btn-outline-secondary w-100" disabled title="Cancel your current plan first">Unavailable</button>
                 {% elif request.user.is_authenticated %}
                 <button class="btn btn-outline-primary w-100 plan-btn" data-plan="enterprise" onclick="buy('enterprise', this)">
                     <span class="btn-label">{% trans "Upgrade to Enterprise" %}</span>
