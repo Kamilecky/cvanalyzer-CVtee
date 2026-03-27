@@ -239,32 +239,60 @@ def create_checkout_session_api(request):
 
 
 @csrf_exempt
-@require_POST
 def stripe_webhook_api_view(request):
     """
     Production Stripe webhook — /api/stripe/webhook/
 
-    - No authentication, no CSRF
-    - Reads raw body bytes (never parsed before signature check)
+    - No authentication, no CSRF, no DRF
+    - Raw body bytes passed directly to Stripe verification
     - Returns 400 ONLY on signature verification failure
     - Returns 200 for all successfully verified events (even on logic errors)
     """
-    from billing.webhook_handler import verify_and_parse, dispatch
+    if request.method != 'POST':
+        return HttpResponse(status=405)
 
-    # Read raw body — must not be parsed/decoded before Stripe verification
-    payload = request.body  # bytes
-    sig_header = request.META.get('HTTP_STRIPE_SIGNATURE', '')
+    from django.conf import settings as django_settings
+    import stripe as stripe_lib
+    from billing.webhook_handler import dispatch
 
-    # Signature verification — returns None on any failure → 400
-    event = verify_and_parse(payload, sig_header)
-    if event is None:
+    # --- Step 1: raw body (bytes) — never decode before verification ---
+    payload = request.body
+
+    # --- Step 2: Stripe-Signature header ---
+    sig_header = request.META.get('HTTP_STRIPE_SIGNATURE')
+
+    # --- DEBUG LOGS (temporary) ---
+    webhook_secret = getattr(django_settings, 'STRIPE_WEBHOOK_SECRET', None)
+    logger.debug(f'[webhook-debug] STRIPE_WEBHOOK_SECRET set: {bool(webhook_secret)}')
+    logger.debug(f'[webhook-debug] payload type: {type(payload)} len={len(payload)}')
+    logger.debug(f'[webhook-debug] Stripe-Signature: {sig_header!r}')
+
+    if not sig_header:
+        logger.warning('webhook: missing HTTP_STRIPE_SIGNATURE header')
+        return HttpResponse('Missing Stripe-Signature header', status=400)
+
+    if not webhook_secret:
+        logger.error('webhook: STRIPE_WEBHOOK_SECRET not set in settings')
+        return HttpResponse('Webhook secret not configured', status=400)
+
+    # --- Step 3: verify signature and parse — NO json.loads before this ---
+    stripe_lib.api_key = getattr(django_settings, 'STRIPE_SECRET_KEY', '')
+    try:
+        event = stripe_lib.Webhook.construct_event(payload, sig_header, webhook_secret)
+    except stripe_lib.error.SignatureVerificationError as e:
+        logger.warning(f'webhook: signature verification failed — {e}')
         return HttpResponse('Webhook signature verification failed', status=400)
+    except ValueError as e:
+        logger.error(f'webhook: invalid payload — {e}')
+        return HttpResponse('Invalid payload', status=400)
 
-    # Dispatch — logic errors must NOT return 500 (Stripe would retry forever)
+    # --- Step 4: process verified event ---
+    logger.info(f'webhook: verified event_id={event["id"]!r} type={event["type"]!r}')
+
     try:
         dispatch(event)
     except Exception as e:
-        logger.error(f'stripe_webhook_api_view: unhandled dispatch error — {e}', exc_info=True)
+        logger.error(f'webhook: dispatch error — {e}', exc_info=True)
 
     return HttpResponse(status=200)
 
