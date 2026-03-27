@@ -162,9 +162,9 @@ def change_plan_view(request):
 
 # Stripe Price IDs — hardcoded as single source of truth
 STRIPE_PRICE_IDS = {
-    'basic':      'price_1TFJTSG1hKAqWyd8x6CBuvXM',
-    'premium':    'price_1TFJT3G1hKAqWyd807KxvltD',
-    'enterprise': 'price_1TFJSdG1hKAqWyd8mWE7460C',
+    'basic':      'price_1TFXopG1hKAqWyd8acz7fkRX',
+    'premium':    'price_1TFXpRG1hKAqWyd8PVsqyYVM',
+    'enterprise': 'price_1TFXpwG1hKAqWyd893ZswyqO',
 }
 
 

@@ -358,9 +358,9 @@ STRIPE_WEBHOOK_SECRET  = os.environ.get('STRIPE_WEBHOOK_SECRET', '')
 
 # Map plan slugs → Stripe Price IDs (set real IDs in environment or here)
 STRIPE_PRICE_IDS = {
-    'basic':      os.environ.get('STRIPE_PRICE_BASIC',      'price_BASIC_ID'),
-    'premium':    os.environ.get('STRIPE_PRICE_PREMIUM',    'price_PREMIUM_ID'),
-    'enterprise': os.environ.get('STRIPE_PRICE_ENTERPRISE', 'price_ENTERPRISE_ID'),
+    'basic':      os.environ.get('STRIPE_PRICE_BASIC',      'price_1TFXopG1hKAqWyd8acz7fkRX'),
+    'premium':    os.environ.get('STRIPE_PRICE_PREMIUM',    'price_1TFXpRG1hKAqWyd8PVsqyYVM'),
+    'enterprise': os.environ.get('STRIPE_PRICE_ENTERPRISE', 'price_1TFXpwG1hKAqWyd893ZswyqO'),
 }
 
 # ---------------------------------------------------------------------------
