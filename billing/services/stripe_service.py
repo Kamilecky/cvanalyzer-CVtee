@@ -244,7 +244,14 @@ class StripeService:
             )
             return user.plan, False
 
+        # Zapisz nowy plan NAJPIERW — przed jakimikolwiek wywołaniami Stripe
+        # które mogą rzucić wyjątek i zostawić plan jako free.
         plan_obj = Plan.objects.filter(name=plan_slug).first()
+        old = user.plan
+        user.plan = plan_slug
+        user.save(update_fields=['plan'])
+        logger.info(f"sync_from_checkout: {user.email} {old} → {plan_slug} (price={price_id})")
+
         Subscription.objects.update_or_create(
             stripe_subscription_id=stripe_sub['id'],
             defaults={
@@ -255,28 +262,22 @@ class StripeService:
             },
         )
 
-        # Anuluj stare subskrypcje → ustaw free → ustaw nowy plan
+        # Anuluj stare subskrypcje (dotyczy zmiany planu, nie zakupu od free)
         if user.stripe_customer_id:
-            old_subs = stripe.Subscription.list(
-                customer=user.stripe_customer_id,
-                status='active',
-                limit=10,
-            )
-            for old_sub in old_subs.data:
-                if old_sub['id'] != stripe_sub['id']:
-                    stripe.Subscription.cancel(old_sub['id'])
-                    Subscription.objects.filter(stripe_subscription_id=old_sub['id']).update(status='canceled')
-                    logger.info(f"sync_from_checkout: canceled old subscription {old_sub['id']} for {user.email}")
-            # Ustaw free jako punkt przejściowy — nowy plan zostanie nadany poniżej
-            if old_subs.data:
-                user.plan = 'free'
-                user.save(update_fields=['plan'])
-                logger.info(f"sync_from_checkout: {user.email} → free (przejściowo przed nowym planem)")
+            try:
+                old_subs = stripe.Subscription.list(
+                    customer=user.stripe_customer_id,
+                    status='active',
+                    limit=10,
+                )
+                for old_sub in old_subs.data:
+                    if old_sub['id'] != stripe_sub['id']:
+                        stripe.Subscription.cancel(old_sub['id'])
+                        Subscription.objects.filter(stripe_subscription_id=old_sub['id']).update(status='canceled')
+                        logger.info(f"sync_from_checkout: canceled old subscription {old_sub['id']} for {user.email}")
+            except Exception as e:
+                logger.error(f"sync_from_checkout: error canceling old subs for {user.email}: {e}")
 
-        old = user.plan
-        user.plan = plan_slug
-        user.save(update_fields=['plan'])
-        logger.info(f"sync_from_checkout: {user.email} {old} → {plan_slug} (price={price_id})")
         return plan_slug, old != plan_slug
 
     @staticmethod
