@@ -243,24 +243,28 @@ def create_checkout_session_api(request):
 def stripe_webhook_api_view(request):
     """
     Production Stripe webhook — /api/stripe/webhook/
-    Single source of truth for subscription state changes.
-    No authentication, no CSRF, raw body only.
+
+    - No authentication, no CSRF
+    - Reads raw body bytes (never parsed before signature check)
+    - Returns 400 ONLY on signature verification failure
+    - Returns 200 for all successfully verified events (even on logic errors)
     """
     from billing.webhook_handler import verify_and_parse, dispatch
 
-    payload = request.body
+    # Read raw body — must not be parsed/decoded before Stripe verification
+    payload = request.body  # bytes
     sig_header = request.META.get('HTTP_STRIPE_SIGNATURE', '')
 
+    # Signature verification — returns None on any failure → 400
     event = verify_and_parse(payload, sig_header)
     if event is None:
-        return HttpResponse(status=400)
+        return HttpResponse('Webhook signature verification failed', status=400)
 
+    # Dispatch — logic errors must NOT return 500 (Stripe would retry forever)
     try:
         dispatch(event)
-    except Exception:
-        # dispatch() already logged the error; return 200 so Stripe doesn't
-        # retry indefinitely on logic errors. Infrastructure errors bubble up.
-        pass
+    except Exception as e:
+        logger.error(f'stripe_webhook_api_view: unhandled dispatch error — {e}', exc_info=True)
 
     return HttpResponse(status=200)
 

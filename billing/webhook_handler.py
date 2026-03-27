@@ -12,9 +12,9 @@ Rules:
 """
 
 import logging
-import os
 
 import stripe
+from django.conf import settings
 from django.db import transaction
 
 logger = logging.getLogger(__name__)
@@ -47,19 +47,38 @@ def _price_to_plan(price_id: str) -> str | None:
 def verify_and_parse(payload: bytes, sig_header: str) -> stripe.Event | None:
     """
     Verify Stripe webhook signature and return parsed event.
-    Returns None on failure (caller should return HTTP 400).
+    - payload must be raw bytes (request.body), never parsed JSON
+    - sig_header is the Stripe-Signature HTTP header
+    Returns None on failure (caller must return HTTP 400).
     """
-    secret = os.environ.get('STRIPE_WEBHOOK_SECRET', '')
+    # Ensure stripe.api_key is set (required by stripe-python >= 5)
+    stripe.api_key = getattr(settings, 'STRIPE_SECRET_KEY', '')
+
+    secret = getattr(settings, 'STRIPE_WEBHOOK_SECRET', '')
     if not secret:
-        logger.error('webhook: STRIPE_WEBHOOK_SECRET not set')
+        logger.error('webhook: STRIPE_WEBHOOK_SECRET not configured in settings')
         return None
+
+    if not sig_header:
+        logger.warning('webhook: missing Stripe-Signature header')
+        return None
+
+    if not isinstance(payload, bytes):
+        logger.error('webhook: payload must be raw bytes — do not parse before verification')
+        return None
+
     try:
+        # construct_event verifies signature AND parses JSON internally
         return stripe.Webhook.construct_event(payload, sig_header, secret)
     except stripe.error.SignatureVerificationError as e:
         logger.warning(f'webhook: signature verification failed — {e}')
         return None
+    except ValueError as e:
+        # Invalid payload (not valid JSON after signature check)
+        logger.error(f'webhook: invalid payload — {e}')
+        return None
     except Exception as e:
-        logger.error(f'webhook: unexpected error during parsing — {e}')
+        logger.error(f'webhook: unexpected error — {e}', exc_info=True)
         return None
 
 
