@@ -74,7 +74,7 @@ def subscription_view(request):
     """Strona zarządzania subskrypcją."""
     from recruitment.models import JobPosition
     sub = getattr(request.user, 'subscription', None)
-    active_job_positions = JobPosition.objects.filter(created_by=request.user, is_active=True).count()
+    active_job_positions = JobPosition.objects.filter(user=request.user, is_active=True).count()
     return render(request, 'billing/subscription.html', {
         'subscription': sub,
         'active_job_positions': active_job_positions,
