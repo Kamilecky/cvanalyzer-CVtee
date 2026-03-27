@@ -143,6 +143,20 @@ class StripeService:
         )
 
         if not subs.data:
+            # Brak aktywnej subskrypcji — sprawdź czy jest incomplete (timing issue)
+            all_subs = stripe.Subscription.list(
+                customer=user.stripe_customer_id,
+                limit=1,
+                expand=['data.items.data.price'],
+            )
+            if all_subs.data and all_subs.data[0]['status'] in ('incomplete', 'trialing'):
+                # Subskrypcja istnieje ale jeszcze nie active — nie downgrade'uj
+                logger.warning(
+                    f"sync: {user.email} subscription status={all_subs.data[0]['status']!r} "
+                    "— keeping current plan to avoid timing-race downgrade"
+                )
+                return user.plan, False
+            # Naprawdę brak subskrypcji — cofnij do free
             Subscription.objects.filter(user=user).update(status='canceled')
             old = user.plan
             user.plan = 'free'
@@ -201,19 +215,26 @@ class StripeService:
             user.save(update_fields=['stripe_customer_id'])
             logger.info(f"sync_from_checkout: linked customer {customer_id} to {user.email}")
 
-        # Użyj subskrypcji z tej konkretnej sesji — pomija problemy z race
-        # condition i wieloma subskrypcjami (np. stara Basic + nowa Enterprise)
+        # Użyj subskrypcji z tej konkretnej sesji
         stripe_sub = session.get('subscription')
-        if not stripe_sub or isinstance(stripe_sub, str):
-            # Subskrypcja nie jest rozwinięta — fallback do listy
-            logger.warning(f"sync_from_checkout: subscription not expanded for session {session_id}, falling back to list")
-            return StripeService.sync_subscription_for_user(user)
+
+        if not stripe_sub:
+            logger.error(f"sync_from_checkout: no subscription in session {session_id}")
+            return user.plan, False
+
+        # Jeśli Stripe zwrócił samo ID (string) — pobierz obiekt bezpośrednio
+        if isinstance(stripe_sub, str):
+            logger.info(f"sync_from_checkout: retrieving subscription {stripe_sub} directly")
+            stripe_sub = stripe.Subscription.retrieve(
+                stripe_sub,
+                expand=['items.data.price'],
+            )
 
         try:
             price_id = stripe_sub['items']['data'][0]['price']['id']
         except (KeyError, IndexError, TypeError):
             logger.error(f"sync_from_checkout: cannot extract price_id from session {session_id}")
-            return StripeService.sync_subscription_for_user(user)
+            return user.plan, False
 
         plan_slug = _price_id_to_plan_slug(price_id)
         if not plan_slug:
