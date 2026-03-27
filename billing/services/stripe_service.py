@@ -395,8 +395,18 @@ class StripeService:
             Subscription.objects.filter(stripe_subscription_id=sub_id).update(status='canceled')
 
             customer_id = data['customer']
-            updated = User.objects.filter(stripe_customer_id=customer_id).update(plan='free')
-            logger.info(f"Subscription canceled for customer {customer_id} ({updated} user(s) → free)")
+            # Ustaw free TYLKO jeśli nie ma żadnej innej aktywnej subskrypcji.
+            # Gdy użytkownik zmienia plan, stara jest kasowana (deleted webhook),
+            # ale nowa jest już aktywna — nie wolno cofać do free.
+            active_subs = stripe.Subscription.list(customer=customer_id, status='active', limit=1)
+            if not active_subs.data:
+                updated = User.objects.filter(stripe_customer_id=customer_id).update(plan='free')
+                logger.info(f"Subscription deleted, brak aktywnych → free dla customer {customer_id} ({updated} user(s))")
+            else:
+                logger.info(
+                    f"Subscription {sub_id!r} deleted dla customer {customer_id}, "
+                    f"ale jest aktywna subskrypcja {active_subs.data[0]['id']!r} — plan bez zmian"
+                )
 
     # ------------------------------------------------------------------
     # invoice.*
