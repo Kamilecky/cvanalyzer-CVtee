@@ -29,19 +29,19 @@
             </div>
             <div class="pricing-body">
                 <ul class="pricing-features text-start">
-                    <li><i class="bi bi-check-circle text-success"></i> {% trans "5 analyses per month" %}</li>
-                    <li><i class="bi bi-check-circle text-success"></i> {% trans "3 active positions" %}</li>
-                    <li><i class="bi bi-check-circle text-success"></i> {% trans "Basic scoring" %}</li>
-                    <li><i class="bi bi-check-circle text-success"></i> {% trans "Section detection" %}</li>
-                    <li><i class="bi bi-check-circle text-success"></i> {% trans "Problem detection" %}</li>
-                    <li><i class="bi bi-check-circle text-success"></i> {% trans "Job matching" %}</li>
-                    <li><i class="bi bi-check-circle text-success"></i> {% trans "Recruitment (HR mode)" %}</li>
-                    <li><i class="bi bi-check-circle text-success"></i> {% trans "Candidate ranking" %}</li>
+                    <li><i class="bi bi-file-earmark-text text-success"></i> {% trans "5 analyses per month" %}</li>
+                    <li><i class="bi bi-briefcase text-success"></i> {% trans "3 active positions" %}</li>
+                    <li><i class="bi bi-star text-success"></i> {% trans "Basic scoring" %}</li>
+                    <li><i class="bi bi-layout-text-sidebar text-success"></i> {% trans "Section detection" %}</li>
+                    <li><i class="bi bi-exclamation-triangle text-success"></i> {% trans "Problem detection" %}</li>
+                    <li><i class="bi bi-diagram-2 text-success"></i> {% trans "Job matching" %}</li>
+                    <li><i class="bi bi-people text-success"></i> {% trans "Recruitment (HR mode)" %}</li>
+                    <li><i class="bi bi-trophy text-success"></i> {% trans "Candidate ranking" %}</li>
                     <li class="pricing-divider"><hr class="my-2"></li>
-                    <li class="text-muted"><i class="bi bi-x-circle"></i> {% trans "PDF export" %}</li>
-                    <li class="text-muted"><i class="bi bi-x-circle"></i> {% trans "AI rewriting" %}</li>
-                    <li class="text-muted"><i class="bi bi-x-circle"></i> {% trans "Interview questions" %}</li>
-                    <li class="text-muted"><i class="bi bi-x-circle"></i> {% trans "Requirement scoring" %}</li>
+                    <li class="text-muted"><i class="bi bi-file-pdf"></i> {% trans "PDF export" %}</li>
+                    <li class="text-muted"><i class="bi bi-pencil-square"></i> {% trans "AI rewriting" %}</li>
+                    <li class="text-muted"><i class="bi bi-chat-dots"></i> {% trans "Interview questions" %}</li>
+                    <li class="text-muted"><i class="bi bi-bar-chart"></i> {% trans "Requirement scoring" %}</li>
                 </ul>
                 {% if request.user.is_authenticated and request.user.plan == 'free' %}
                 <button class="btn btn-outline-secondary w-100" disabled>{% trans "Current Plan" %}</button>
@@ -62,20 +62,20 @@
             </div>
             <div class="pricing-body">
                 <ul class="pricing-features text-start">
-                    <li><i class="bi bi-check-circle text-success"></i> {% trans "50 analyses per month" %}</li>
-                    <li><i class="bi bi-check-circle text-success"></i> {% trans "10 active positions" %}</li>
+                    <li><i class="bi bi-file-earmark-text text-success"></i> {% trans "50 analyses per month" %}</li>
+                    <li><i class="bi bi-briefcase text-success"></i> {% trans "10 active positions" %}</li>
                     <li class="pricing-divider"><hr class="my-2"></li>
                     <li class="fw-semibold text-secondary small"><i class="bi bi-layers me-1"></i> {% trans "Everything in Free" %}</li>
                     <li class="pricing-divider"><hr class="my-2"></li>
-                    <li><i class="bi bi-check-circle text-success"></i> {% trans "Recommendations" %}</li>
-                    <li><i class="bi bi-check-circle text-success"></i> {% trans "Skill gap analysis" %}</li>
-                    <li><i class="bi bi-check-circle text-success"></i> {% trans "CV versioning" %}</li>
-                    <li><i class="bi bi-check-circle text-success"></i> {% trans "Analysis History" %}</li>
+                    <li><i class="bi bi-lightbulb text-success"></i> {% trans "Recommendations" %}</li>
+                    <li><i class="bi bi-graph-up text-success"></i> {% trans "Skill gap analysis" %}</li>
+                    <li><i class="bi bi-clock-history text-success"></i> {% trans "CV versioning" %}</li>
+                    <li><i class="bi bi-archive text-success"></i> {% trans "Analysis History" %}</li>
                     <li class="pricing-divider"><hr class="my-2"></li>
-                    <li class="text-muted"><i class="bi bi-x-circle"></i> {% trans "PDF export" %}</li>
-                    <li class="text-muted"><i class="bi bi-x-circle"></i> {% trans "AI rewriting" %}</li>
-                    <li class="text-muted"><i class="bi bi-x-circle"></i> {% trans "Interview questions" %}</li>
-                    <li class="text-muted"><i class="bi bi-x-circle"></i> {% trans "Requirement scoring" %}</li>
+                    <li class="text-muted"><i class="bi bi-file-pdf"></i> {% trans "PDF export" %}</li>
+                    <li class="text-muted"><i class="bi bi-pencil-square"></i> {% trans "AI rewriting" %}</li>
+                    <li class="text-muted"><i class="bi bi-chat-dots"></i> {% trans "Interview questions" %}</li>
+                    <li class="text-muted"><i class="bi bi-bar-chart"></i> {% trans "Requirement scoring" %}</li>
                 </ul>
                 {% if request.user.is_authenticated and request.user.plan == 'basic' %}
                 <button class="btn btn-outline-secondary w-100" disabled>{% trans "Current Plan" %}</button>
@@ -102,17 +102,17 @@
             </div>
             <div class="pricing-body">
                 <ul class="pricing-features text-start">
-                    <li><i class="bi bi-check-circle text-success"></i> {% trans "300 analyses per month" %}</li>
-                    <li><i class="bi bi-check-circle text-success"></i> {% trans "50 active positions" %}</li>
+                    <li><i class="bi bi-file-earmark-text text-success"></i> {% trans "300 analyses per month" %}</li>
+                    <li><i class="bi bi-briefcase text-success"></i> {% trans "50 active positions" %}</li>
                     <li class="pricing-divider"><hr class="my-2"></li>
                     <li class="fw-semibold text-secondary small"><i class="bi bi-layers me-1"></i> {% trans "Everything in Basic" %}</li>
                     <li class="pricing-divider"><hr class="my-2"></li>
-                    <li><i class="bi bi-check-circle text-success"></i> {% trans "AI interview questions" %}</li>
-                    <li><i class="bi bi-check-circle text-success"></i> {% trans "Requirement scoring" %}</li>
-                    <li><i class="bi bi-check-circle text-success"></i> {% trans "PDF export" %}</li>
-                    <li><i class="bi bi-check-circle text-success"></i> {% trans "AI rewriting" %}</li>
-                    <li><i class="bi bi-check-circle text-success"></i> {% trans "Benchmarking" %}</li>
-                    <li><i class="bi bi-check-circle text-success"></i> {% trans "Career advisor" %}</li>
+                    <li><i class="bi bi-chat-quote text-success"></i> {% trans "AI interview questions" %}</li>
+                    <li><i class="bi bi-bar-chart text-success"></i> {% trans "Requirement scoring" %}</li>
+                    <li><i class="bi bi-file-pdf text-success"></i> {% trans "PDF export" %}</li>
+                    <li><i class="bi bi-pencil-square text-success"></i> {% trans "AI rewriting" %}</li>
+                    <li><i class="bi bi-speedometer2 text-success"></i> {% trans "Benchmarking" %}</li>
+                    <li><i class="bi bi-compass text-success"></i> {% trans "Career advisor" %}</li>
                     <li><i class="bi bi-shield-check text-success"></i> {% trans "Prompt injection defence" %}</li>
                     <li><i class="bi bi-shield-lock text-success"></i> {% trans "Hidden prompt injection defence" %}</li>
                 </ul>
@@ -141,15 +141,15 @@
             </div>
             <div class="pricing-body">
                 <ul class="pricing-features text-start">
-                    <li><i class="bi bi-check-circle text-success"></i> {% trans "Unlimited analyses" %}</li>
-                    <li><i class="bi bi-check-circle text-success"></i> {% trans "Unlimited positions" %}</li>
+                    <li><i class="bi bi-infinity text-success"></i> {% trans "Unlimited analyses" %}</li>
+                    <li><i class="bi bi-briefcase text-success"></i> {% trans "Unlimited positions" %}</li>
                     <li class="pricing-divider"><hr class="my-2"></li>
                     <li class="fw-semibold text-secondary small"><i class="bi bi-layers me-1"></i> {% trans "Everything in Premium" %}</li>
                     <li class="pricing-divider"><hr class="my-2"></li>
-                    <li><i class="bi bi-check-circle text-success"></i> {% trans "SLA guarantee" %}</li>
-                    <li><i class="bi bi-check-circle text-success"></i> {% trans "Priority processing" %}</li>
-                    <li><i class="bi bi-check-circle text-success"></i> {% trans "Custom prompts" %}</li>
-                    <li><i class="bi bi-check-circle text-success"></i> {% trans "API access" %}</li>
+                    <li><i class="bi bi-patch-check text-success"></i> {% trans "SLA guarantee" %}</li>
+                    <li><i class="bi bi-lightning text-success"></i> {% trans "Priority processing" %}</li>
+                    <li><i class="bi bi-code-slash text-success"></i> {% trans "Custom prompts" %}</li>
+                    <li><i class="bi bi-plug text-success"></i> {% trans "API access" %}</li>
                     <li><i class="bi bi-shield-check text-success"></i> {% trans "Prompt injection defence" %}</li>
                     <li><i class="bi bi-shield-lock text-success"></i> {% trans "Hidden prompt injection defence" %}</li>
                 </ul>
@@ -186,7 +186,6 @@
 
 <script>
 async function buy(plan, btn) {
-    // Disable all plan buttons and show spinner on clicked one
     document.querySelectorAll('.plan-btn').forEach(b => b.disabled = true);
     btn.querySelector('.btn-label').classList.add('d-none');
     btn.querySelector('.btn-spinner').classList.remove('d-none');
@@ -214,7 +213,6 @@ async function buy(plan, btn) {
         const errEl = document.getElementById('pricing-error');
         errEl.textContent = err.message || '{% trans "An error occurred. Please try again." %}';
         errEl.classList.remove('d-none');
-        // Re-enable buttons
         document.querySelectorAll('.plan-btn').forEach(b => b.disabled = false);
         btn.querySelector('.btn-label').classList.remove('d-none');
         btn.querySelector('.btn-spinner').classList.add('d-none');
