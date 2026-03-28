@@ -752,6 +752,19 @@ body {
     padding: 32px;
     text-align: center;
     transition: all 0.3s;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.pricing-body {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.pricing-features {
+    flex: 1;
 }
 
 .pricing-features {
