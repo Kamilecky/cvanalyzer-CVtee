@@ -193,7 +193,7 @@ EMAIL_VERIFICATION_TOKEN_EXPIRY_HOURS = 24
 # Plany subskrypcyjne - limity miesięcznych analiz
 # ---------------------------------------------------------------------------
 PLAN_LIMITS = {
-    'free': 5,
+    'free': 15,
     'basic': 50,
     'premium': 300,
     'enterprise': None,   # unlimited

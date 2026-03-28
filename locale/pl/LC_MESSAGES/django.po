@@ -764,6 +764,9 @@ msgstr "/miesiąc"
 msgid "5 analyses per month"
 msgstr "5 analiz miesięcznie"
 
+msgid "15 analyses per month"
+msgstr "15 analiz miesięcznie"
+
 msgid "3 active positions"
 msgstr "3 aktywne stanowiska"
 
