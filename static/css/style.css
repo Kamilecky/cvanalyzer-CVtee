@@ -754,6 +754,30 @@ body {
     transition: all 0.3s;
 }
 
+.pricing-features {
+    list-style: none;
+    padding: 0;
+    margin: 20px 0;
+    text-align: left;
+}
+
+.pricing-features li {
+    padding: 6px 0;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.pricing-features li.pricing-divider {
+    padding: 0;
+    list-style: none;
+}
+
+.pricing-features li.pricing-divider hr {
+    border-color: var(--border-color);
+    opacity: 0.6;
+    margin: 4px 0;
+}
+
 .pricing-card:hover {
     box-shadow: var(--shadow-lg);
     transform: translateY(-4px);
