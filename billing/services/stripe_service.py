@@ -16,9 +16,9 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
 # ---------------------------------------------------------------------------
 
 _HARDCODED_PRICE_MAP = {
-    'price_1TFs85G1hKAqWyd8Sz9J5e84': 'basic',
-    'price_1TFs8fG1hKAqWyd8YFhrFPj2': 'premium',
-    'price_1TFs9CG1hKAqWyd8Rqp6tE96': 'enterprise',
+    'price_1TFsjVG1hKAqWyd8xI23jwNT': 'basic',
+    'price_1TFslDG1hKAqWyd8OaPaX9Tj': 'premium',
+    'price_1TFslsG1hKAqWyd8iZgiQzXR': 'enterprise',
 }
 
 
