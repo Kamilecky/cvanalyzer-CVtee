@@ -22,7 +22,7 @@ from analysis.models import (
 from .openai_client import OpenAIClient
 from .prompts import SYSTEM_PROMPT, EXTRACTION_PROMPT, SECTION_ANALYSIS_PROMPT
 from .text_cleaner import TextCleaner
-from .injection_detector import detect_injection
+from .injection_detector import detect_injection, scan_hidden_injection
 from core.security.output_filter import filter_dict
 
 logger = logging.getLogger(__name__)
@@ -40,7 +40,7 @@ class CVAnalyzer:
         Progress: 10% -> 30% -> 60% -> 90% -> 100%
         Partial failure: jeśli 1 z 2 promptów się uda → status='partial'.
         """
-        analysis = AnalysisResult.objects.select_related('cv_document').get(id=analysis_id)
+        analysis = AnalysisResult.objects.select_related('cv_document', 'cv_document__user').get(id=analysis_id)
         analysis.status = 'processing'
         analysis.progress = 10
         analysis.save(update_fields=['status', 'progress'])
@@ -74,9 +74,25 @@ class CVAnalyzer:
                     f"Analysis {analysis_id}: short CV text ({len(cleaned_text)} chars)"
                 )
 
-            # Injection detection — heuristic + optional LLM classifier
-            injection = detect_injection(cleaned_text, use_llm=True, client=self.client)
+            # Plan-based security feature flags
+            user = analysis.cv_document.user
+            use_llm_injection   = user.has_feature('prompt_injection_defence')
+            use_hidden_injection = user.has_feature('hidden_prompt_injection_defence')
+
+            # Prompt Injection Defence — LLM classifier only for Premium / Enterprise
+            injection = detect_injection(cleaned_text, use_llm=use_llm_injection, client=self.client)
             backend_flags = injection.flags
+
+            # Hidden Prompt Injection Defence — Premium / Enterprise only
+            if use_hidden_injection:
+                hidden_flags = scan_hidden_injection(analysis.cv_document.extracted_text or '')
+                if hidden_flags:
+                    backend_flags = backend_flags + hidden_flags
+                    metadata['hidden_injection_scan'] = hidden_flags
+                    logger.warning(
+                        f"Analysis {analysis_id}: {len(hidden_flags)} hidden injection flag(s) detected"
+                    )
+
             if backend_flags:
                 metadata['backend_injection_scan'] = backend_flags
                 analysis.risk_score = injection.score

@@ -419,3 +419,135 @@ def detect_injection(text: str, use_llm: bool = True, client=None) -> InjectionR
         )
 
     return result
+
+
+# ---------------------------------------------------------------------------
+# Hidden Prompt Injection scan (Premium / Enterprise only)
+# ---------------------------------------------------------------------------
+
+# Unicode homoglyph ranges — Cyrillic, Greek, fullwidth Latin, lookalikes
+_HOMOGLYPH_RANGES = re.compile(
+    r'[\u0400-\u04FF'      # Cyrillic
+    r'\u0370-\u03FF'       # Greek
+    r'\uFF01-\uFF5E'       # Fullwidth Latin
+    r'\u2100-\u214F'       # Letterlike symbols
+    r'\u1D00-\u1DBF'       # Phonetic extensions (often used as lookalikes)
+    r']'
+)
+
+# Invisible / steganographic Unicode characters beyond the basic zero-width set
+_INVISIBLE_CHARS = re.compile(
+    r'[\u200B-\u200F'      # Zero-width space/non-joiner/joiner/LRM/RLM
+    r'\u2028\u2029'        # Line/paragraph separator
+    r'\u00AD'              # Soft hyphen
+    r'\u2060-\u2064'       # Word joiner and invisible operators
+    r'\uFEFF'              # BOM / zero-width no-break space
+    r'\u034F'              # Combining grapheme joiner
+    r'\u115F\u1160'        # Hangul fillers
+    r'\u3164'              # Hangul filler
+    r'\uFFA0'              # Halfwidth Hangul filler
+    r']'
+)
+
+# HTML/CSS style attributes that could hide text (white color, font-size:0, opacity:0)
+_HIDDEN_STYLE = re.compile(
+    r'(?i)(color\s*:\s*white|color\s*:\s*#fff|font-size\s*:\s*0|'
+    r'opacity\s*:\s*0|visibility\s*:\s*hidden|display\s*:\s*none|'
+    r'color\s*:\s*rgba?\s*\(\s*255\s*,\s*255\s*,\s*255)',
+)
+
+# RTL/LTR override characters used to reverse text visually
+_BIDI_OVERRIDE = re.compile(r'[\u202A-\u202E\u2066-\u2069\u061C]')
+
+# Suspiciously long unbroken sequences of non-printable / control characters
+_CONTROL_SEQUENCE = re.compile(r'[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]{3,}')
+
+
+def scan_hidden_injection(raw_text: str) -> list[dict]:
+    """
+    Scans for HIDDEN prompt injection techniques (Premium / Enterprise feature).
+
+    Detects text that is invisible to the human reader but present in the
+    extracted content sent to the AI model:
+
+      - Unicode homoglyphs (Cyrillic/Greek lookalikes masquerading as Latin)
+      - Invisible / zero-width steganographic characters
+      - Bidirectional text override (reverses visible text)
+      - HTML/CSS style-based text hiding (white-on-white, font-size:0, opacity:0)
+      - Control character sequences
+      - Suspiciously high ratio of non-ASCII characters
+
+    Returns a list of flag dicts compatible with InjectionResult.flags.
+    Caller is responsible for merging with main detect_injection() results.
+    """
+    flags: list[dict] = []
+
+    # 1. Homoglyphs
+    hg_matches = _HOMOGLYPH_RANGES.findall(raw_text)
+    if len(hg_matches) > 5:
+        flags.append({
+            'type': 'homoglyph_substitution',
+            'fragment': f'{len(hg_matches)} non-Latin lookalike characters detected',
+            'action': 'hidden_content_flagged',
+            'source': 'hidden_injection_scan',
+        })
+        logger.warning(f"HiddenInjection: homoglyph_substitution count={len(hg_matches)}")
+
+    # 2. Invisible / zero-width characters
+    inv_matches = _INVISIBLE_CHARS.findall(raw_text)
+    if inv_matches:
+        flags.append({
+            'type': 'invisible_characters',
+            'fragment': f'{len(inv_matches)} invisible/zero-width characters detected',
+            'action': 'hidden_content_flagged',
+            'source': 'hidden_injection_scan',
+        })
+        logger.warning(f"HiddenInjection: invisible_characters count={len(inv_matches)}")
+
+    # 3. Bidirectional text override
+    bidi_matches = _BIDI_OVERRIDE.findall(raw_text)
+    if bidi_matches:
+        flags.append({
+            'type': 'bidi_text_override',
+            'fragment': f'{len(bidi_matches)} bidirectional override characters detected',
+            'action': 'hidden_content_flagged',
+            'source': 'hidden_injection_scan',
+        })
+        logger.warning(f"HiddenInjection: bidi_text_override count={len(bidi_matches)}")
+
+    # 4. HTML/CSS style-based hiding
+    style_match = _HIDDEN_STYLE.search(raw_text)
+    if style_match:
+        flags.append({
+            'type': 'css_hidden_text',
+            'fragment': style_match.group()[:120],
+            'action': 'hidden_content_flagged',
+            'source': 'hidden_injection_scan',
+        })
+        logger.warning(f"HiddenInjection: css_hidden_text fragment={style_match.group()[:60]!r}")
+
+    # 5. Control character sequences
+    ctrl_match = _CONTROL_SEQUENCE.search(raw_text)
+    if ctrl_match:
+        flags.append({
+            'type': 'control_character_sequence',
+            'fragment': repr(ctrl_match.group()[:40]),
+            'action': 'hidden_content_flagged',
+            'source': 'hidden_injection_scan',
+        })
+        logger.warning("HiddenInjection: control_character_sequence detected")
+
+    # 6. High non-ASCII ratio (obfuscation signal)
+    if len(raw_text) > 100:
+        non_ascii = sum(1 for c in raw_text if ord(c) > 127)
+        ratio = non_ascii / len(raw_text)
+        if ratio > 0.35:
+            flags.append({
+                'type': 'high_non_ascii_ratio',
+                'fragment': f'non-ASCII ratio={ratio:.2%} ({non_ascii}/{len(raw_text)} chars)',
+                'action': 'hidden_content_flagged',
+                'source': 'hidden_injection_scan',
+            })
+            logger.warning(f"HiddenInjection: high_non_ascii_ratio={ratio:.2%}")
+
+    return flags

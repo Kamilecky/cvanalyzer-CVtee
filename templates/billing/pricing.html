@@ -108,6 +108,8 @@
                     <li><i class="bi bi-check-circle text-success"></i> AI rewriting</li>
                     <li><i class="bi bi-check-circle text-success"></i> Benchmarking</li>
                     <li><i class="bi bi-check-circle text-success"></i> Career advisor</li>
+                    <li><i class="bi bi-shield-check text-success"></i> Prompt injection defence</li>
+                    <li><i class="bi bi-shield-lock text-success"></i> Hidden prompt injection defence</li>
                 </ul>
                 {% if request.user.is_authenticated and request.user.plan == 'premium' %}
                 <button class="btn btn-outline-secondary w-100" disabled>Current Plan</button>
@@ -141,6 +143,8 @@
                     <li><i class="bi bi-check-circle text-success"></i> Priority processing</li>
                     <li><i class="bi bi-check-circle text-success"></i> Custom prompts</li>
                     <li><i class="bi bi-check-circle text-success"></i> API access</li>
+                    <li><i class="bi bi-shield-check text-success"></i> Prompt injection defence</li>
+                    <li><i class="bi bi-shield-lock text-success"></i> Hidden prompt injection defence</li>
                 </ul>
                 {% if request.user.is_authenticated and request.user.plan == 'enterprise' %}
                 <button class="btn btn-outline-secondary w-100" disabled>Current Plan</button>

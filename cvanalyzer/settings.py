@@ -231,7 +231,9 @@ PLAN_FEATURES = {
         'sla_flag': False,
         'custom_prompts': False,
         'api_access': False,
-        'prompt_injection_scan': False,   # heuristic only; LLM scan = premium+
+        'prompt_injection_scan': False,
+        'prompt_injection_defence': False,
+        'hidden_prompt_injection_defence': False,
     },
     'basic': {
         'basic_scoring': True,
@@ -255,7 +257,9 @@ PLAN_FEATURES = {
         'sla_flag': False,
         'custom_prompts': False,
         'api_access': False,
-        'prompt_injection_scan': False,   # heuristic only; LLM scan = premium+
+        'prompt_injection_scan': False,
+        'prompt_injection_defence': False,
+        'hidden_prompt_injection_defence': False,
     },
     'premium': {
         'basic_scoring': True,
@@ -279,7 +283,9 @@ PLAN_FEATURES = {
         'sla_flag': False,
         'custom_prompts': False,
         'api_access': False,
-        'prompt_injection_scan': True,    # full LLM-based injection + hidden text scan
+        'prompt_injection_scan': True,
+        'prompt_injection_defence': True,
+        'hidden_prompt_injection_defence': True,
     },
     'enterprise': {
         'basic_scoring': True,
@@ -303,7 +309,9 @@ PLAN_FEATURES = {
         'sla_flag': True,
         'custom_prompts': True,
         'api_access': True,
-        'prompt_injection_scan': True,    # full LLM-based injection + hidden text scan
+        'prompt_injection_scan': True,
+        'prompt_injection_defence': True,
+        'hidden_prompt_injection_defence': True,
     },
 }
 
