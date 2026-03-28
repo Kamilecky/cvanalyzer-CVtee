@@ -745,3 +745,156 @@ msgstr "Niewystarczająca liczba analiz. Potrzebujesz %(needed)s, a pozostało %
 
 msgid "No CVs uploaded yet."
 msgstr "Nie przesłano jeszcze CV."
+
+msgid "Choose the plan that fits your needs"
+msgstr "Wybierz plan dopasowany do Twoich potrzeb"
+
+msgid "You currently have an active"
+msgstr "Posiadasz aktywny plan"
+
+msgid "plan. To switch to a different plan, first"
+msgstr "plan. Aby przejść na inny plan, najpierw"
+
+msgid "cancel your current subscription"
+msgstr "anuluj swoją bieżącą subskrypcję"
+
+msgid "/month"
+msgstr "/miesiąc"
+
+msgid "5 analyses per month"
+msgstr "5 analiz miesięcznie"
+
+msgid "3 active positions"
+msgstr "3 aktywne stanowiska"
+
+msgid "Basic scoring"
+msgstr "Podstawowe ocenianie"
+
+msgid "Section detection"
+msgstr "Wykrywanie sekcji"
+
+msgid "Problem detection"
+msgstr "Wykrywanie problemów"
+
+msgid "Job matching"
+msgstr "Dopasowanie do ofert pracy"
+
+msgid "Recruitment (HR mode)"
+msgstr "Rekrutacja (tryb HR)"
+
+msgid "Candidate ranking"
+msgstr "Ranking kandydatów"
+
+msgid "PDF export"
+msgstr "Eksport PDF"
+
+msgid "AI rewriting"
+msgstr "Przepisywanie AI"
+
+msgid "Interview questions"
+msgstr "Pytania rekrutacyjne"
+
+msgid "Requirement scoring"
+msgstr "Ocena wymagań"
+
+msgid "50 analyses per month"
+msgstr "50 analiz miesięcznie"
+
+msgid "10 active positions"
+msgstr "10 aktywnych stanowisk"
+
+msgid "Everything in Free"
+msgstr "Wszystko z planu Darmowego"
+
+msgid "Recommendations"
+msgstr "Rekomendacje"
+
+msgid "Skill gap analysis"
+msgstr "Analiza luk kompetencyjnych"
+
+msgid "CV versioning"
+msgstr "Wersjonowanie CV"
+
+msgid "300 analyses per month"
+msgstr "300 analiz miesięcznie"
+
+msgid "50 active positions"
+msgstr "50 aktywnych stanowisk"
+
+msgid "Everything in Basic"
+msgstr "Wszystko z planu Podstawowego"
+
+msgid "AI interview questions"
+msgstr "Pytania rekrutacyjne AI"
+
+msgid "Benchmarking"
+msgstr "Benchmarking"
+
+msgid "Career advisor"
+msgstr "Doradca kariery"
+
+msgid "Prompt injection defence"
+msgstr "Ochrona przed prompt injection"
+
+msgid "Hidden prompt injection defence"
+msgstr "Ochrona przed ukrytym prompt injection"
+
+msgid "Unlimited analyses"
+msgstr "Nieograniczone analizy"
+
+msgid "Unlimited positions"
+msgstr "Nieograniczone stanowiska"
+
+msgid "Everything in Premium"
+msgstr "Wszystko z planu Premium"
+
+msgid "SLA guarantee"
+msgstr "Gwarancja SLA"
+
+msgid "Priority processing"
+msgstr "Priorytetowe przetwarzanie"
+
+msgid "Custom prompts"
+msgstr "Własne prompty"
+
+msgid "API access"
+msgstr "Dostęp do API"
+
+msgid "Most Popular"
+msgstr "Najpopularniejszy"
+
+msgid "Current Plan"
+msgstr "Bieżący plan"
+
+msgid "Cancel your current plan first"
+msgstr "Najpierw anuluj swój bieżący plan"
+
+msgid "Unavailable"
+msgstr "Niedostępny"
+
+msgid "Default plan — no payment needed"
+msgstr "Plan domyślny — bez płatności"
+
+msgid "Redirecting…"
+msgstr "Przekierowanie…"
+
+msgid "Get Started"
+msgstr "Rozpocznij"
+
+msgid "Want to switch plans? First cancel your current"
+msgstr "Chcesz zmienić plan? Najpierw anuluj swoją bieżącą"
+
+msgid "subscription, then purchase a new plan."
+msgstr "subskrypcję, a następnie wykup nowy plan."
+
+msgid "Are you sure you want to cancel your subscription and return to the Free plan?"
+msgstr "Czy na pewno chcesz anulować subskrypcję i wrócić do planu Darmowego?"
+
+msgid "Cancel Current Subscription"
+msgstr "Anuluj bieżącą subskrypcję"
+
+msgid "Could not start checkout."
+msgstr "Nie można rozpocząć płatności."
+
+msgid "An error occurred. Please try again."
+msgstr "Wystąpił błąd. Spróbuj ponownie."

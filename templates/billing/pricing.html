@@ -6,7 +6,7 @@
 {% block content %}
 <div class="page-header text-center">
     <h1>{% trans "Pricing Plans" %}</h1>
-    <p class="text-muted">Choose the plan that fits your needs</p>
+    <p class="text-muted">{% trans "Choose the plan that fits your needs" %}</p>
 </div>
 
 <div id="pricing-error" class="alert alert-danger d-none mx-auto" style="max-width:480px;" role="alert"></div>
@@ -14,8 +14,7 @@
 {% if request.user.is_authenticated and request.user.plan != 'free' %}
 <div class="alert alert-info mx-auto text-center mb-4" style="max-width:600px;">
     <i class="bi bi-info-circle me-1"></i>
-    You currently have an active <strong>{{ request.user.get_plan_display }}</strong> plan.
-    To switch to a different plan, first <a href="{% url 'subscription' %}">cancel your current subscription</a>.
+    {% trans "You currently have an active" %} <strong>{{ request.user.get_plan_display }}</strong> {% trans "plan. To switch to a different plan, first" %} <a href="{% url 'subscription' %}">{% trans "cancel your current subscription" %}</a>.
 </div>
 {% endif %}
 
@@ -26,28 +25,28 @@
         <div class="pricing-card w-100">
             <div class="pricing-header">
                 <h3>{% trans "Free" %}</h3>
-                <div class="pricing-price">0 zł<span>/month</span></div>
+                <div class="pricing-price">0 zł<span>{% trans "/month" %}</span></div>
             </div>
             <div class="pricing-body">
                 <ul class="pricing-features text-start">
-                    <li><i class="bi bi-check-circle text-success"></i> 5 analyses per month</li>
-                    <li><i class="bi bi-check-circle text-success"></i> 3 active positions</li>
-                    <li><i class="bi bi-check-circle text-success"></i> Basic scoring</li>
-                    <li><i class="bi bi-check-circle text-success"></i> Section detection</li>
-                    <li><i class="bi bi-check-circle text-success"></i> Problem detection</li>
-                    <li><i class="bi bi-check-circle text-success"></i> Job matching</li>
-                    <li><i class="bi bi-check-circle text-success"></i> Recruitment (HR mode)</li>
-                    <li><i class="bi bi-check-circle text-success"></i> Candidate ranking</li>
+                    <li><i class="bi bi-check-circle text-success"></i> {% trans "5 analyses per month" %}</li>
+                    <li><i class="bi bi-check-circle text-success"></i> {% trans "3 active positions" %}</li>
+                    <li><i class="bi bi-check-circle text-success"></i> {% trans "Basic scoring" %}</li>
+                    <li><i class="bi bi-check-circle text-success"></i> {% trans "Section detection" %}</li>
+                    <li><i class="bi bi-check-circle text-success"></i> {% trans "Problem detection" %}</li>
+                    <li><i class="bi bi-check-circle text-success"></i> {% trans "Job matching" %}</li>
+                    <li><i class="bi bi-check-circle text-success"></i> {% trans "Recruitment (HR mode)" %}</li>
+                    <li><i class="bi bi-check-circle text-success"></i> {% trans "Candidate ranking" %}</li>
                     <li class="pricing-divider"><hr class="my-2"></li>
-                    <li class="text-muted"><i class="bi bi-x-circle"></i> PDF export</li>
-                    <li class="text-muted"><i class="bi bi-x-circle"></i> AI rewriting</li>
-                    <li class="text-muted"><i class="bi bi-x-circle"></i> Interview questions</li>
-                    <li class="text-muted"><i class="bi bi-x-circle"></i> Requirement scoring</li>
+                    <li class="text-muted"><i class="bi bi-x-circle"></i> {% trans "PDF export" %}</li>
+                    <li class="text-muted"><i class="bi bi-x-circle"></i> {% trans "AI rewriting" %}</li>
+                    <li class="text-muted"><i class="bi bi-x-circle"></i> {% trans "Interview questions" %}</li>
+                    <li class="text-muted"><i class="bi bi-x-circle"></i> {% trans "Requirement scoring" %}</li>
                 </ul>
                 {% if request.user.is_authenticated and request.user.plan == 'free' %}
-                <button class="btn btn-outline-secondary w-100" disabled>Current Plan</button>
+                <button class="btn btn-outline-secondary w-100" disabled>{% trans "Current Plan" %}</button>
                 {% else %}
-                <span class="text-muted small">Default plan — no payment needed</span>
+                <span class="text-muted small">{% trans "Default plan — no payment needed" %}</span>
                 {% endif %}
             </div>
         </div>
@@ -56,36 +55,36 @@
     <!-- Basic Plan -->
     <div class="col-md-6 col-lg-3">
         <div class="pricing-card pricing-popular">
-            <div class="pricing-badge">Most Popular</div>
+            <div class="pricing-badge">{% trans "Most Popular" %}</div>
             <div class="pricing-header">
                 <h3>{% trans "Basic" %}</h3>
-                <div class="pricing-price">79 zł<span>/month</span></div>
+                <div class="pricing-price">79 zł<span>{% trans "/month" %}</span></div>
             </div>
             <div class="pricing-body">
                 <ul class="pricing-features text-start">
-                    <li><i class="bi bi-check-circle text-success"></i> 50 analyses per month</li>
-                    <li><i class="bi bi-check-circle text-success"></i> 10 active positions</li>
+                    <li><i class="bi bi-check-circle text-success"></i> {% trans "50 analyses per month" %}</li>
+                    <li><i class="bi bi-check-circle text-success"></i> {% trans "10 active positions" %}</li>
                     <li class="pricing-divider"><hr class="my-2"></li>
-                    <li class="fw-semibold text-secondary small"><i class="bi bi-layers me-1"></i> Everything in Free</li>
+                    <li class="fw-semibold text-secondary small"><i class="bi bi-layers me-1"></i> {% trans "Everything in Free" %}</li>
                     <li class="pricing-divider"><hr class="my-2"></li>
-                    <li><i class="bi bi-check-circle text-success"></i> Recommendations</li>
-                    <li><i class="bi bi-check-circle text-success"></i> Skill gap analysis</li>
-                    <li><i class="bi bi-check-circle text-success"></i> CV versioning</li>
-                    <li><i class="bi bi-check-circle text-success"></i> Analysis history</li>
+                    <li><i class="bi bi-check-circle text-success"></i> {% trans "Recommendations" %}</li>
+                    <li><i class="bi bi-check-circle text-success"></i> {% trans "Skill gap analysis" %}</li>
+                    <li><i class="bi bi-check-circle text-success"></i> {% trans "CV versioning" %}</li>
+                    <li><i class="bi bi-check-circle text-success"></i> {% trans "Analysis History" %}</li>
                     <li class="pricing-divider"><hr class="my-2"></li>
-                    <li class="text-muted"><i class="bi bi-x-circle"></i> PDF export</li>
-                    <li class="text-muted"><i class="bi bi-x-circle"></i> AI rewriting</li>
-                    <li class="text-muted"><i class="bi bi-x-circle"></i> Interview questions</li>
-                    <li class="text-muted"><i class="bi bi-x-circle"></i> Requirement scoring</li>
+                    <li class="text-muted"><i class="bi bi-x-circle"></i> {% trans "PDF export" %}</li>
+                    <li class="text-muted"><i class="bi bi-x-circle"></i> {% trans "AI rewriting" %}</li>
+                    <li class="text-muted"><i class="bi bi-x-circle"></i> {% trans "Interview questions" %}</li>
+                    <li class="text-muted"><i class="bi bi-x-circle"></i> {% trans "Requirement scoring" %}</li>
                 </ul>
                 {% if request.user.is_authenticated and request.user.plan == 'basic' %}
-                <button class="btn btn-outline-secondary w-100" disabled>Current Plan</button>
+                <button class="btn btn-outline-secondary w-100" disabled>{% trans "Current Plan" %}</button>
                 {% elif request.user.is_authenticated and request.user.plan != 'free' %}
-                <button class="btn btn-outline-secondary w-100" disabled title="Cancel your current plan first">Unavailable</button>
+                <button class="btn btn-outline-secondary w-100" disabled title="{% trans "Cancel your current plan first" %}">{% trans "Unavailable" %}</button>
                 {% elif request.user.is_authenticated %}
                 <button class="btn btn-accent w-100 plan-btn" data-plan="basic" onclick="buy('basic', this)">
                     <span class="btn-label">{% trans "Upgrade to Basic" %}</span>
-                    <span class="btn-spinner d-none"><span class="spinner-border spinner-border-sm me-1"></span> Redirecting…</span>
+                    <span class="btn-spinner d-none"><span class="spinner-border spinner-border-sm me-1"></span> {% trans "Redirecting…" %}</span>
                 </button>
                 {% else %}
                 <a href="{% url 'login' %}?next={% url 'pricing' %}" class="btn btn-accent w-100">{% trans "Get Started" %}</a>
@@ -99,32 +98,32 @@
         <div class="pricing-card w-100">
             <div class="pricing-header">
                 <h3>{% trans "Premium" %}</h3>
-                <div class="pricing-price">199 zł<span>/month</span></div>
+                <div class="pricing-price">199 zł<span>{% trans "/month" %}</span></div>
             </div>
             <div class="pricing-body">
                 <ul class="pricing-features text-start">
-                    <li><i class="bi bi-check-circle text-success"></i> 300 analyses per month</li>
-                    <li><i class="bi bi-check-circle text-success"></i> 50 active positions</li>
+                    <li><i class="bi bi-check-circle text-success"></i> {% trans "300 analyses per month" %}</li>
+                    <li><i class="bi bi-check-circle text-success"></i> {% trans "50 active positions" %}</li>
                     <li class="pricing-divider"><hr class="my-2"></li>
-                    <li class="fw-semibold text-secondary small"><i class="bi bi-layers me-1"></i> Everything in Basic</li>
+                    <li class="fw-semibold text-secondary small"><i class="bi bi-layers me-1"></i> {% trans "Everything in Basic" %}</li>
                     <li class="pricing-divider"><hr class="my-2"></li>
-                    <li><i class="bi bi-check-circle text-success"></i> AI interview questions</li>
-                    <li><i class="bi bi-check-circle text-success"></i> Requirement scoring</li>
-                    <li><i class="bi bi-check-circle text-success"></i> PDF export</li>
-                    <li><i class="bi bi-check-circle text-success"></i> AI rewriting</li>
-                    <li><i class="bi bi-check-circle text-success"></i> Benchmarking</li>
-                    <li><i class="bi bi-check-circle text-success"></i> Career advisor</li>
-                    <li><i class="bi bi-shield-check text-success"></i> Prompt injection defence</li>
-                    <li><i class="bi bi-shield-lock text-success"></i> Hidden prompt injection defence</li>
+                    <li><i class="bi bi-check-circle text-success"></i> {% trans "AI interview questions" %}</li>
+                    <li><i class="bi bi-check-circle text-success"></i> {% trans "Requirement scoring" %}</li>
+                    <li><i class="bi bi-check-circle text-success"></i> {% trans "PDF export" %}</li>
+                    <li><i class="bi bi-check-circle text-success"></i> {% trans "AI rewriting" %}</li>
+                    <li><i class="bi bi-check-circle text-success"></i> {% trans "Benchmarking" %}</li>
+                    <li><i class="bi bi-check-circle text-success"></i> {% trans "Career advisor" %}</li>
+                    <li><i class="bi bi-shield-check text-success"></i> {% trans "Prompt injection defence" %}</li>
+                    <li><i class="bi bi-shield-lock text-success"></i> {% trans "Hidden prompt injection defence" %}</li>
                 </ul>
                 {% if request.user.is_authenticated and request.user.plan == 'premium' %}
-                <button class="btn btn-outline-secondary w-100" disabled>Current Plan</button>
+                <button class="btn btn-outline-secondary w-100" disabled>{% trans "Current Plan" %}</button>
                 {% elif request.user.is_authenticated and request.user.plan != 'free' %}
-                <button class="btn btn-outline-secondary w-100" disabled title="Cancel your current plan first">Unavailable</button>
+                <button class="btn btn-outline-secondary w-100" disabled title="{% trans "Cancel your current plan first" %}">{% trans "Unavailable" %}</button>
                 {% elif request.user.is_authenticated %}
                 <button class="btn btn-outline-primary w-100 plan-btn" data-plan="premium" onclick="buy('premium', this)">
                     <span class="btn-label">{% trans "Upgrade to Premium" %}</span>
-                    <span class="btn-spinner d-none"><span class="spinner-border spinner-border-sm me-1"></span> Redirecting…</span>
+                    <span class="btn-spinner d-none"><span class="spinner-border spinner-border-sm me-1"></span> {% trans "Redirecting…" %}</span>
                 </button>
                 {% else %}
                 <a href="{% url 'login' %}?next={% url 'pricing' %}" class="btn btn-outline-primary w-100">{% trans "Get Started" %}</a>
@@ -138,30 +137,30 @@
         <div class="pricing-card w-100">
             <div class="pricing-header">
                 <h3>{% trans "Enterprise" %}</h3>
-                <div class="pricing-price">999 zł<span>/month</span></div>
+                <div class="pricing-price">999 zł<span>{% trans "/month" %}</span></div>
             </div>
             <div class="pricing-body">
                 <ul class="pricing-features text-start">
-                    <li><i class="bi bi-check-circle text-success"></i> Unlimited analyses</li>
-                    <li><i class="bi bi-check-circle text-success"></i> Unlimited positions</li>
+                    <li><i class="bi bi-check-circle text-success"></i> {% trans "Unlimited analyses" %}</li>
+                    <li><i class="bi bi-check-circle text-success"></i> {% trans "Unlimited positions" %}</li>
                     <li class="pricing-divider"><hr class="my-2"></li>
-                    <li class="fw-semibold text-secondary small"><i class="bi bi-layers me-1"></i> Everything in Premium</li>
+                    <li class="fw-semibold text-secondary small"><i class="bi bi-layers me-1"></i> {% trans "Everything in Premium" %}</li>
                     <li class="pricing-divider"><hr class="my-2"></li>
-                    <li><i class="bi bi-check-circle text-success"></i> SLA guarantee</li>
-                    <li><i class="bi bi-check-circle text-success"></i> Priority processing</li>
-                    <li><i class="bi bi-check-circle text-success"></i> Custom prompts</li>
-                    <li><i class="bi bi-check-circle text-success"></i> API access</li>
-                    <li><i class="bi bi-shield-check text-success"></i> Prompt injection defence</li>
-                    <li><i class="bi bi-shield-lock text-success"></i> Hidden prompt injection defence</li>
+                    <li><i class="bi bi-check-circle text-success"></i> {% trans "SLA guarantee" %}</li>
+                    <li><i class="bi bi-check-circle text-success"></i> {% trans "Priority processing" %}</li>
+                    <li><i class="bi bi-check-circle text-success"></i> {% trans "Custom prompts" %}</li>
+                    <li><i class="bi bi-check-circle text-success"></i> {% trans "API access" %}</li>
+                    <li><i class="bi bi-shield-check text-success"></i> {% trans "Prompt injection defence" %}</li>
+                    <li><i class="bi bi-shield-lock text-success"></i> {% trans "Hidden prompt injection defence" %}</li>
                 </ul>
                 {% if request.user.is_authenticated and request.user.plan == 'enterprise' %}
-                <button class="btn btn-outline-secondary w-100" disabled>Current Plan</button>
+                <button class="btn btn-outline-secondary w-100" disabled>{% trans "Current Plan" %}</button>
                 {% elif request.user.is_authenticated and request.user.plan != 'free' %}
-                <button class="btn btn-outline-secondary w-100" disabled title="Cancel your current plan first">Unavailable</button>
+                <button class="btn btn-outline-secondary w-100" disabled title="{% trans "Cancel your current plan first" %}">{% trans "Unavailable" %}</button>
                 {% elif request.user.is_authenticated %}
                 <button class="btn btn-outline-primary w-100 plan-btn" data-plan="enterprise" onclick="buy('enterprise', this)">
                     <span class="btn-label">{% trans "Upgrade to Enterprise" %}</span>
-                    <span class="btn-spinner d-none"><span class="spinner-border spinner-border-sm me-1"></span> Redirecting…</span>
+                    <span class="btn-spinner d-none"><span class="spinner-border spinner-border-sm me-1"></span> {% trans "Redirecting…" %}</span>
                 </button>
                 {% else %}
                 <a href="{% url 'login' %}?next={% url 'pricing' %}" class="btn btn-outline-primary w-100">{% trans "Get Started" %}</a>
@@ -175,11 +174,11 @@
 {% if request.user.is_authenticated and request.user.plan != 'free' %}
 <div class="text-center mt-5">
     <hr class="my-4">
-    <p class="text-muted mb-3">Want to switch plans? First cancel your current <strong>{{ request.user.get_plan_display }}</strong> subscription, then purchase a new plan.</p>
-    <form method="post" action="{% url 'cancel_subscription' %}" onsubmit="return confirm('Are you sure you want to cancel your subscription and return to the Free plan?');">
+    <p class="text-muted mb-3">{% trans "Want to switch plans? First cancel your current" %} <strong>{{ request.user.get_plan_display }}</strong> {% trans "subscription, then purchase a new plan." %}</p>
+    <form method="post" action="{% url 'cancel_subscription' %}" onsubmit="return confirm('{% trans "Are you sure you want to cancel your subscription and return to the Free plan?" %}');">
         {% csrf_token %}
         <button type="submit" class="btn btn-outline-danger">
-            <i class="bi bi-x-circle me-1"></i> Cancel Current Subscription
+            <i class="bi bi-x-circle me-1"></i> {% trans "Cancel Current Subscription" %}
         </button>
     </form>
 </div>
@@ -206,14 +205,14 @@ async function buy(plan, btn) {
         const data = await res.json();
 
         if (!res.ok || !data.url) {
-            throw new Error(data.error || 'Could not start checkout.');
+            throw new Error(data.error || '{% trans "Could not start checkout." %}');
         }
 
         window.location.href = data.url;
 
     } catch (err) {
         const errEl = document.getElementById('pricing-error');
-        errEl.textContent = err.message || 'An error occurred. Please try again.';
+        errEl.textContent = err.message || '{% trans "An error occurred. Please try again." %}';
         errEl.classList.remove('d-none');
         // Re-enable buttons
         document.querySelectorAll('.plan-btn').forEach(b => b.disabled = false);
