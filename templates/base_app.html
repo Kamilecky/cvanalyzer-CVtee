@@ -216,4 +216,111 @@
 
     {% block content %}{% endblock %}
 </main>
+
+<!-- ============================
+     App Footer
+     ============================ -->
+<footer class="app-footer">
+    <div class="row g-4 pb-2">
+
+        <!-- Col 1: Brand -->
+        <div class="col-12 col-sm-6 col-lg-3">
+            <div class="footer-brand-name mb-1">
+                <i class="bi bi-people-fill me-1" style="color:var(--accent);"></i>CVeeto
+            </div>
+            <p class="footer-brand-desc">
+                AI recruitment platform for HR teams. Screen candidates faster, rank CVs automatically and make data-driven hiring decisions.
+            </p>
+            <div class="footer-badges">
+                <span class="footer-badge"><i class="bi bi-robot"></i> AI-Assisted Hiring</span>
+                <span class="footer-badge"><i class="bi bi-shield-check"></i> GDPR Compliant</span>
+                <span class="footer-badge"><i class="bi bi-lock"></i> Stripe Secured</span>
+            </div>
+            <div class="footer-social">
+                <a href="https://www.linkedin.com" target="_blank" rel="noopener" title="LinkedIn">
+                    <i class="bi bi-linkedin"></i>
+                </a>
+                <a href="https://www.github.com" target="_blank" rel="noopener" title="GitHub">
+                    <i class="bi bi-github"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- Col 2: HR Features + Account -->
+        <div class="col-6 col-sm-3 col-lg-2">
+            <div class="footer-col-title">{% trans "HR Features" %}</div>
+            <ul class="footer-nav">
+                <li><a href="{% url 'recruitment_dashboard' %}"><i class="bi bi-speedometer2 me-1"></i>{% trans "HR Dashboard" %}</a></li>
+                <li><a href="{% url 'recruitment_candidate_list' %}"><i class="bi bi-person-lines-fill me-1"></i>{% trans "Candidates" %}</a></li>
+                <li><a href="{% url 'recruitment_position_list' %}"><i class="bi bi-briefcase me-1"></i>{% trans "Positions" %}</a></li>
+                <li><a href="{% url 'recruitment_position_ranks' %}"><i class="bi bi-trophy me-1"></i>{% trans "Position Ranks" %}</a></li>
+                <li><a href="{% url 'cv_upload' %}"><i class="bi bi-cloud-upload me-1"></i>{% trans "Upload CV" %}</a></li>
+                <li><a href="{% url 'pricing' %}"><i class="bi bi-tag me-1"></i>{% trans "Pricing" %}</a></li>
+            </ul>
+        </div>
+
+        <div class="col-6 col-sm-3 col-lg-2">
+            <div class="footer-col-title">{% trans "Account" %}</div>
+            <ul class="footer-nav">
+                {% if request.user.is_authenticated %}
+                <li><a href="{% url 'profile' %}"><i class="bi bi-person me-1"></i>{% trans "Profile" %}</a></li>
+                <li><a href="{% url 'subscription' %}"><i class="bi bi-credit-card me-1"></i>{% trans "Plan & Billing" %}</a></li>
+                <li><a href="{% url 'analysis_history' %}"><i class="bi bi-clock-history me-1"></i>{% trans "Analysis History" %}</a></li>
+                <li><a href="{% url 'logout' %}"><i class="bi bi-box-arrow-right me-1"></i>{% trans "Logout" %}</a></li>
+                {% else %}
+                <li><a href="{% url 'login' %}"><i class="bi bi-box-arrow-in-right me-1"></i>{% trans "Sign In" %}</a></li>
+                <li><a href="{% url 'register' %}"><i class="bi bi-person-plus me-1"></i>{% trans "Create Account" %}</a></li>
+                {% endif %}
+            </ul>
+        </div>
+
+        <!-- Col 3: Contact -->
+        <div class="col-12 col-sm-6 col-lg-2">
+            <div class="footer-col-title">{% trans "Contact" %}</div>
+            <div class="footer-contact-item">
+                <i class="bi bi-envelope"></i>
+                <a href="mailto:kamil3c2@onet.pl">kamil3c2@onet.pl</a>
+            </div>
+            <div class="footer-contact-item">
+                <i class="bi bi-envelope"></i>
+                <a href="mailto:kpl50970@gmail.com">kpl50970@gmail.com</a>
+            </div>
+            <p class="mt-2" style="font-size:0.75rem;color:var(--text-muted);">
+                {% trans "Support for HR teams and business inquiries." %}
+            </p>
+        </div>
+
+        <!-- Col 4: CTA + AI Disclaimer -->
+        <div class="col-12 col-sm-6 col-lg-3">
+            <div class="footer-cta-box mb-3">
+                <p>{% trans "Screen more candidates in less time. Let AI rank and score CVs for your open positions." %}</p>
+                {% if request.user.is_authenticated %}
+                <a href="{% url 'recruitment_dashboard' %}" class="btn btn-accent btn-sm w-100">
+                    <i class="bi bi-people me-1"></i> {% trans "Open HR Dashboard" %}
+                </a>
+                {% else %}
+                <a href="{% url 'register' %}" class="btn btn-accent btn-sm w-100">
+                    <i class="bi bi-rocket me-1"></i> {% trans "Start hiring smarter" %}
+                </a>
+                {% endif %}
+            </div>
+            <div class="footer-disclaimer">
+                <i class="bi bi-exclamation-triangle me-1"></i>
+                {% trans "AI scores and rankings are decision-support tools only. Final hiring decisions remain the sole responsibility of the HR team." %}
+            </div>
+        </div>
+
+    </div><!-- .row -->
+
+    <!-- Bottom bar -->
+    <div class="footer-bottom">
+        <span>© 2026 CVeeto. {% trans "All rights reserved." %}</span>
+        <div class="footer-bottom-legal">
+            <a href="#">{% trans "Privacy Policy" %}</a>
+            <a href="#">{% trans "Terms of Service" %}</a>
+            <a href="#">{% trans "Cookies Policy" %}</a>
+        </div>
+        <span style="font-size:0.72rem;opacity:0.6;">v1.0.0</span>
+    </div>
+</footer>
 {% endblock %}

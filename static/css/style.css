@@ -1371,3 +1371,212 @@ body {
     background-color: #475569 !important;
     color: #e2e8f0 !important;
 }
+
+/* ==============================
+   App Footer
+   ============================== */
+
+.app-footer {
+    background: var(--bg-sidebar);
+    border-top: 1px solid var(--border-color);
+    margin-left: var(--sidebar-width);
+    padding: 48px 40px 0;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+.app-footer a {
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.app-footer a:hover {
+    color: var(--accent);
+}
+
+.footer-brand-name {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: -0.02em;
+}
+
+.footer-brand-desc {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    line-height: 1.5;
+    max-width: 220px;
+}
+
+.footer-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+}
+
+.footer-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 20px;
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+    background: transparent;
+    letter-spacing: 0.02em;
+}
+
+.footer-col-title {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+}
+
+.footer-nav {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.footer-nav li a {
+    color: var(--text-secondary);
+    font-size: 0.83rem;
+}
+
+.footer-nav li a:hover {
+    color: var(--accent);
+}
+
+.footer-contact-item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 0.83rem;
+    margin-bottom: 6px;
+    color: var(--text-secondary);
+}
+
+.footer-contact-item i {
+    color: var(--accent);
+    font-size: 0.9rem;
+    flex-shrink: 0;
+}
+
+.footer-social {
+    display: flex;
+    gap: 10px;
+    margin-top: 14px;
+}
+
+.footer-social a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    font-size: 1rem;
+    transition: all 0.2s;
+}
+
+.footer-social a:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(41, 98, 255, 0.07);
+}
+
+.footer-cta-box {
+    background: linear-gradient(135deg, rgba(41,98,255,0.07) 0%, rgba(41,98,255,0.03) 100%);
+    border: 1px solid rgba(41, 98, 255, 0.18);
+    border-radius: 12px;
+    padding: 20px 24px;
+}
+
+.footer-cta-box p {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    margin: 0 0 12px;
+}
+
+.footer-disclaimer {
+    background: rgba(255, 193, 7, 0.07);
+    border: 1px solid rgba(255, 193, 7, 0.22);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+    margin-top: 4px;
+}
+
+.footer-disclaimer i {
+    color: #f59e0b;
+}
+
+.footer-bottom {
+    margin-top: 36px;
+    padding: 14px 0;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 0.77rem;
+    color: var(--text-muted);
+}
+
+.footer-bottom-legal {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.footer-bottom-legal a {
+    color: var(--text-muted);
+    font-size: 0.77rem;
+}
+
+.footer-bottom-legal a:hover {
+    color: var(--accent);
+}
+
+/* Collapse sidebar offset on mobile */
+@media (max-width: 767.98px) {
+    .app-footer {
+        margin-left: 0;
+        padding: 36px 20px 0;
+    }
+
+    .footer-brand-desc {
+        max-width: 100%;
+    }
+}
+
+[data-theme="dark"] .footer-cta-box {
+    background: linear-gradient(135deg, rgba(130,177,255,0.07) 0%, rgba(130,177,255,0.03) 100%);
+    border-color: rgba(130, 177, 255, 0.2);
+}
+
+[data-theme="dark"] .footer-social a:hover {
+    background: rgba(130, 177, 255, 0.08);
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+[data-theme="dark"] .footer-disclaimer {
+    background: rgba(245, 158, 11, 0.06);
+    border-color: rgba(245, 158, 11, 0.18);
+}
