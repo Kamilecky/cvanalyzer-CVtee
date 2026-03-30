@@ -1,0 +1,275 @@
+{% extends "base_public.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Privacy Policy" %} – CVeeto{% endblock %}
+
+{% block content %}
+{% get_current_language as LANG %}
+<div class="legal-page">
+    <div class="legal-container">
+
+        <div class="legal-hero">
+            <div class="legal-hero-icon"><i class="bi bi-shield-lock"></i></div>
+            {% if LANG == 'pl' %}
+            <h1>Polityka Prywatności</h1>
+            <p class="legal-subtitle">Ostatnia aktualizacja: 30 marca 2026 r.</p>
+            {% else %}
+            <h1>Privacy Policy</h1>
+            <p class="legal-subtitle">Last updated: March 30, 2026</p>
+            {% endif %}
+        </div>
+
+        {% if LANG == 'pl' %}
+
+        <div class="legal-section">
+            <h2>1. Administrator danych osobowych</h2>
+            <p>Administratorem Twoich danych osobowych jest CVeeto (dalej: „Serwis"), świadczący usługi analizy CV i dopasowania do ofert pracy za pomocą sztucznej inteligencji.</p>
+            <div class="legal-contact-box">
+                <p><i class="bi bi-envelope me-2"></i><strong>Kontakt:</strong> <a href="mailto:kamil3c2@onet.pl">kamil3c2@onet.pl</a> · <a href="mailto:kpl50970@gmail.com">kpl50970@gmail.com</a></p>
+            </div>
+        </div>
+
+        <div class="legal-section">
+            <h2>2. Jakie dane zbieramy</h2>
+            <div class="legal-grid">
+                <div class="legal-card">
+                    <h3><i class="bi bi-person-fill me-2"></i>Dane konta</h3>
+                    <ul>
+                        <li>Adres e-mail (identyfikator konta)</li>
+                        <li>Hasło (przechowywane w formie zaszyfrowanej)</li>
+                        <li>Data rejestracji i aktywności</li>
+                    </ul>
+                </div>
+                <div class="legal-card">
+                    <h3><i class="bi bi-file-earmark-text me-2"></i>Dane z CV</h3>
+                    <ul>
+                        <li>Treść przesłanych dokumentów CV (PDF, DOCX, TXT)</li>
+                        <li>Wyniki analizy AI (oceny, rekomendacje)</li>
+                        <li>Historia analiz i wersje CV</li>
+                    </ul>
+                </div>
+                <div class="legal-card">
+                    <h3><i class="bi bi-gear-fill me-2"></i>Dane techniczne</h3>
+                    <ul>
+                        <li>Adres IP</li>
+                        <li>Pliki cookies sesji</li>
+                        <li>Identyfikator przeglądarki (user-agent)</li>
+                        <li>Logi dostępu do serwisu</li>
+                    </ul>
+                </div>
+                <div class="legal-card">
+                    <h3><i class="bi bi-credit-card-fill me-2"></i>Dane płatności</h3>
+                    <ul>
+                        <li>Plan subskrypcji i status</li>
+                        <li>Identyfikator klienta Stripe (stripe_customer_id)</li>
+                        <li>Dane kart płatniczych — przechowywane wyłącznie przez Stripe</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="legal-section">
+            <h2>3. Cel i podstawa prawna przetwarzania</h2>
+            <div class="legal-table-wrap">
+                <table class="legal-table">
+                    <thead><tr><th>Cel</th><th>Podstawa prawna (RODO)</th></tr></thead>
+                    <tbody>
+                        <tr><td>Obsługa konta użytkownika</td><td>Art. 6 ust. 1 lit. b – wykonanie umowy</td></tr>
+                        <tr><td>Analiza CV przez AI i dopasowanie ofert</td><td>Art. 6 ust. 1 lit. b – wykonanie umowy</td></tr>
+                        <tr><td>Obsługa płatności (Stripe)</td><td>Art. 6 ust. 1 lit. b – wykonanie umowy</td></tr>
+                        <tr><td>Przesyłanie e-maili weryfikacyjnych</td><td>Art. 6 ust. 1 lit. b – wykonanie umowy</td></tr>
+                        <tr><td>Bezpieczeństwo i zapobieganie nadużyciom</td><td>Art. 6 ust. 1 lit. f – uzasadniony interes</td></tr>
+                        <tr><td>Analityka serwisu (logi techniczne)</td><td>Art. 6 ust. 1 lit. f – uzasadniony interes</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="legal-section">
+            <h2>4. Integracje z podmiotami zewnętrznymi</h2>
+            <div class="legal-integration-item">
+                <div class="legal-integration-icon"><i class="bi bi-lock-fill"></i></div>
+                <div>
+                    <strong>Stripe</strong> – obsługa płatności subskrypcyjnych. Dane kart płatniczych są przetwarzane wyłącznie przez Stripe zgodnie z ich <a href="https://stripe.com/privacy" target="_blank" rel="noopener">Polityką Prywatności</a>. CVeeto przechowuje wyłącznie identyfikator klienta Stripe.
+                </div>
+            </div>
+            <div class="legal-integration-item">
+                <div class="legal-integration-icon"><i class="bi bi-robot"></i></div>
+                <div>
+                    <strong>OpenAI (GPT-4o-mini)</strong> – przetwarzanie treści CV w celu generowania analizy. Dane przesyłane do OpenAI nie są przez nich wykorzystywane do trenowania modeli (zgodnie z polityką API).
+                </div>
+            </div>
+        </div>
+
+        <div class="legal-section">
+            <h2>5. Okres przechowywania danych</h2>
+            <ul class="legal-list">
+                <li>Dane konta i CV są przechowywane <strong>do momentu usunięcia konta</strong> przez użytkownika.</li>
+                <li>Po usunięciu konta dane są trwale usuwane w ciągu <strong>30 dni</strong>.</li>
+                <li>Logi techniczne są przechowywane przez <strong>90 dni</strong>.</li>
+                <li>Dane transakcyjne wymagane przepisami podatkowymi mogą być przechowywane przez <strong>5 lat</strong>.</li>
+            </ul>
+        </div>
+
+        <div class="legal-section">
+            <h2>6. Twoje prawa (RODO)</h2>
+            <div class="legal-rights-grid">
+                <div class="legal-right-item"><i class="bi bi-eye"></i><span><strong>Dostęp</strong> – prawo do uzyskania kopii swoich danych</span></div>
+                <div class="legal-right-item"><i class="bi bi-pencil"></i><span><strong>Poprawienie</strong> – prawo do sprostowania nieprawidłowych danych</span></div>
+                <div class="legal-right-item"><i class="bi bi-trash"></i><span><strong>Usunięcie</strong> – prawo do bycia zapomnianym</span></div>
+                <div class="legal-right-item"><i class="bi bi-pause-circle"></i><span><strong>Ograniczenie</strong> – prawo do ograniczenia przetwarzania</span></div>
+                <div class="legal-right-item"><i class="bi bi-download"></i><span><strong>Przenoszalność</strong> – prawo do przeniesienia danych</span></div>
+                <div class="legal-right-item"><i class="bi bi-x-circle"></i><span><strong>Sprzeciw</strong> – prawo do sprzeciwu wobec przetwarzania</span></div>
+            </div>
+            <p class="mt-3">W celu realizacji praw skontaktuj się pod adresem: <a href="mailto:kamil3c2@onet.pl">kamil3c2@onet.pl</a>. Masz również prawo wniesienia skargi do Urzędu Ochrony Danych Osobowych (UODO).</p>
+        </div>
+
+        <div class="legal-section">
+            <h2>7. Bezpieczeństwo danych</h2>
+            <p>CVeeto stosuje następujące środki ochrony danych:</p>
+            <ul class="legal-list">
+                <li>Hasła przechowywane jako skróty kryptograficzne (bcrypt/PBKDF2)</li>
+                <li>Szyfrowana komunikacja HTTPS/TLS</li>
+                <li>Ograniczony dostęp do danych produkcyjnych</li>
+                <li>Płatności obsługiwane wyłącznie przez certyfikowany system Stripe (PCI DSS Level 1)</li>
+                <li>Regularne kopie zapasowe danych</li>
+            </ul>
+        </div>
+
+        <div class="legal-section">
+            <h2>8. Pliki cookies</h2>
+            <p>Serwis używa plików cookies niezbędnych do działania sesji logowania. Szczegółowe informacje znajdziesz w <a href="{% url 'cookies_policy' %}">Polityce Cookies</a>.</p>
+        </div>
+
+        {% else %}
+
+        <div class="legal-section">
+            <h2>1. Data Controller</h2>
+            <p>The data controller for your personal data is CVeeto (hereinafter: "Service"), providing AI-powered CV analysis and job matching services.</p>
+            <div class="legal-contact-box">
+                <p><i class="bi bi-envelope me-2"></i><strong>Contact:</strong> <a href="mailto:kamil3c2@onet.pl">kamil3c2@onet.pl</a> · <a href="mailto:kpl50970@gmail.com">kpl50970@gmail.com</a></p>
+            </div>
+        </div>
+
+        <div class="legal-section">
+            <h2>2. Data We Collect</h2>
+            <div class="legal-grid">
+                <div class="legal-card">
+                    <h3><i class="bi bi-person-fill me-2"></i>Account Data</h3>
+                    <ul>
+                        <li>Email address (account identifier)</li>
+                        <li>Password (stored in encrypted form)</li>
+                        <li>Registration and activity dates</li>
+                    </ul>
+                </div>
+                <div class="legal-card">
+                    <h3><i class="bi bi-file-earmark-text me-2"></i>CV Data</h3>
+                    <ul>
+                        <li>Contents of uploaded CV documents (PDF, DOCX, TXT)</li>
+                        <li>AI analysis results (scores, recommendations)</li>
+                        <li>Analysis history and CV versions</li>
+                    </ul>
+                </div>
+                <div class="legal-card">
+                    <h3><i class="bi bi-gear-fill me-2"></i>Technical Data</h3>
+                    <ul>
+                        <li>IP address</li>
+                        <li>Session cookies</li>
+                        <li>Browser identifier (user-agent)</li>
+                        <li>Service access logs</li>
+                    </ul>
+                </div>
+                <div class="legal-card">
+                    <h3><i class="bi bi-credit-card-fill me-2"></i>Payment Data</h3>
+                    <ul>
+                        <li>Subscription plan and status</li>
+                        <li>Stripe customer identifier (stripe_customer_id)</li>
+                        <li>Card data — stored exclusively by Stripe</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="legal-section">
+            <h2>3. Purpose and Legal Basis for Processing</h2>
+            <div class="legal-table-wrap">
+                <table class="legal-table">
+                    <thead><tr><th>Purpose</th><th>Legal Basis (GDPR)</th></tr></thead>
+                    <tbody>
+                        <tr><td>User account management</td><td>Art. 6(1)(b) – contract performance</td></tr>
+                        <tr><td>AI CV analysis and job matching</td><td>Art. 6(1)(b) – contract performance</td></tr>
+                        <tr><td>Payment processing (Stripe)</td><td>Art. 6(1)(b) – contract performance</td></tr>
+                        <tr><td>Sending verification emails</td><td>Art. 6(1)(b) – contract performance</td></tr>
+                        <tr><td>Security and abuse prevention</td><td>Art. 6(1)(f) – legitimate interest</td></tr>
+                        <tr><td>Service analytics (technical logs)</td><td>Art. 6(1)(f) – legitimate interest</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="legal-section">
+            <h2>4. Third-Party Integrations</h2>
+            <div class="legal-integration-item">
+                <div class="legal-integration-icon"><i class="bi bi-lock-fill"></i></div>
+                <div>
+                    <strong>Stripe</strong> – subscription payment processing. Card payment data is processed solely by Stripe under their <a href="https://stripe.com/privacy" target="_blank" rel="noopener">Privacy Policy</a>. CVeeto stores only the Stripe customer identifier.
+                </div>
+            </div>
+            <div class="legal-integration-item">
+                <div class="legal-integration-icon"><i class="bi bi-robot"></i></div>
+                <div>
+                    <strong>OpenAI (GPT-4o-mini)</strong> – CV content is processed to generate analysis. Data sent to OpenAI is not used by them to train models (per their API policy).
+                </div>
+            </div>
+        </div>
+
+        <div class="legal-section">
+            <h2>5. Data Retention</h2>
+            <ul class="legal-list">
+                <li>Account and CV data is retained <strong>until account deletion</strong> by the user.</li>
+                <li>After account deletion, data is permanently removed within <strong>30 days</strong>.</li>
+                <li>Technical logs are retained for <strong>90 days</strong>.</li>
+                <li>Transaction data required by tax law may be retained for <strong>5 years</strong>.</li>
+            </ul>
+        </div>
+
+        <div class="legal-section">
+            <h2>6. Your Rights (GDPR)</h2>
+            <div class="legal-rights-grid">
+                <div class="legal-right-item"><i class="bi bi-eye"></i><span><strong>Access</strong> – right to obtain a copy of your data</span></div>
+                <div class="legal-right-item"><i class="bi bi-pencil"></i><span><strong>Rectification</strong> – right to correct inaccurate data</span></div>
+                <div class="legal-right-item"><i class="bi bi-trash"></i><span><strong>Erasure</strong> – right to be forgotten</span></div>
+                <div class="legal-right-item"><i class="bi bi-pause-circle"></i><span><strong>Restriction</strong> – right to restrict processing</span></div>
+                <div class="legal-right-item"><i class="bi bi-download"></i><span><strong>Portability</strong> – right to data portability</span></div>
+                <div class="legal-right-item"><i class="bi bi-x-circle"></i><span><strong>Objection</strong> – right to object to processing</span></div>
+            </div>
+            <p class="mt-3">To exercise your rights, contact us at: <a href="mailto:kamil3c2@onet.pl">kamil3c2@onet.pl</a>. You also have the right to lodge a complaint with your local data protection authority.</p>
+        </div>
+
+        <div class="legal-section">
+            <h2>7. Data Security</h2>
+            <p>CVeeto implements the following data protection measures:</p>
+            <ul class="legal-list">
+                <li>Passwords stored as cryptographic hashes (bcrypt/PBKDF2)</li>
+                <li>Encrypted communication via HTTPS/TLS</li>
+                <li>Restricted access to production data</li>
+                <li>Payments handled exclusively by Stripe (PCI DSS Level 1 certified)</li>
+                <li>Regular data backups</li>
+            </ul>
+        </div>
+
+        <div class="legal-section">
+            <h2>8. Cookies</h2>
+            <p>The Service uses cookies necessary for login session management. See our <a href="{% url 'cookies_policy' %}">Cookies Policy</a> for details.</p>
+        </div>
+
+        {% endif %}
+
+        <div class="legal-nav-links">
+            <a href="{% url 'terms_of_service' %}">{% trans "Terms of Service" %} →</a>
+            <a href="{% url 'cookies_policy' %}">{% trans "Cookies Policy" %} →</a>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

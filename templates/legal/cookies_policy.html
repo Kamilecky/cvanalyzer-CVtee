@@ -1,0 +1,213 @@
+{% extends "base_public.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Cookies Policy" %} – CVeeto{% endblock %}
+
+{% block content %}
+{% get_current_language as LANG %}
+<div class="legal-page">
+    <div class="legal-container">
+
+        <div class="legal-hero">
+            <div class="legal-hero-icon"><i class="bi bi-cookie"></i></div>
+            {% if LANG == 'pl' %}
+            <h1>Polityka Cookies</h1>
+            <p class="legal-subtitle">Ostatnia aktualizacja: 30 marca 2026 r.</p>
+            {% else %}
+            <h1>Cookies Policy</h1>
+            <p class="legal-subtitle">Last updated: March 30, 2026</p>
+            {% endif %}
+        </div>
+
+        {% if LANG == 'pl' %}
+
+        <div class="legal-section">
+            <h2>1. Czym są pliki cookies?</h2>
+            <p>Pliki cookies (ciasteczka) to małe pliki tekstowe zapisywane na Twoim urządzeniu (komputerze, telefonie, tablecie) przez przeglądarkę internetową podczas odwiedzin w serwisie. Służą do zapamiętywania preferencji i stanu sesji użytkownika, dzięki czemu serwis działa poprawnie i wygodnie.</p>
+            <p>Pliki cookies nie zawierają wirusów ani złośliwego oprogramowania i nie mogą uruchamiać programów na Twoim urządzeniu.</p>
+        </div>
+
+        <div class="legal-section">
+            <h2>2. Rodzaje używanych cookies</h2>
+            <div class="legal-cookies-grid">
+
+                <div class="legal-cookie-item legal-cookie-required">
+                    <div class="legal-cookie-header">
+                        <span class="legal-cookie-badge required">Niezbędne</span>
+                        <h3>Cookies sesji i uwierzytelnienia</h3>
+                    </div>
+                    <p>Wymagane do prawidłowego działania serwisu. Nie można ich wyłączyć.</p>
+                    <table class="legal-table mt-2">
+                        <thead><tr><th>Nazwa</th><th>Cel</th><th>Ważność</th></tr></thead>
+                        <tbody>
+                            <tr><td><code>sessionid</code></td><td>Identyfikacja sesji zalogowanego użytkownika</td><td>Do zamknięcia przeglądarki / 2 tygodnie</td></tr>
+                            <tr><td><code>csrftoken</code></td><td>Ochrona przed atakami CSRF</td><td>1 rok</td></tr>
+                            <tr><td><code>django_language</code></td><td>Zapamiętanie wybranego języka interfejsu</td><td>1 rok</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="legal-cookie-item legal-cookie-functional">
+                    <div class="legal-cookie-header">
+                        <span class="legal-cookie-badge functional">Funkcjonalne</span>
+                        <h3>Cookies preferencji</h3>
+                    </div>
+                    <p>Zapamiętują wybory użytkownika poprawiające komfort korzystania z serwisu.</p>
+                    <table class="legal-table mt-2">
+                        <thead><tr><th>Nazwa</th><th>Cel</th><th>Ważność</th></tr></thead>
+                        <tbody>
+                            <tr><td><code>theme</code> (localStorage)</td><td>Zapamiętanie trybu jasnego/ciemnego interfejsu</td><td>Stałe (localStorage)</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="legal-cookie-item legal-cookie-stripe">
+                    <div class="legal-cookie-header">
+                        <span class="legal-cookie-badge stripe">Płatności (Stripe)</span>
+                        <h3>Cookies Stripe</h3>
+                    </div>
+                    <p>Serwis Stripe może ustawiać pliki cookies niezbędne do bezpiecznego przetwarzania płatności. CVeeto nie ma dostępu do tych cookies. Więcej informacji: <a href="https://stripe.com/cookie-settings" target="_blank" rel="noopener">stripe.com/cookie-settings</a>.</p>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="legal-section">
+            <h2>3. Cookies analityczne</h2>
+            <p>CVeeto <strong>nie używa aktualnie</strong> zewnętrznych narzędzi analitycznych (np. Google Analytics). Serwis może analizować logi dostępu wyłącznie na własnym serwerze w celach bezpieczeństwa i optymalizacji wydajności.</p>
+        </div>
+
+        <div class="legal-section">
+            <h2>4. Jak zarządzać plikami cookies?</h2>
+            <p>Możesz kontrolować i usuwać pliki cookies za pomocą ustawień przeglądarki:</p>
+            <div class="legal-browser-grid">
+                <a href="https://support.google.com/chrome/answer/95647" target="_blank" rel="noopener" class="legal-browser-item">
+                    <i class="bi bi-browser-chrome"></i> Google Chrome
+                </a>
+                <a href="https://support.mozilla.org/pl/kb/ciasteczka" target="_blank" rel="noopener" class="legal-browser-item">
+                    <i class="bi bi-browser-firefox"></i> Mozilla Firefox
+                </a>
+                <a href="https://support.microsoft.com/pl-pl/windows/usuwanie-i-zarz%C4%85dzanie-plikami-cookie" target="_blank" rel="noopener" class="legal-browser-item">
+                    <i class="bi bi-browser-edge"></i> Microsoft Edge
+                </a>
+                <a href="https://support.apple.com/pl-pl/guide/safari/sfri11471/mac" target="_blank" rel="noopener" class="legal-browser-item">
+                    <i class="bi bi-browser-safari"></i> Apple Safari
+                </a>
+            </div>
+            <div class="legal-warning-box mt-3">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                <span>Wyłączenie cookies niezbędnych (<code>sessionid</code>, <code>csrftoken</code>) uniemożliwi zalogowanie się do serwisu CVeeto.</span>
+            </div>
+        </div>
+
+        <div class="legal-section">
+            <h2>5. Zmiany w polityce cookies</h2>
+            <p>CVeeto zastrzega sobie prawo do zmiany niniejszej polityki. Zmiany będą publikowane na tej stronie z aktualizacją daty. W przypadku istotnych zmian użytkownicy zostaną poinformowani przez komunikat w aplikacji.</p>
+        </div>
+
+        <div class="legal-section">
+            <h2>6. Kontakt</h2>
+            <p>W razie pytań dotyczących polityki cookies skontaktuj się pod adresem: <a href="mailto:kamil3c2@onet.pl">kamil3c2@onet.pl</a></p>
+        </div>
+
+        {% else %}
+
+        <div class="legal-section">
+            <h2>1. What Are Cookies?</h2>
+            <p>Cookies are small text files stored on your device (computer, phone, tablet) by your web browser when you visit a website. They are used to remember user preferences and session state, enabling the service to work correctly and conveniently.</p>
+            <p>Cookies do not contain viruses or malware and cannot execute programs on your device.</p>
+        </div>
+
+        <div class="legal-section">
+            <h2>2. Types of Cookies Used</h2>
+            <div class="legal-cookies-grid">
+
+                <div class="legal-cookie-item legal-cookie-required">
+                    <div class="legal-cookie-header">
+                        <span class="legal-cookie-badge required">Essential</span>
+                        <h3>Session and Authentication Cookies</h3>
+                    </div>
+                    <p>Required for the service to function correctly. These cannot be disabled.</p>
+                    <table class="legal-table mt-2">
+                        <thead><tr><th>Name</th><th>Purpose</th><th>Expiry</th></tr></thead>
+                        <tbody>
+                            <tr><td><code>sessionid</code></td><td>Identifies the logged-in user session</td><td>Browser close / 2 weeks</td></tr>
+                            <tr><td><code>csrftoken</code></td><td>Protection against CSRF attacks</td><td>1 year</td></tr>
+                            <tr><td><code>django_language</code></td><td>Remembers the selected interface language</td><td>1 year</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="legal-cookie-item legal-cookie-functional">
+                    <div class="legal-cookie-header">
+                        <span class="legal-cookie-badge functional">Functional</span>
+                        <h3>Preference Cookies</h3>
+                    </div>
+                    <p>Remember user choices that improve the browsing experience.</p>
+                    <table class="legal-table mt-2">
+                        <thead><tr><th>Name</th><th>Purpose</th><th>Expiry</th></tr></thead>
+                        <tbody>
+                            <tr><td><code>theme</code> (localStorage)</td><td>Remembers light/dark interface mode</td><td>Persistent (localStorage)</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="legal-cookie-item legal-cookie-stripe">
+                    <div class="legal-cookie-header">
+                        <span class="legal-cookie-badge stripe">Payments (Stripe)</span>
+                        <h3>Stripe Cookies</h3>
+                    </div>
+                    <p>Stripe may set cookies necessary for secure payment processing. CVeeto has no access to these cookies. More info: <a href="https://stripe.com/cookie-settings" target="_blank" rel="noopener">stripe.com/cookie-settings</a>.</p>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="legal-section">
+            <h2>3. Analytical Cookies</h2>
+            <p>CVeeto <strong>does not currently use</strong> any third-party analytics tools (e.g. Google Analytics). The service may analyze access logs exclusively on its own server for security and performance optimization purposes.</p>
+        </div>
+
+        <div class="legal-section">
+            <h2>4. How to Manage Cookies</h2>
+            <p>You can control and delete cookies through your browser settings:</p>
+            <div class="legal-browser-grid">
+                <a href="https://support.google.com/chrome/answer/95647" target="_blank" rel="noopener" class="legal-browser-item">
+                    <i class="bi bi-browser-chrome"></i> Google Chrome
+                </a>
+                <a href="https://support.mozilla.org/en-US/kb/cookies-information-websites-store-on-your-computer" target="_blank" rel="noopener" class="legal-browser-item">
+                    <i class="bi bi-browser-firefox"></i> Mozilla Firefox
+                </a>
+                <a href="https://support.microsoft.com/en-us/windows/delete-and-manage-cookies" target="_blank" rel="noopener" class="legal-browser-item">
+                    <i class="bi bi-browser-edge"></i> Microsoft Edge
+                </a>
+                <a href="https://support.apple.com/guide/safari/manage-cookies-sfri11471/mac" target="_blank" rel="noopener" class="legal-browser-item">
+                    <i class="bi bi-browser-safari"></i> Apple Safari
+                </a>
+            </div>
+            <div class="legal-warning-box mt-3">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                <span>Disabling essential cookies (<code>sessionid</code>, <code>csrftoken</code>) will prevent you from logging in to CVeeto.</span>
+            </div>
+        </div>
+
+        <div class="legal-section">
+            <h2>5. Changes to This Policy</h2>
+            <p>CVeeto reserves the right to modify this policy. Changes will be published on this page with an updated date. For material changes, users will be notified via an in-app message.</p>
+        </div>
+
+        <div class="legal-section">
+            <h2>6. Contact</h2>
+            <p>For questions about this Cookies Policy, contact us at: <a href="mailto:kamil3c2@onet.pl">kamil3c2@onet.pl</a></p>
+        </div>
+
+        {% endif %}
+
+        <div class="legal-nav-links">
+            <a href="{% url 'privacy_policy' %}">{% trans "Privacy Policy" %} →</a>
+            <a href="{% url 'terms_of_service' %}">{% trans "Terms of Service" %} →</a>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

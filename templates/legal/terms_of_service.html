@@ -1,0 +1,215 @@
+{% extends "base_public.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Terms of Service" %} – CVeeto{% endblock %}
+
+{% block content %}
+{% get_current_language as LANG %}
+<div class="legal-page">
+    <div class="legal-container">
+
+        <div class="legal-hero">
+            <div class="legal-hero-icon"><i class="bi bi-file-text"></i></div>
+            {% if LANG == 'pl' %}
+            <h1>Warunki korzystania z usługi</h1>
+            <p class="legal-subtitle">Ostatnia aktualizacja: 30 marca 2026 r.</p>
+            {% else %}
+            <h1>Terms of Service</h1>
+            <p class="legal-subtitle">Last updated: March 30, 2026</p>
+            {% endif %}
+        </div>
+
+        {% if LANG == 'pl' %}
+
+        <div class="legal-section">
+            <h2>1. Opis usługi</h2>
+            <p>CVeeto to platforma SaaS oparta na sztucznej inteligencji, dedykowana specjalistom HR i rekruterom. Umożliwia:</p>
+            <ul class="legal-list">
+                <li><strong>Analizę CV przy użyciu AI</strong> – automatyczne ocenianie i scoring dokumentów aplikacyjnych</li>
+                <li><strong>Tryb HR (Recruitment)</strong> – zarządzanie kandydatami, stanowiskami i procesami rekrutacyjnymi</li>
+                <li><strong>Ranking kandydatów</strong> – porównanie CV względem wymagań stanowiska</li>
+                <li><strong>Dopasowanie do ofert pracy</strong> – analiza zgodności profilu z wymaganiami</li>
+                <li><strong>Pytania rekrutacyjne AI</strong> – generowanie spersonalizowanych pytań na rozmowę (plan Premium/Enterprise)</li>
+                <li><strong>Ochrona przed prompt injection</strong> – wykrywanie prób manipulacji systemem AI (plan Premium/Enterprise)</li>
+            </ul>
+        </div>
+
+        <div class="legal-section">
+            <h2>2. Konto użytkownika</h2>
+            <ul class="legal-list">
+                <li>Rejestracja wymaga podania prawidłowego adresu e-mail i potwierdzenia przez link weryfikacyjny.</li>
+                <li>Użytkownik ponosi pełną odpowiedzialność za bezpieczeństwo swoich danych logowania.</li>
+                <li>Zabrania się udostępniania konta osobom trzecim.</li>
+                <li>CVeeto zastrzega prawo do zawieszenia lub usunięcia konta w przypadku naruszenia niniejszych warunków.</li>
+                <li>Usunięcie konta możliwe jest w ustawieniach profilu. Dane są trwale usuwane w ciągu 30 dni.</li>
+            </ul>
+        </div>
+
+        <div class="legal-section">
+            <h2>3. Plany i płatności</h2>
+            <div class="legal-grid legal-grid-2">
+                <div class="legal-card">
+                    <h3><i class="bi bi-gift me-2"></i>Plan Darmowy</h3>
+                    <p>15 analiz miesięcznie, 3 aktywne stanowiska. Bez opłat, bez karty płatniczej.</p>
+                </div>
+                <div class="legal-card">
+                    <h3><i class="bi bi-star me-2"></i>Plany płatne (Basic, Premium, Enterprise)</h3>
+                    <p>Rozszerzone limity, funkcje AI i wsparcie. Rozliczenie miesięczne za pomocą Stripe.</p>
+                </div>
+            </div>
+            <ul class="legal-list mt-3">
+                <li>Płatności są obsługiwane wyłącznie przez <strong>Stripe</strong> – certyfikowany system płatności (PCI DSS Level 1).</li>
+                <li>CVeeto nie przechowuje danych kart płatniczych.</li>
+                <li>Subskrypcja odnawia się automatycznie co miesiąc.</li>
+                <li>Anulowanie subskrypcji jest możliwe w dowolnym momencie w sekcji Billing. Plan zostaje zmieniony na Darmowy z końcem okresu rozliczeniowego.</li>
+                <li>CVeeto nie zwraca opłat za bieżący okres rozliczeniowy po anulowaniu, chyba że obowiązujące prawo stanowi inaczej.</li>
+                <li>Ceny mogą ulec zmianie. Użytkownicy zostaną powiadomieni z <strong>30-dniowym wyprzedzeniem</strong>.</li>
+            </ul>
+        </div>
+
+        <div class="legal-section">
+            <h2>4. Zastrzeżenie dotyczące AI</h2>
+            <div class="legal-disclaimer-box">
+                <i class="bi bi-robot me-2"></i>
+                <div>
+                    <strong>Ważna informacja dla użytkowników HR:</strong><br>
+                    Wyniki generowane przez AI (oceny, rankingi, rekomendacje, pytania rekrutacyjne) stanowią <strong>wyłącznie narzędzie wspomagające decyzje</strong>. CVeeto nie gwarantuje ich dokładności ani kompletności. Ostateczne decyzje rekrutacyjne pozostają wyłączną odpowiedzialnością użytkownika i jego organizacji. Nie należy opierać decyzji o zatrudnieniu wyłącznie na wynikach algorytmu.
+                </div>
+            </div>
+        </div>
+
+        <div class="legal-section">
+            <h2>5. Ograniczenie odpowiedzialności</h2>
+            <ul class="legal-list">
+                <li>CVeeto nie gwarantuje zatrudnienia ani wyniku procesu rekrutacyjnego.</li>
+                <li>CVeeto nie ponosi odpowiedzialności za decyzje podejmowane na podstawie wyników AI.</li>
+                <li>Usługa jest świadczona „tak jak jest" (<em>as-is</em>). CVeeto nie gwarantuje nieprzerwanej dostępności serwisu.</li>
+                <li>Maksymalna odpowiedzialność CVeeto ograniczona jest do kwoty opłat wniesionych przez użytkownika w ciągu ostatnich 3 miesięcy.</li>
+            </ul>
+        </div>
+
+        <div class="legal-section">
+            <h2>6. Zakazane działania</h2>
+            <p>Użytkownikowi zabrania się:</p>
+            <ul class="legal-list">
+                <li>Próby nieautoryzowanego dostępu do systemu lub danych innych użytkowników</li>
+                <li>Celowego wstrzykiwania złośliwych poleceń do systemu AI (prompt injection)</li>
+                <li>Automatycznego masowego pobierania danych (scraping)</li>
+                <li>Odsprzedaży lub udostępniania konta bez zgody CVeeto</li>
+                <li>Przesyłania treści nielegalnych, obraźliwych lub naruszających prawa osób trzecich</li>
+                <li>Działań naruszających przepisy RODO lub innych obowiązujących regulacji</li>
+            </ul>
+        </div>
+
+        <div class="legal-section">
+            <h2>7. Zmiany warunków</h2>
+            <p>CVeeto zastrzega sobie prawo do zmiany niniejszych warunków. O istotnych zmianach użytkownicy zostaną poinformowani e-mailem lub komunikatem w aplikacji z <strong>co najmniej 14-dniowym wyprzedzeniem</strong>. Dalsze korzystanie z usługi po upływie tego terminu oznacza akceptację nowych warunków.</p>
+        </div>
+
+        <div class="legal-section">
+            <h2>8. Prawo właściwe</h2>
+            <p>Niniejsze warunki podlegają prawu polskiemu i przepisom Unii Europejskiej, w szczególności RODO. Wszelkie spory będą rozstrzygane przez sądy właściwe dla siedziby administratora.</p>
+        </div>
+
+        {% else %}
+
+        <div class="legal-section">
+            <h2>1. Service Description</h2>
+            <p>CVeeto is an AI-powered SaaS platform dedicated to HR professionals and recruiters. It enables:</p>
+            <ul class="legal-list">
+                <li><strong>AI CV Analysis</strong> – automated scoring and evaluation of application documents</li>
+                <li><strong>HR Mode (Recruitment)</strong> – candidate, position, and recruitment process management</li>
+                <li><strong>Candidate Ranking</strong> – comparing CVs against job requirements</li>
+                <li><strong>Job Matching</strong> – analyzing profile fit against position requirements</li>
+                <li><strong>AI Interview Questions</strong> – generating personalized interview questions (Premium/Enterprise)</li>
+                <li><strong>Prompt Injection Defence</strong> – detecting AI manipulation attempts (Premium/Enterprise)</li>
+            </ul>
+        </div>
+
+        <div class="legal-section">
+            <h2>2. User Account</h2>
+            <ul class="legal-list">
+                <li>Registration requires a valid email address confirmed via a verification link.</li>
+                <li>Users are solely responsible for the security of their login credentials.</li>
+                <li>Sharing accounts with third parties is prohibited.</li>
+                <li>CVeeto reserves the right to suspend or delete accounts that violate these terms.</li>
+                <li>Account deletion is available in Profile Settings. Data is permanently removed within 30 days.</li>
+            </ul>
+        </div>
+
+        <div class="legal-section">
+            <h2>3. Plans and Payments</h2>
+            <div class="legal-grid legal-grid-2">
+                <div class="legal-card">
+                    <h3><i class="bi bi-gift me-2"></i>Free Plan</h3>
+                    <p>15 analyses per month, 3 active positions. No charge, no credit card required.</p>
+                </div>
+                <div class="legal-card">
+                    <h3><i class="bi bi-star me-2"></i>Paid Plans (Basic, Premium, Enterprise)</h3>
+                    <p>Extended limits, AI features, and support. Billed monthly via Stripe.</p>
+                </div>
+            </div>
+            <ul class="legal-list mt-3">
+                <li>Payments are processed exclusively by <strong>Stripe</strong> – a certified payment system (PCI DSS Level 1).</li>
+                <li>CVeeto does not store credit card data.</li>
+                <li>Subscriptions renew automatically each month.</li>
+                <li>Subscriptions can be cancelled at any time in the Billing section. The plan reverts to Free at the end of the billing period.</li>
+                <li>CVeeto does not issue refunds for the current billing period after cancellation, unless required by applicable law.</li>
+                <li>Prices may change. Users will be notified with <strong>30 days' notice</strong>.</li>
+            </ul>
+        </div>
+
+        <div class="legal-section">
+            <h2>4. AI Disclaimer</h2>
+            <div class="legal-disclaimer-box">
+                <i class="bi bi-robot me-2"></i>
+                <div>
+                    <strong>Important notice for HR users:</strong><br>
+                    AI-generated results (scores, rankings, recommendations, interview questions) are <strong>decision-support tools only</strong>. CVeeto does not guarantee their accuracy or completeness. Final hiring decisions remain the sole responsibility of the user and their organization. Hiring decisions should not be based solely on algorithm output.
+                </div>
+            </div>
+        </div>
+
+        <div class="legal-section">
+            <h2>5. Limitation of Liability</h2>
+            <ul class="legal-list">
+                <li>CVeeto does not guarantee employment or the outcome of any recruitment process.</li>
+                <li>CVeeto is not liable for decisions made based on AI results.</li>
+                <li>The service is provided "as-is". CVeeto does not guarantee uninterrupted availability.</li>
+                <li>CVeeto's maximum liability is limited to fees paid by the user in the previous 3 months.</li>
+            </ul>
+        </div>
+
+        <div class="legal-section">
+            <h2>6. Prohibited Activities</h2>
+            <p>Users are prohibited from:</p>
+            <ul class="legal-list">
+                <li>Attempting unauthorized access to the system or other users' data</li>
+                <li>Deliberately injecting malicious commands into the AI system (prompt injection)</li>
+                <li>Automated bulk data extraction (scraping)</li>
+                <li>Reselling or sharing accounts without CVeeto's consent</li>
+                <li>Uploading illegal, offensive content or content violating third-party rights</li>
+                <li>Activities violating GDPR or other applicable regulations</li>
+            </ul>
+        </div>
+
+        <div class="legal-section">
+            <h2>7. Changes to Terms</h2>
+            <p>CVeeto reserves the right to modify these terms. Users will be notified of material changes by email or in-app notice with <strong>at least 14 days' advance notice</strong>. Continued use of the service after that period constitutes acceptance of the new terms.</p>
+        </div>
+
+        <div class="legal-section">
+            <h2>8. Governing Law</h2>
+            <p>These terms are governed by Polish law and European Union regulations, in particular the GDPR. Any disputes will be resolved by courts having jurisdiction over the administrator's registered location.</p>
+        </div>
+
+        {% endif %}
+
+        <div class="legal-nav-links">
+            <a href="{% url 'privacy_policy' %}">{% trans "Privacy Policy" %} →</a>
+            <a href="{% url 'cookies_policy' %}">{% trans "Cookies Policy" %} →</a>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

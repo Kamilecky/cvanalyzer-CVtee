@@ -19,6 +19,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.http import HttpResponse
 from django.shortcuts import redirect
+from django.views.generic import TemplateView
 from billing import views as billing_views
 
 urlpatterns = [
@@ -31,6 +32,10 @@ urlpatterns = [
     path('billing/', include('billing.urls')),
     path('reports/', include('reports.urls')),
     path('recruitment/', include('recruitment.urls')),
+    # Legal pages — publicly accessible, no login required
+    path('privacy-policy/', TemplateView.as_view(template_name='legal/privacy_policy.html'), name='privacy_policy'),
+    path('terms-of-service/', TemplateView.as_view(template_name='legal/terms_of_service.html'), name='terms_of_service'),
+    path('cookies-policy/', TemplateView.as_view(template_name='legal/cookies_policy.html'), name='cookies_policy'),
     # Production Stripe webhook — single source of truth for subscription state
     path('api/stripe/webhook/', billing_views.stripe_webhook_api_view, name='stripe_webhook_api'),
     path('api/create-checkout-session/', billing_views.create_checkout_session_api, name='create_checkout_session_api'),
