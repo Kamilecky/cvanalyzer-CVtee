@@ -849,6 +849,7 @@ def position_ranks_view(request):
             JobFitResult.objects
             .filter(position=position, status='done')
             .select_related('candidate')
+            .prefetch_related('requirement_matches')
             .order_by('-overall_match')[:3]
         )
 
@@ -898,30 +899,48 @@ def position_ranks_view(request):
                 position, candidate_skills_lower, candidate_levels,
             )
 
-            # Skill gaps derive directly from the type field — no extra AI lookup needed.
-            skill_gaps = {
-                'critical':  [r['text'] for r in missing_reqs if r['type'] == 'skill_required'],
-                'important': [r['text'] for r in missing_reqs if r['type'] == 'skill_optional'],
-            }
+            # Count critical gaps for verdict (required skills that are missing)
+            critical_gaps_count = sum(1 for r in missing_reqs if r['type'] == 'skill_required')
+
+            # Responsibility matches from RequirementMatch (AI-analyzed, prefetched)
+            resp_matches = [
+                r for r in fit.requirement_matches.all()
+                if r.requirement_type == 'responsibility'
+            ]
+            matched_resp = sorted(
+                [r for r in resp_matches if r.match_percentage >= 60],
+                key=lambda r: -r.match_percentage,
+            )
+            missing_resp = sorted(
+                [r for r in resp_matches if r.match_percentage < 40],
+                key=lambda r: r.match_percentage,
+            )
+
             risks = _compute_risks(profile, position)
-            verdict = _compute_verdict(fit.overall_match, len(skill_gaps['critical']))
+            verdict = _compute_verdict(fit.overall_match, critical_gaps_count)
             top_reason = None
             if rank == 1:
                 top_reason = _top_candidate_reason(
                     fit, profile,
                     len(matched_reqs),
-                    len(skill_gaps['critical']),
+                    critical_gaps_count,
                 )
 
             candidates.append({
                 'rank': rank,
                 'fit': fit,
                 'profile': profile,
-                'highlighted_skills': highlighted_skills,
                 'classification': _classification_label(fit),
                 'matched_requirements': matched_reqs,
                 'missing_requirements': missing_reqs,
-                'skill_gaps': skill_gaps,
+                'matched_responsibilities': [
+                    {'text': r.requirement_text, 'pct': int(r.match_percentage)}
+                    for r in matched_resp
+                ],
+                'missing_responsibilities': [
+                    {'text': r.requirement_text, 'pct': int(r.match_percentage)}
+                    for r in missing_resp
+                ],
                 'risks': risks,
                 'confidence': _compute_confidence(profile),
                 'verdict': verdict,

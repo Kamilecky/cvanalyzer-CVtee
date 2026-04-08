@@ -1423,31 +1423,59 @@ body {
 }
 .mbreakdown-matched .mbreakdown-text { color: #2e7d32; }
 .mbreakdown-matched .mbreakdown-pct  { color: #43a047; }
+/* Required skill item — red (Important) */
+.mbreakdown-req .mbreakdown-text { color: #c62828; font-weight: 500; }
+/* Optional skill item — orange (Not important) */
+.mbreakdown-opt .mbreakdown-text { color: #e65100; }
+/* Legacy matched colours kept for responsibility rows */
+.mbreakdown-matched .mbreakdown-text { color: #2e7d32; }
+.mbreakdown-matched .mbreakdown-pct  { color: #43a047; }
 .mbreakdown-missing .mbreakdown-text { color: #c62828; }
 .mbreakdown-missing .mbreakdown-pct  { color: #e53935; }
-[data-theme="dark"] .mbreakdown-matched .mbreakdown-text { color: #81c784; }
-[data-theme="dark"] .mbreakdown-matched .mbreakdown-pct  { color: #66bb6a; }
-[data-theme="dark"] .mbreakdown-missing .mbreakdown-text { color: #ef9a9a; }
-[data-theme="dark"] .mbreakdown-missing .mbreakdown-pct  { color: #e57373; }
-/* Optional skill label */
-.skill-type-tag {
-    font-size: .6rem;
-    font-weight: 600;
-    border-radius: 3px;
-    padding: 0 .25rem;
-    vertical-align: middle;
-    margin-left: .2rem;
-    letter-spacing: .3px;
-    text-transform: uppercase;
+/* Responsibility rows */
+.mbreakdown-resp-matched .mbreakdown-text { color: #2e7d32; }
+.mbreakdown-resp-matched .mbreakdown-pct  { color: #43a047; font-weight: 600; font-size: .72rem; }
+.mbreakdown-resp-missing .mbreakdown-text { color: #c62828; }
+.mbreakdown-resp-missing .mbreakdown-pct  { color: #e53935; font-weight: 600; font-size: .72rem; }
+
+[data-theme="dark"] .mbreakdown-req .mbreakdown-text      { color: #ef9a9a; }
+[data-theme="dark"] .mbreakdown-opt .mbreakdown-text      { color: #ffb74d; }
+[data-theme="dark"] .mbreakdown-matched .mbreakdown-text  { color: #81c784; }
+[data-theme="dark"] .mbreakdown-matched .mbreakdown-pct   { color: #66bb6a; }
+[data-theme="dark"] .mbreakdown-missing .mbreakdown-text  { color: #ef9a9a; }
+[data-theme="dark"] .mbreakdown-missing .mbreakdown-pct   { color: #e57373; }
+[data-theme="dark"] .mbreakdown-resp-matched .mbreakdown-text { color: #81c784; }
+[data-theme="dark"] .mbreakdown-resp-matched .mbreakdown-pct  { color: #66bb6a; }
+[data-theme="dark"] .mbreakdown-resp-missing .mbreakdown-text { color: #ef9a9a; }
+[data-theme="dark"] .mbreakdown-resp-missing .mbreakdown-pct  { color: #e57373; }
+
+/* Responsibilities section header */
+.mbreakdown-resp-hdr { color: #5c6bc0; }
+[data-theme="dark"] .mbreakdown-resp-hdr { color: #9fa8da; }
+
+/* Inline legend in Missing header */
+.mbreakdown-legend {
+    display: inline-flex;
+    align-items: center;
+    gap: .2rem;
+    font-size: .65rem;
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0;
+    color: var(--text-muted);
+    margin-left: .5rem;
 }
-.skill-optional-tag {
-    background: #e3f2fd;
-    color: #1565c0;
+.mlegend-dot {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
 }
-[data-theme="dark"] .skill-optional-tag {
-    background: #1a2e42;
-    color: #64b5f6;
-}
+.mlegend-req { background: #c62828; }
+.mlegend-opt { background: #e65100; }
+[data-theme="dark"] .mlegend-req { background: #ef9a9a; }
+[data-theme="dark"] .mlegend-opt { background: #ffb74d; }
 
 /* Skill gap box */
 .skill-gap-box {

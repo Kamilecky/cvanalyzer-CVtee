@@ -119,10 +119,11 @@
             </div>
             {% endif %}
 
-            <!-- ── 4. MATCH BREAKDOWN (matched first, then missing) ── -->
-            {% if c.matched_requirements or c.missing_requirements %}
+            <!-- ── 4. SKILLS + RESPONSIBILITIES BREAKDOWN ── -->
+            {% if c.matched_requirements or c.missing_requirements or c.matched_responsibilities or c.missing_responsibilities %}
             <div class="match-breakdown-vertical">
 
+              <!-- Matched skills -->
               {% if c.matched_requirements %}
               <div class="mbreakdown-section">
                 <div class="mbreakdown-header mbreakdown-matched-hdr">
@@ -130,29 +131,51 @@
                 </div>
                 <ul class="mbreakdown-list">
                   {% for item in c.matched_requirements %}
-                  <li class="mbreakdown-matched">
-                    <span class="mbreakdown-text">
-                      {{ item.text }}{% if item.type == 'skill_optional' %}<span class="skill-type-tag skill-optional-tag">opt</span>{% endif %}
-                    </span>
-                    {% if item.pct is not None %}<span class="mbreakdown-pct">{{ item.pct }}%</span>{% endif %}
+                  <li class="{% if item.type == 'skill_required' %}mbreakdown-req{% else %}mbreakdown-opt{% endif %}">
+                    <span class="mbreakdown-text">{{ item.text }}</span>
                   </li>
                   {% endfor %}
                 </ul>
               </div>
               {% endif %}
 
+              <!-- Missing skills with legend -->
               {% if c.missing_requirements %}
               <div class="mbreakdown-section">
                 <div class="mbreakdown-header mbreakdown-missing-hdr">
                   <i class="bi bi-x-circle-fill me-1"></i>Missing ({{ c.missing_requirements|length }})
+                  <span class="mbreakdown-legend">
+                    <span class="mlegend-dot mlegend-req"></span>Important
+                    <span class="mlegend-dot mlegend-opt ms-2"></span>Not important
+                  </span>
                 </div>
                 <ul class="mbreakdown-list">
                   {% for item in c.missing_requirements %}
-                  <li class="mbreakdown-missing">
-                    <span class="mbreakdown-text">
-                      {{ item.text }}{% if item.type == 'skill_optional' %}<span class="skill-type-tag skill-optional-tag">opt</span>{% endif %}
-                    </span>
-                    {% if item.pct is not None %}<span class="mbreakdown-pct">{{ item.pct }}%</span>{% endif %}
+                  <li class="{% if item.type == 'skill_required' %}mbreakdown-req{% else %}mbreakdown-opt{% endif %}">
+                    <span class="mbreakdown-text">{{ item.text }}</span>
+                  </li>
+                  {% endfor %}
+                </ul>
+              </div>
+              {% endif %}
+
+              <!-- Responsibilities -->
+              {% if c.matched_responsibilities or c.missing_responsibilities %}
+              <div class="mbreakdown-section">
+                <div class="mbreakdown-header mbreakdown-resp-hdr">
+                  <i class="bi bi-list-task me-1"></i>Responsibilities
+                </div>
+                <ul class="mbreakdown-list">
+                  {% for item in c.matched_responsibilities %}
+                  <li class="mbreakdown-resp-matched">
+                    <span class="mbreakdown-text">{{ item.text }}</span>
+                    <span class="mbreakdown-pct">{{ item.pct }}%</span>
+                  </li>
+                  {% endfor %}
+                  {% for item in c.missing_responsibilities %}
+                  <li class="mbreakdown-resp-missing">
+                    <span class="mbreakdown-text">{{ item.text }}</span>
+                    <span class="mbreakdown-pct">{{ item.pct }}%</span>
                   </li>
                   {% endfor %}
                 </ul>
@@ -162,59 +185,7 @@
             </div>
             {% endif %}
 
-            <!-- ── 5. SKILL GAPS ── -->
-            {% if c.skill_gaps.critical or c.skill_gaps.important %}
-            <div class="skill-gap-box">
-              <div class="skill-gap-title"><i class="bi bi-lightning-charge-fill me-1"></i>Skill Gaps</div>
-              <div class="skill-gap-items">
-                {% for gap in c.skill_gaps.critical %}
-                  <span class="gap-badge gap-critical">{{ gap }}</span>
-                {% endfor %}
-                {% for gap in c.skill_gaps.important %}
-                  <span class="gap-badge gap-important">{{ gap }}</span>
-                {% endfor %}
-              </div>
-              {% if c.skill_gaps.critical %}
-              <div class="gap-legend mt-1">
-                <span class="gap-dot gap-critical-dot"></span><span class="small text-muted">critical</span>
-                {% if c.skill_gaps.important %}<span class="gap-dot gap-important-dot ms-2"></span><span class="small text-muted">important</span>{% endif %}
-              </div>
-              {% endif %}
-            </div>
-            {% endif %}
-
-
-
-            <!-- ── 7. EXPERIENCE ── -->
-            {% if c.profile.companies %}
-            <div class="dc-section">
-              <div class="dc-section-label"><i class="bi bi-briefcase me-1"></i>Experience</div>
-              <ul class="dc-list">
-                {% for job in c.profile.companies|slice:":2" %}
-                <li>
-                  <strong>{{ job.role|default:"Position" }}</strong>{% if job.company %} · {{ job.company }}{% endif %}
-                  {% if job.duration_months %}<span class="text-muted"> ({{ job.duration_months }}mo)</span>{% endif %}
-                </li>
-                {% endfor %}
-              </ul>
-            </div>
-            {% endif %}
-
-            <!-- ── 8. EDUCATION ── -->
-            {% if c.profile.education %}
-            <div class="dc-section">
-              <div class="dc-section-label"><i class="bi bi-mortarboard me-1"></i>Education</div>
-              <ul class="dc-list">
-                {% for edu in c.profile.education|slice:":1" %}
-                <li>
-                  <strong>{{ edu.degree|default:"Degree" }}</strong>{% if edu.institution %} · {{ edu.institution }}{% endif %}
-                </li>
-                {% endfor %}
-              </ul>
-            </div>
-            {% endif %}
-
-            <!-- ── 9. FOOTER: confidence + CTA ── -->
+            <!-- ── 5. FOOTER: confidence + CTA ── -->
             <div class="dc-footer">
               <span class="confidence-badge confidence-{{ c.confidence }}" title="Data extraction confidence">
                 <i class="bi bi-shield{% if c.confidence == 'high' %}-fill-check{% elif c.confidence == 'medium' %}-exclamation{% else %}{% endif %} me-1"></i>
