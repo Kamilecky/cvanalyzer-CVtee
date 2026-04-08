@@ -115,8 +115,25 @@ def _split_skills_deterministic(position, candidate_skills_lower, candidate_leve
             matched.append({'text': req_str, 'type': skill_type})
             return
 
+        # Level lookup: try exact key first, then fuzzy (skill_levels keys may
+        # differ from skills list, e.g. "SAP ERP" vs "SAP").
         candidate_level_str = candidate_levels.get(matched_skill_name, '')
-        if candidate_level_str and _level_rank(candidate_level_str) >= min_rank:
+        if not candidate_level_str:
+            for level_key, level_val in candidate_levels.items():
+                if (matched_skill_name == level_key
+                        or matched_skill_name in level_key
+                        or level_key in matched_skill_name):
+                    candidate_level_str = level_val
+                    break
+
+        if not candidate_level_str:
+            # Candidate has the skill but level is not recorded — treat as matched.
+            matched.append({'text': req_str, 'type': skill_type})
+            return
+
+        rank = _level_rank(candidate_level_str)
+        if rank == 0 or rank >= min_rank:
+            # rank==0 means unrecognised level string — give benefit of the doubt.
             matched.append({'text': req_str, 'type': skill_type})
         else:
             missing.append({'text': req_str, 'type': skill_type})
