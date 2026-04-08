@@ -1,10 +1,51 @@
 """recruitment/views.py - Widoki modułu rekrutacji HR."""
 
 import logging
+import re
 
 from django.conf import settings
 
 logger = logging.getLogger(__name__)
+
+# ---------------------------------------------------------------------------
+# Skill level helpers for position_ranks_view
+# ---------------------------------------------------------------------------
+
+_SKILL_LEVEL_RANK = {
+    # Polish
+    'podstawowy': 1, 'podstawowa': 1, 'podstawowe': 1,
+    'elementarny': 1, 'elementarna': 1,
+    'początkujący': 1, 'poczatkujacy': 1,
+    'średniozaawansowany': 2, 'średniozaawansowana': 2,
+    'srednio zaawansowany': 2, 'srednio': 2, 'średni': 2, 'sredni': 2,
+    'zaawansowany': 3, 'zaawansowana': 3,
+    'bardzo zaawansowany': 4, 'bardzo zaawansowana': 4,
+    'ekspercki': 5, 'ekspercka': 5, 'ekspert': 5,
+    'mistrzowski': 5, 'mistrzowska': 5, 'mistrz': 5,
+    # English
+    'beginner': 1, 'basic': 1, 'novice': 1, 'elementary': 1, 'starter': 1,
+    'intermediate': 2,
+    'advanced': 3, 'proficient': 3,
+    'very advanced': 4, 'highly advanced': 4, 'fluent': 4,
+    'expert': 5, 'master': 5,
+}
+
+
+def _level_rank(level_str):
+    """Return numeric proficiency rank (1-5) for a level string; 0 if unknown."""
+    return _SKILL_LEVEL_RANK.get(level_str.strip().lower(), 0)
+
+
+def _parse_skill_req(req_str):
+    """Parse 'Excel - średniozaawansowany' → ('excel', 2).
+
+    Splits on ' - ', ' – ', ' — ', or ':'.
+    Returns (skill_name_lower, min_rank) where min_rank=0 means no level specified.
+    """
+    parts = re.split(r'\s*[-–—:]\s*', req_str.strip(), maxsplit=1)
+    name = parts[0].strip().lower()
+    rank = _level_rank(parts[1]) if len(parts) > 1 else 0
+    return name, rank
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -626,24 +667,48 @@ def position_ranks_view(request):
             })
             continue
 
+        # Parse position requirements once: {'excel': 2, 'python': 0, ...}
+        req_skill_map = {}
+        for req in (position.required_skills or []):
+            req_name, min_rank = _parse_skill_req(req)
+            req_skill_map[req_name] = min_rank
+
         candidates = []
         for rank, fit in enumerate(top_fits, 1):
             profile = fit.candidate
             candidate_skills = profile.skills or []
 
-            # Use AI-computed matching_skills (semantic match) for highlighting.
-            # Fall back to exact lowercase comparison against position.required_skills
-            # only when matching_skills is empty (e.g. legacy records).
-            if fit.matching_skills:
-                matched_lower = {s.lower() for s in fit.matching_skills}
-            else:
-                matched_lower = {s.lower() for s in (position.required_skills or [])}
+            # AI-confirmed matches (semantic, from matching phase)
+            matched_lower = {s.lower() for s in (fit.matching_skills or [])}
+
+            # Candidate skill_levels normalised to lowercase keys and values
+            candidate_levels = {
+                k.lower(): v.lower()
+                for k, v in (profile.skill_levels or {}).items()
+            }
 
             highlighted_skills = []
             for skill in candidate_skills:
+                skill_lower = skill.lower()
+                is_match = skill_lower in matched_lower  # AI semantic match
+
+                if not is_match:
+                    # Level-aware fallback: check if skill name overlaps any
+                    # required skill and candidate's level >= required level.
+                    for req_name, min_rank in req_skill_map.items():
+                        if req_name == skill_lower or req_name in skill_lower or skill_lower in req_name:
+                            if min_rank == 0:
+                                # No level constraint → name match is enough
+                                is_match = True
+                            else:
+                                candidate_level_str = candidate_levels.get(skill_lower, '')
+                                if candidate_level_str and _level_rank(candidate_level_str) >= min_rank:
+                                    is_match = True
+                            break
+
                 highlighted_skills.append({
                     'name': skill,
-                    'is_match': skill.lower() in matched_lower,
+                    'is_match': is_match,
                 })
 
             candidates.append({
