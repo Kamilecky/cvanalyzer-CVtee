@@ -131,7 +131,9 @@
                 <ul class="mbreakdown-list">
                   {% for item in c.matched_requirements %}
                   <li class="mbreakdown-matched">
-                    <span class="mbreakdown-text">{{ item.text }}</span>
+                    <span class="mbreakdown-text">
+                      {{ item.text }}{% if item.type == 'skill_optional' %}<span class="skill-type-tag skill-optional-tag">opt</span>{% endif %}
+                    </span>
                     {% if item.pct is not None %}<span class="mbreakdown-pct">{{ item.pct }}%</span>{% endif %}
                   </li>
                   {% endfor %}
@@ -147,7 +149,9 @@
                 <ul class="mbreakdown-list">
                   {% for item in c.missing_requirements %}
                   <li class="mbreakdown-missing">
-                    <span class="mbreakdown-text">{{ item.text }}</span>
+                    <span class="mbreakdown-text">
+                      {{ item.text }}{% if item.type == 'skill_optional' %}<span class="skill-type-tag skill-optional-tag">opt</span>{% endif %}
+                    </span>
                     {% if item.pct is not None %}<span class="mbreakdown-pct">{{ item.pct }}%</span>{% endif %}
                   </li>
                   {% endfor %}

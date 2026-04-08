@@ -79,33 +79,44 @@ def _classification_label(fit):
     return {'label': cls, 'css': _CLASSIFICATION_CSS.get(cls, 'secondary')}
 
 
-def _split_requirement_matches(fit):
-    """Split requirement_matches into matched/missing lists, consistent with full analysis.
+_SKILL_REQ_TYPES = {'skill_required', 'skill_optional'}
 
-    Uses RequirementMatch objects (same source as fit_result.html).
-    Falls back to fit.matching_skills / fit.missing_skills when empty.
-    matched: match_percentage >= 60, sorted descending
-    missing: match_percentage < 40, sorted ascending (worst first)
+
+def _split_skill_matches(fit):
+    """Split RequirementMatch records into matched/missing — SKILLS ONLY.
+
+    Filters to requirement_type in ('skill_required', 'skill_optional') so that
+    responsibilities, experience criteria, and languages are excluded from the
+    ranking card (they belong only on the full Match Breakdown page).
+
+    matched : match_percentage >= 60, sorted descending (best first)
+    missing : match_percentage <  40, sorted ascending  (worst first)
+
+    Falls back to fit.matching_skills / fit.missing_skills when no
+    RequirementMatch records exist (legacy or failed secondary AI call).
     """
-    req_matches = list(fit.requirement_matches.all())
+    skill_matches = [
+        r for r in fit.requirement_matches.all()
+        if r.requirement_type in _SKILL_REQ_TYPES
+    ]
 
-    if req_matches:
+    if skill_matches:
         matched = sorted(
-            [r for r in req_matches if r.match_percentage >= 60],
+            [r for r in skill_matches if r.match_percentage >= 60],
             key=lambda r: -r.match_percentage,
         )
         missing = sorted(
-            [r for r in req_matches if r.match_percentage < 40],
+            [r for r in skill_matches if r.match_percentage < 40],
             key=lambda r: r.match_percentage,
         )
         return (
-            [{'text': r.requirement_text, 'pct': int(r.match_percentage)} for r in matched],
-            [{'text': r.requirement_text, 'pct': int(r.match_percentage)} for r in missing],
+            [{'text': r.requirement_text, 'pct': int(r.match_percentage), 'type': r.requirement_type} for r in matched],
+            [{'text': r.requirement_text, 'pct': int(r.match_percentage), 'type': r.requirement_type} for r in missing],
         )
 
-    # Fallback: basic AI lists (no percentage available)
-    matched = [{'text': s, 'pct': None} for s in (fit.matching_skills or [])]
-    missing = [{'text': s, 'pct': None} for s in (fit.missing_skills or [])]
+    # Fallback: basic AI lists (no percentage, no type info)
+    matched = [{'text': s, 'pct': None, 'type': 'skill_required'} for s in (fit.matching_skills or [])]
+    missing = [{'text': s, 'pct': None, 'type': 'skill_required'} for s in (fit.missing_skills or [])]
     return matched, missing
 
 
@@ -872,8 +883,10 @@ def position_ranks_view(request):
                         break
                 highlighted_skills.append({'name': skill, 'is_match': is_match})
 
-            # Matched / missing from RequirementMatch — same source as full analysis page
-            matched_reqs, missing_reqs = _split_requirement_matches(fit)
+            # Matched / missing skills only (required + optional) for the card.
+            # Responsibilities / experience / language matches stay on the full
+            # Match Breakdown page only.
+            matched_reqs, missing_reqs = _split_skill_matches(fit)
 
             # --- Decision-support data ---
             skill_gaps = _compute_skill_gaps(

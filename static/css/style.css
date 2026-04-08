@@ -1429,6 +1429,25 @@ body {
 [data-theme="dark"] .mbreakdown-matched .mbreakdown-pct  { color: #66bb6a; }
 [data-theme="dark"] .mbreakdown-missing .mbreakdown-text { color: #ef9a9a; }
 [data-theme="dark"] .mbreakdown-missing .mbreakdown-pct  { color: #e57373; }
+/* Optional skill label */
+.skill-type-tag {
+    font-size: .6rem;
+    font-weight: 600;
+    border-radius: 3px;
+    padding: 0 .25rem;
+    vertical-align: middle;
+    margin-left: .2rem;
+    letter-spacing: .3px;
+    text-transform: uppercase;
+}
+.skill-optional-tag {
+    background: #e3f2fd;
+    color: #1565c0;
+}
+[data-theme="dark"] .skill-optional-tag {
+    background: #1a2e42;
+    color: #64b5f6;
+}
 
 /* Skill gap box */
 .skill-gap-box {
