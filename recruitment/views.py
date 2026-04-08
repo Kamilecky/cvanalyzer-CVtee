@@ -79,61 +79,55 @@ def _classification_label(fit):
     return {'label': cls, 'css': _CLASSIFICATION_CSS.get(cls, 'secondary')}
 
 
-_SKILL_REQ_TYPES = {'skill_required', 'skill_optional'}
+def _split_skills_deterministic(position, candidate_skills_lower, candidate_levels):
+    """Deterministic skill matching for ranking cards.
 
+    Checks ALL position skills (required + optional) against the candidate's
+    profile using the same level-aware logic as the skill badge highlighting.
+    This guarantees consistent results across all positions for the same
+    candidate — no AI non-determinism, no grey zones.
 
-def _split_skill_matches(fit):
-    """Split RequirementMatch records into matched/missing — SKILLS ONLY.
+    Returns (matched, missing) where each item is:
+        {'text': original_req_string, 'type': 'skill_required'|'skill_optional'}
 
-    Filters to requirement_type in ('skill_required', 'skill_optional') so that
-    responsibilities, experience criteria, and languages are excluded from the
-    ranking card (they belong only on the full Match Breakdown page).
-
-    matched : match_percentage >= 60, sorted descending (best first)
-    missing : match_percentage <  40, sorted ascending  (worst first)
-
-    Falls back to fit.matching_skills / fit.missing_skills when no
-    RequirementMatch records exist (legacy or failed secondary AI call).
+    Order: required skills first, optional skills after (within each group
+    preserving the order from the position definition).
     """
-    skill_matches = [
-        r for r in fit.requirement_matches.all()
-        if r.requirement_type in _SKILL_REQ_TYPES
-    ]
+    matched = []
+    missing = []
 
-    if skill_matches:
-        matched = sorted(
-            [r for r in skill_matches if r.match_percentage >= 60],
-            key=lambda r: -r.match_percentage,
-        )
-        missing = sorted(
-            [r for r in skill_matches if r.match_percentage < 40],
-            key=lambda r: r.match_percentage,
-        )
-        return (
-            [{'text': r.requirement_text, 'pct': int(r.match_percentage), 'type': r.requirement_type} for r in matched],
-            [{'text': r.requirement_text, 'pct': int(r.match_percentage), 'type': r.requirement_type} for r in missing],
-        )
+    def _evaluate(req_str, skill_type):
+        req_name, min_rank = _parse_skill_req(req_str)
 
-    # Fallback: basic AI lists (no percentage, no type info)
-    matched = [{'text': s, 'pct': None, 'type': 'skill_required'} for s in (fit.matching_skills or [])]
-    missing = [{'text': s, 'pct': None, 'type': 'skill_required'} for s in (fit.missing_skills or [])]
+        # Find a matching skill name in the candidate's profile
+        matched_skill_name = None
+        for s in candidate_skills_lower:
+            if req_name == s or req_name in s or s in req_name:
+                matched_skill_name = s
+                break
+
+        if matched_skill_name is None:
+            missing.append({'text': req_str, 'type': skill_type})
+            return
+
+        if min_rank == 0:
+            # No level constraint — name presence is enough
+            matched.append({'text': req_str, 'type': skill_type})
+            return
+
+        candidate_level_str = candidate_levels.get(matched_skill_name, '')
+        if candidate_level_str and _level_rank(candidate_level_str) >= min_rank:
+            matched.append({'text': req_str, 'type': skill_type})
+        else:
+            missing.append({'text': req_str, 'type': skill_type})
+
+    for req in (position.required_skills or []):
+        _evaluate(req, 'skill_required')
+    for req in (position.optional_skills or []):
+        _evaluate(req, 'skill_optional')
+
     return matched, missing
 
-
-def _compute_skill_gaps(missing_skills, required_names_lower, optional_names_lower):
-    """Classify missing skills as critical (required) or important (optional/unknown)."""
-    critical, important = [], []
-    for skill in (missing_skills or []):
-        skill_lower = skill.lower()
-        is_required = any(
-            r == skill_lower or r in skill_lower or skill_lower in r
-            for r in required_names_lower
-        )
-        if is_required:
-            critical.append(skill)
-        else:
-            important.append(skill)
-    return {'critical': critical, 'important': important}
 
 
 def _compute_risks(profile, position):
@@ -838,7 +832,6 @@ def position_ranks_view(request):
             JobFitResult.objects
             .filter(position=position, status='done')
             .select_related('candidate')
-            .prefetch_related('requirement_matches')
             .order_by('-overall_match')[:3]
         )
 
@@ -854,8 +847,6 @@ def position_ranks_view(request):
         for req in (position.required_skills or []):
             req_name, min_rank = _parse_skill_req(req)
             req_skill_map[req_name] = min_rank
-        required_names_lower = set(req_skill_map.keys())
-        optional_names_lower = {_parse_skill_req(s)[0] for s in (position.optional_skills or [])}
 
         candidates = []
         for rank, fit in enumerate(top_fits, 1):
@@ -883,15 +874,18 @@ def position_ranks_view(request):
                         break
                 highlighted_skills.append({'name': skill, 'is_match': is_match})
 
-            # Matched / missing skills only (required + optional) for the card.
-            # Responsibilities / experience / language matches stay on the full
-            # Match Breakdown page only.
-            matched_reqs, missing_reqs = _split_skill_matches(fit)
-
-            # --- Decision-support data ---
-            skill_gaps = _compute_skill_gaps(
-                [r['text'] for r in missing_reqs], required_names_lower, optional_names_lower,
+            # Deterministic skill matching — same algorithm as badge highlighting.
+            # Required skills first, optional after. Consistent across all positions.
+            candidate_skills_lower = {s.lower() for s in candidate_skills}
+            matched_reqs, missing_reqs = _split_skills_deterministic(
+                position, candidate_skills_lower, candidate_levels,
             )
+
+            # Skill gaps derive directly from the type field — no extra AI lookup needed.
+            skill_gaps = {
+                'critical':  [r['text'] for r in missing_reqs if r['type'] == 'skill_required'],
+                'important': [r['text'] for r in missing_reqs if r['type'] == 'skill_optional'],
+            }
             risks = _compute_risks(profile, position)
             verdict = _compute_verdict(fit.overall_match, len(skill_gaps['critical']))
             top_reason = None
