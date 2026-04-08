@@ -678,9 +678,6 @@ def position_ranks_view(request):
             profile = fit.candidate
             candidate_skills = profile.skills or []
 
-            # AI-confirmed matches (semantic, from matching phase)
-            matched_lower = {s.lower() for s in (fit.matching_skills or [])}
-
             # Candidate skill_levels normalised to lowercase keys and values
             candidate_levels = {
                 k.lower(): v.lower()
@@ -690,21 +687,20 @@ def position_ranks_view(request):
             highlighted_skills = []
             for skill in candidate_skills:
                 skill_lower = skill.lower()
-                is_match = skill_lower in matched_lower  # AI semantic match
+                is_match = False
 
-                if not is_match:
-                    # Level-aware fallback: check if skill name overlaps any
-                    # required skill and candidate's level >= required level.
-                    for req_name, min_rank in req_skill_map.items():
-                        if req_name == skill_lower or req_name in skill_lower or skill_lower in req_name:
-                            if min_rank == 0:
-                                # No level constraint → name match is enough
+                # Deterministic level-aware check against this position's requirements.
+                # A skill is green when the candidate's proficiency >= required level.
+                # Same algorithm for every position → consistent highlighting.
+                for req_name, min_rank in req_skill_map.items():
+                    if req_name == skill_lower or req_name in skill_lower or skill_lower in req_name:
+                        if min_rank == 0:
+                            is_match = True
+                        else:
+                            candidate_level_str = candidate_levels.get(skill_lower, '')
+                            if candidate_level_str and _level_rank(candidate_level_str) >= min_rank:
                                 is_match = True
-                            else:
-                                candidate_level_str = candidate_levels.get(skill_lower, '')
-                                if candidate_level_str and _level_rank(candidate_level_str) >= min_rank:
-                                    is_match = True
-                            break
+                        break
 
                 highlighted_skills.append({
                     'name': skill,
