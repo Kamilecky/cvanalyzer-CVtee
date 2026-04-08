@@ -279,10 +279,17 @@ def candidate_upload_view(request):
             for uploaded_file in files_to_process:
                 cv_doc = _process_uploaded_cv(uploaded_file, request.user)
                 if cv_doc:
-                    run_profile_extraction_in_thread(cv_doc.id, request.user.id, language=lang)
+                    if cv_doc.injection_flag:
+                        messages.warning(
+                            request,
+                            _('CV "%(name)s" was flagged as suspicious and will not be processed.')
+                            % {'name': cv_doc.original_filename},
+                        )
+                    else:
+                        run_profile_extraction_in_thread(cv_doc.id, request.user.id, language=lang)
 
-                    # CV analysis (billing + history) — same logic as /cv/upload/
-                    start_cv_analysis(cv_doc, request.user, language=lang)
+                        # CV analysis (billing + history) — same logic as /cv/upload/
+                        start_cv_analysis(cv_doc, request.user, language=lang)
 
                     uploaded_count += 1
                     last_cv_doc = cv_doc
@@ -320,6 +327,13 @@ def _process_uploaded_cv(uploaded_file, user):
     uploaded_file.seek(0)
     from analysis.services.analyzer import CVAnalyzer
     file_hash = CVAnalyzer.compute_file_hash(uploaded_file)
+
+    # Duplicate detection: return existing CVDocument if same file was already uploaded
+    if file_hash:
+        existing = CVDocument.objects.filter(user=user, file_hash=file_hash, is_active=True).first()
+        if existing:
+            logger.info(f"Duplicate CV detected for user {user.id}: hash {file_hash[:8]} matches CV {existing.id}")
+            return existing
 
     uploaded_file.seek(0)
     cv_doc = CVDocument.objects.create(

@@ -27,6 +27,9 @@ def _run_profile_extraction(cv_document_id, user_id, language='en'):
     try:
         user = User.objects.get(id=user_id)
         cv_doc = CVDocument.objects.get(id=cv_document_id, user=user)
+        if cv_doc.injection_flag:
+            logger.warning(f"Skipping profile extraction for CV {cv_document_id}: injection_flag is set")
+            return
         extractor = ProfileExtractor()
         extractor.extract_profile(cv_doc, user, language=language)
     except Exception as e:

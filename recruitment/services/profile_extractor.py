@@ -34,6 +34,17 @@ class ProfileExtractor:
             'Every summary, description, tag, red flag, and note must be in Polish.'
         ) if (language or 'en')[:2] == 'pl' else ''
 
+        if cv_document.injection_flag:
+            logger.warning(f"Refusing profile extraction for CV {cv_document.id}: injection_flag is set")
+            profile, _ = CandidateProfile.objects.get_or_create(
+                cv_document=cv_document,
+                defaults={'user': user},
+            )
+            profile.status = 'failed'
+            profile.error_message = 'CV flagged as suspicious — profile extraction blocked.'
+            profile.save(update_fields=['status', 'error_message'])
+            return profile
+
         profile, created = CandidateProfile.objects.get_or_create(
             cv_document=cv_document,
             defaults={'user': user},
