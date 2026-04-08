@@ -1423,10 +1423,17 @@ body {
 }
 .mbreakdown-matched .mbreakdown-text { color: #2e7d32; }
 .mbreakdown-matched .mbreakdown-pct  { color: #43a047; }
-/* Required skill item — red (Important) */
-.mbreakdown-req .mbreakdown-text { color: #c62828; font-weight: 500; }
-/* Optional skill item — orange (Not important) */
-.mbreakdown-opt .mbreakdown-text { color: #e65100; }
+/* Matched skills — always green */
+.mbreakdown-section-matched .mbreakdown-req .mbreakdown-text,
+.mbreakdown-section-matched .mbreakdown-opt .mbreakdown-text { color: #2e7d32; font-weight: 500; }
+/* Missing skills — red (required/Important) or orange (optional/Not important) */
+.mbreakdown-section-missing .mbreakdown-req .mbreakdown-text { color: #c62828; font-weight: 500; }
+.mbreakdown-section-missing .mbreakdown-opt .mbreakdown-text { color: #e65100; }
+
+[data-theme="dark"] .mbreakdown-section-matched .mbreakdown-req .mbreakdown-text,
+[data-theme="dark"] .mbreakdown-section-matched .mbreakdown-opt .mbreakdown-text { color: #81c784; }
+[data-theme="dark"] .mbreakdown-section-missing .mbreakdown-req .mbreakdown-text { color: #ef9a9a; }
+[data-theme="dark"] .mbreakdown-section-missing .mbreakdown-opt .mbreakdown-text { color: #ffb74d; }
 /* Legacy matched colours kept for responsibility rows */
 .mbreakdown-matched .mbreakdown-text { color: #2e7d32; }
 .mbreakdown-matched .mbreakdown-pct  { color: #43a047; }

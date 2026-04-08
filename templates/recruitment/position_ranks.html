@@ -125,7 +125,7 @@
 
               <!-- Matched skills -->
               {% if c.matched_requirements %}
-              <div class="mbreakdown-section">
+              <div class="mbreakdown-section mbreakdown-section-matched">
                 <div class="mbreakdown-header mbreakdown-matched-hdr">
                   <i class="bi bi-check-circle-fill me-1"></i>Matched ({{ c.matched_requirements|length }})
                 </div>
@@ -141,7 +141,7 @@
 
               <!-- Missing skills with legend -->
               {% if c.missing_requirements %}
-              <div class="mbreakdown-section">
+              <div class="mbreakdown-section mbreakdown-section-missing">
                 <div class="mbreakdown-header mbreakdown-missing-hdr">
                   <i class="bi bi-x-circle-fill me-1"></i>Missing ({{ c.missing_requirements|length }})
                   <span class="mbreakdown-legend">
