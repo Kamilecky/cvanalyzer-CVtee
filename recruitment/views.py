@@ -626,18 +626,24 @@ def position_ranks_view(request):
             })
             continue
 
-        required_skills_lower = {s.lower() for s in (position.required_skills or [])}
-
         candidates = []
         for rank, fit in enumerate(top_fits, 1):
             profile = fit.candidate
             candidate_skills = profile.skills or []
 
+            # Use AI-computed matching_skills (semantic match) for highlighting.
+            # Fall back to exact lowercase comparison against position.required_skills
+            # only when matching_skills is empty (e.g. legacy records).
+            if fit.matching_skills:
+                matched_lower = {s.lower() for s in fit.matching_skills}
+            else:
+                matched_lower = {s.lower() for s in (position.required_skills or [])}
+
             highlighted_skills = []
             for skill in candidate_skills:
                 highlighted_skills.append({
                     'name': skill,
-                    'is_match': skill.lower() in required_skills_lower,
+                    'is_match': skill.lower() in matched_lower,
                 })
 
             candidates.append({
