@@ -101,7 +101,7 @@
                 <span class="rank-match {% if c.fit.overall_match >= 80 %}score-high{% elif c.fit.overall_match >= 60 %}score-mid{% else %}score-low{% endif %}">
                   {{ c.fit.overall_match|default:"—" }}{% if c.fit.overall_match %}%{% endif %}
                 </span>
-                <span class="badge bg-{{ c.match_label.css }} match-label-badge">{{ c.match_label.label }}</span>
+                <span class="badge bg-{{ c.classification.css }} match-label-badge">{{ c.classification.label }}</span>
               </div>
             </div>
 
@@ -119,41 +119,44 @@
             </div>
             {% endif %}
 
-            <!-- ── 4. MATCH BREAKDOWN ── -->
-            <div class="match-breakdown">
+            <!-- ── 4. MATCH BREAKDOWN (matched first, then missing) ── -->
+            {% if c.matched_requirements or c.missing_requirements %}
+            <div class="match-breakdown-vertical">
+
               {% if c.matched_requirements %}
-              <div class="breakdown-col breakdown-matched">
-                <div class="breakdown-col-title"><i class="bi bi-check-circle-fill text-success me-1"></i>Matched</div>
-                <ul class="breakdown-list">
+              <div class="mbreakdown-section">
+                <div class="mbreakdown-header mbreakdown-matched-hdr">
+                  <i class="bi bi-check-circle-fill me-1"></i>Matched ({{ c.matched_requirements|length }})
+                </div>
+                <ul class="mbreakdown-list">
                   {% for item in c.matched_requirements %}
-                  <li>{{ item }}</li>
+                  <li class="mbreakdown-matched">
+                    <span class="mbreakdown-text">{{ item.text }}</span>
+                    {% if item.pct is not None %}<span class="mbreakdown-pct">{{ item.pct }}%</span>{% endif %}
+                  </li>
                   {% endfor %}
                 </ul>
               </div>
               {% endif %}
 
               {% if c.missing_requirements %}
-              <div class="breakdown-col breakdown-missing">
-                <div class="breakdown-col-title"><i class="bi bi-x-circle-fill text-danger me-1"></i>Missing</div>
-                <ul class="breakdown-list">
+              <div class="mbreakdown-section">
+                <div class="mbreakdown-header mbreakdown-missing-hdr">
+                  <i class="bi bi-x-circle-fill me-1"></i>Missing ({{ c.missing_requirements|length }})
+                </div>
+                <ul class="mbreakdown-list">
                   {% for item in c.missing_requirements %}
-                  <li>{{ item }}</li>
+                  <li class="mbreakdown-missing">
+                    <span class="mbreakdown-text">{{ item.text }}</span>
+                    {% if item.pct is not None %}<span class="mbreakdown-pct">{{ item.pct }}%</span>{% endif %}
+                  </li>
                   {% endfor %}
                 </ul>
               </div>
               {% endif %}
 
-              {% if c.risks %}
-              <div class="breakdown-col breakdown-risks">
-                <div class="breakdown-col-title"><i class="bi bi-exclamation-triangle-fill text-warning me-1"></i>Risks</div>
-                <ul class="breakdown-list">
-                  {% for risk in c.risks %}
-                  <li>{{ risk }}</li>
-                  {% endfor %}
-                </ul>
-              </div>
-              {% endif %}
             </div>
+            {% endif %}
 
             <!-- ── 5. SKILL GAPS ── -->
             {% if c.skill_gaps.critical or c.skill_gaps.important %}

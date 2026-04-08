@@ -63,6 +63,52 @@ def _match_label(score):
     return {'label': 'Weak Match', 'css': 'danger'}
 
 
+# Consistent with fit_result.html's get_classification() colour mapping
+_CLASSIFICATION_CSS = {
+    'Excellent': 'success',
+    'Strong':    'primary',
+    'Moderate':  'warning',
+    'Weak':      'secondary',
+    'Poor':      'danger',
+}
+
+
+def _classification_label(fit):
+    """Return {'label': ..., 'css': ...} matching fit_result.html display."""
+    cls = fit.get_classification() or 'Poor'
+    return {'label': cls, 'css': _CLASSIFICATION_CSS.get(cls, 'secondary')}
+
+
+def _split_requirement_matches(fit):
+    """Split requirement_matches into matched/missing lists, consistent with full analysis.
+
+    Uses RequirementMatch objects (same source as fit_result.html).
+    Falls back to fit.matching_skills / fit.missing_skills when empty.
+    matched: match_percentage >= 60, sorted descending
+    missing: match_percentage < 40, sorted ascending (worst first)
+    """
+    req_matches = list(fit.requirement_matches.all())
+
+    if req_matches:
+        matched = sorted(
+            [r for r in req_matches if r.match_percentage >= 60],
+            key=lambda r: -r.match_percentage,
+        )
+        missing = sorted(
+            [r for r in req_matches if r.match_percentage < 40],
+            key=lambda r: r.match_percentage,
+        )
+        return (
+            [{'text': r.requirement_text, 'pct': int(r.match_percentage)} for r in matched],
+            [{'text': r.requirement_text, 'pct': int(r.match_percentage)} for r in missing],
+        )
+
+    # Fallback: basic AI lists (no percentage available)
+    matched = [{'text': s, 'pct': None} for s in (fit.matching_skills or [])]
+    missing = [{'text': s, 'pct': None} for s in (fit.missing_skills or [])]
+    return matched, missing
+
+
 def _compute_skill_gaps(missing_skills, required_names_lower, optional_names_lower):
     """Classify missing skills as critical (required) or important (optional/unknown)."""
     critical, important = [], []
@@ -777,9 +823,13 @@ def position_ranks_view(request):
 
     position_ranks = []
     for position in positions:
-        top_fits = JobFitResult.objects.filter(
-            position=position, status='done',
-        ).select_related('candidate').order_by('-overall_match')[:3]
+        top_fits = list(
+            JobFitResult.objects
+            .filter(position=position, status='done')
+            .select_related('candidate')
+            .prefetch_related('requirement_matches')
+            .order_by('-overall_match')[:3]
+        )
 
         if not top_fits:
             position_ranks.append({
@@ -822,9 +872,12 @@ def position_ranks_view(request):
                         break
                 highlighted_skills.append({'name': skill, 'is_match': is_match})
 
+            # Matched / missing from RequirementMatch — same source as full analysis page
+            matched_reqs, missing_reqs = _split_requirement_matches(fit)
+
             # --- Decision-support data ---
             skill_gaps = _compute_skill_gaps(
-                fit.missing_skills, required_names_lower, optional_names_lower,
+                [r['text'] for r in missing_reqs], required_names_lower, optional_names_lower,
             )
             risks = _compute_risks(profile, position)
             verdict = _compute_verdict(fit.overall_match, len(skill_gaps['critical']))
@@ -832,7 +885,7 @@ def position_ranks_view(request):
             if rank == 1:
                 top_reason = _top_candidate_reason(
                     fit, profile,
-                    len(fit.matching_skills or []),
+                    len(matched_reqs),
                     len(skill_gaps['critical']),
                 )
 
@@ -841,9 +894,9 @@ def position_ranks_view(request):
                 'fit': fit,
                 'profile': profile,
                 'highlighted_skills': highlighted_skills,
-                'match_label': _match_label(fit.overall_match),
-                'matched_requirements': (fit.matching_skills or [])[:6],
-                'missing_requirements': (fit.missing_skills or [])[:4],
+                'classification': _classification_label(fit),
+                'matched_requirements': matched_reqs,
+                'missing_requirements': missing_reqs,
                 'skill_gaps': skill_gaps,
                 'risks': risks,
                 'confidence': _compute_confidence(profile),
