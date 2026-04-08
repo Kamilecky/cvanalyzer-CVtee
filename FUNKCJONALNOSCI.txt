@@ -166,79 +166,8 @@ Flow 2: Rekrutacja
 ================================================================================
 🔹 Plan działania na jutro
 
-1️⃣ Sprawdź SMTP credentials w Mailgun
-
-Wejdź w panel Mailgun:
-
-Sending
-→ Domains
-→ mg.cveeto.eu
-→ SMTP credentials
-
-Powinieneś zobaczyć login:
-
-postmaster@mg.cveeto.eu
-
-Jeśli go tam nie ma, kliknij:
-
-Add new SMTP user
-
-i utwórz np.:
-
-postmaster@mg.cveeto.eu
-
-Mailgun wygeneruje hasło SMTP.
-
-2️⃣ Zmień zmienne w Railway
-
-W Railway ustaw:
-
-MAILGUN_SMTP_HOST=smtp.eu.mailgun.org
-MAILGUN_SMTP_LOGIN=postmaster@mg.cveeto.eu
-MAILGUN_SMTP_PASSWORD=<hasło SMTP z Mailgun>
-MAILGUN_SMTP_PORT=587
-MAILGUN_SMTP_TLS=True
-3️⃣ Redeploy aplikacji
-
-Po zmianie variables zrób:
-
-Railway → Deployments → Redeploy
-
-bo inaczej aplikacja używa starych zmiennych środowiskowych.
-
-4️⃣ Sprawdź konfigurację Django
-
-Twój settings.py jest OK:
-
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = os.environ.get('MAILGUN_SMTP_HOST')
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = os.environ.get('MAILGUN_SMTP_LOGIN')
-EMAIL_HOST_PASSWORD = os.environ.get('MAILGUN_SMTP_PASSWORD')
-DEFAULT_FROM_EMAIL = "CVeeto <noreply@mg.cveeto.eu>"
-5️⃣ Test po deploy
-from django.core.mail import send_mail
-
-send_mail(
-    "Test CVeeto",
-    "Mailgun działa",
-    "noreply@mg.cveeto.eu",
-    ["merceke@interia.pl"],
-    fail_silently=False,
-)
-
-Powinno zwrócić:
-
-1
-Jeśli nadal będzie błąd
-
-Pokaż screen z sekcji SMTP credentials w Mailgun dla domeny mg.cveeto.eu, bo najczęściej problemem jest:
-
-używanie loginu z sandbox
-
-brak użytkownika SMTP dla nowej domeny
-
-stare hasło SMTP w Railway.
-
-I kup ten dentosept w końcu
+Zadbaj o spójność informacji w ogłoszeniach o pracę:
+W umiejętnościach wymaganych jest wymieniona każda umiejętność,
+ale w obowiązkach już nie
+Powiedz AI, żeby dopasowując umiejętności kandydata do stanowiska kierował się
+zakładką wymagane i opcjonalne umiejętności

@@ -1296,6 +1296,205 @@ body {
 }
 
 /* ==============================
+   Decision Cards (Position Ranks redesign)
+   ============================== */
+
+/* Card wrapper */
+.decision-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--shadow);
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+.decision-card:hover {
+    box-shadow: 0 6px 18px rgba(0,0,0,.12);
+    transform: translateY(-2px);
+}
+
+/* Header row: rank badge / name / score */
+.dc-header {
+    display: flex;
+    align-items: flex-start;
+    gap: .6rem;
+    padding: 1rem 1rem .6rem;
+}
+.dc-name-block {
+    flex: 1;
+    min-width: 0;
+}
+.dc-name-block h6 { font-size: .95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dc-score-block {
+    text-align: right;
+    flex-shrink: 0;
+}
+.match-label-badge {
+    font-size: .7rem;
+    font-weight: 600;
+    letter-spacing: .3px;
+    display: block;
+    margin-top: .15rem;
+}
+
+/* HR Verdict band */
+.verdict-band {
+    display: flex;
+    align-items: baseline;
+    gap: .4rem;
+    padding: .45rem 1rem;
+    font-size: .82rem;
+    font-weight: 600;
+    flex-wrap: wrap;
+}
+.verdict-invite   { background: #e8f5e9; color: #2e7d32; border-top: 1px solid #c8e6c9; border-bottom: 1px solid #c8e6c9; }
+.verdict-consider { background: #fff8e1; color: #f57f17; border-top: 1px solid #ffe082; border-bottom: 1px solid #ffe082; }
+.verdict-reject   { background: #ffebee; color: #c62828; border-top: 1px solid #ffcdd2; border-bottom: 1px solid #ffcdd2; }
+.verdict-reason {
+    font-weight: 400;
+    opacity: .85;
+}
+[data-theme="dark"] .verdict-invite   { background: #1b3e20; color: #81c784; border-color: #2e5c32; }
+[data-theme="dark"] .verdict-consider { background: #3e2e00; color: #ffca28; border-color: #5c4400; }
+[data-theme="dark"] .verdict-reject   { background: #3e1a1a; color: #ef9a9a; border-color: #5c2626; }
+
+/* Why #1 box */
+.top-reason-box {
+    background: linear-gradient(90deg, #fff8e1, #fffde7);
+    border-left: 3px solid #FFC107;
+    padding: .4rem 1rem;
+    font-size: .8rem;
+    color: #795548;
+}
+[data-theme="dark"] .top-reason-box {
+    background: #2e2500;
+    border-color: #f59f00;
+    color: #ffca28;
+}
+
+/* Match breakdown (3 columns: matched / missing / risks) */
+.match-breakdown {
+    display: flex;
+    gap: 0;
+    border-top: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color);
+    font-size: .78rem;
+}
+.breakdown-col {
+    flex: 1;
+    padding: .5rem .75rem;
+    border-right: 1px solid var(--border-color);
+}
+.breakdown-col:last-child { border-right: none; }
+.breakdown-col-title {
+    font-weight: 600;
+    font-size: .72rem;
+    text-transform: uppercase;
+    letter-spacing: .4px;
+    margin-bottom: .25rem;
+    color: var(--text-muted);
+}
+.breakdown-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.breakdown-list li {
+    padding: .1rem 0;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.breakdown-matched .breakdown-list li { color: #2e7d32; }
+.breakdown-missing .breakdown-list li { color: #c62828; }
+.breakdown-risks   .breakdown-list li { color: #e65100; }
+[data-theme="dark"] .breakdown-matched .breakdown-list li { color: #81c784; }
+[data-theme="dark"] .breakdown-missing .breakdown-list li { color: #ef9a9a; }
+[data-theme="dark"] .breakdown-risks   .breakdown-list li { color: #ffb74d; }
+
+/* Skill gap box */
+.skill-gap-box {
+    padding: .5rem 1rem;
+    background: rgba(229,57,53,.05);
+    border-bottom: 1px solid var(--border-color);
+}
+[data-theme="dark"] .skill-gap-box { background: rgba(239,154,154,.06); }
+.skill-gap-title {
+    font-size: .72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .4px;
+    color: #c62828;
+    margin-bottom: .3rem;
+}
+[data-theme="dark"] .skill-gap-title { color: #ef9a9a; }
+.skill-gap-items { display: flex; flex-wrap: wrap; gap: .3rem; }
+.gap-badge {
+    font-size: .72rem;
+    padding: .15rem .5rem;
+    border-radius: 20px;
+    font-weight: 600;
+}
+.gap-critical { background: #ffcdd2; color: #b71c1c; }
+.gap-important { background: #fff3e0; color: #e65100; }
+[data-theme="dark"] .gap-critical  { background: #5c2626; color: #ef9a9a; }
+[data-theme="dark"] .gap-important { background: #4a2c00; color: #ffb74d; }
+.gap-dot  { display: inline-block; width: 8px; height: 8px; border-radius: 50%; vertical-align: middle; }
+.gap-critical-dot  { background: #e53935; }
+.gap-important-dot { background: #ff6d00; }
+
+/* Generic section inside decision card */
+.dc-section {
+    padding: .5rem 1rem 0;
+    font-size: .82rem;
+}
+.dc-section-label {
+    font-size: .72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .4px;
+    color: var(--text-muted);
+    margin-bottom: .2rem;
+}
+.dc-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.dc-list li {
+    color: var(--text-secondary);
+    padding: .1rem 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Footer: confidence + CTA */
+.dc-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: .75rem 1rem;
+    margin-top: auto;
+    border-top: 1px solid var(--border-color);
+}
+.confidence-badge {
+    font-size: .72rem;
+    font-weight: 600;
+    padding: .2rem .55rem;
+    border-radius: 20px;
+}
+.confidence-high   { background: #e8f5e9; color: #2e7d32; }
+.confidence-medium { background: #fff8e1; color: #f57f17; }
+.confidence-low    { background: #fafafa; color: #9e9e9e; border: 1px solid #e0e0e0; }
+[data-theme="dark"] .confidence-high   { background: #1b3e20; color: #81c784; }
+[data-theme="dark"] .confidence-medium { background: #3e2e00; color: #ffca28; }
+[data-theme="dark"] .confidence-low    { background: #2a2a2a; color: #9e9e9e; border-color: #444; }
+
+/* ==============================
    Match Summary (minimal % view)
    ============================== */
 .match-summary-list {

@@ -46,6 +46,127 @@ def _parse_skill_req(req_str):
     name = parts[0].strip().lower()
     rank = _level_rank(parts[1]) if len(parts) > 1 else 0
     return name, rank
+
+
+# ---------------------------------------------------------------------------
+# Decision-support helpers for position_ranks_view
+# ---------------------------------------------------------------------------
+
+def _match_label(score):
+    """Translate numeric score → human label + Bootstrap colour class."""
+    if score is None:
+        return {'label': 'Unknown', 'css': 'secondary'}
+    if score >= 80:
+        return {'label': 'Strong Match', 'css': 'success'}
+    if score >= 60:
+        return {'label': 'Consider', 'css': 'warning'}
+    return {'label': 'Weak Match', 'css': 'danger'}
+
+
+def _compute_skill_gaps(missing_skills, required_names_lower, optional_names_lower):
+    """Classify missing skills as critical (required) or important (optional/unknown)."""
+    critical, important = [], []
+    for skill in (missing_skills or []):
+        skill_lower = skill.lower()
+        is_required = any(
+            r == skill_lower or r in skill_lower or skill_lower in r
+            for r in required_names_lower
+        )
+        if is_required:
+            critical.append(skill)
+        else:
+            important.append(skill)
+    return {'critical': critical, 'important': important}
+
+
+def _compute_risks(profile, position):
+    """Build concise risk list from profile red_flags + experience gap."""
+    risks = []
+    if (
+        profile.years_of_experience is not None
+        and position.years_of_experience_required > 0
+        and profile.years_of_experience < position.years_of_experience_required
+    ):
+        risks.append(
+            f"Only {profile.years_of_experience} yr(s) experience "
+            f"(required: {position.years_of_experience_required})"
+        )
+    for flag in (profile.red_flags or []):
+        if isinstance(flag, dict):
+            if flag.get('severity') in ('critical', 'warning'):
+                desc = flag.get('description', '').strip()
+                if desc:
+                    risks.append(desc)
+    return risks[:3]
+
+
+def _compute_confidence(profile):
+    """Estimate extraction confidence from profile completeness."""
+    if profile.status == 'failed':
+        return 'low'
+    score = sum([
+        bool(profile.name),
+        bool(profile.email),
+        bool(profile.companies),
+        profile.years_of_experience is not None,
+        len(profile.skills or []) >= 5,
+        profile.status == 'done',
+    ])
+    if score >= 5:
+        return 'high'
+    if score >= 3:
+        return 'medium'
+    return 'low'
+
+
+def _compute_verdict(overall_match, critical_gaps_count):
+    """Rule-based hiring recommendation."""
+    score = overall_match or 0
+    if critical_gaps_count >= 2 or score < 40:
+        return {
+            'decision': 'reject',
+            'css': 'danger',
+            'icon': 'bi-x-circle-fill',
+            'label': 'Reject',
+            'reason': (
+                f"Missing {critical_gaps_count} critical requirement(s)."
+                if critical_gaps_count >= 2
+                else "Overall match too low."
+            ),
+        }
+    if score >= 75:
+        return {
+            'decision': 'invite',
+            'css': 'success',
+            'icon': 'bi-check-circle-fill',
+            'label': 'Invite to Interview',
+            'reason': f"Meets key requirements with {score}% overall match.",
+        }
+    return {
+        'decision': 'consider',
+        'css': 'warning',
+        'icon': 'bi-question-circle-fill',
+        'label': 'Consider',
+        'reason': "Partial match — review details before deciding.",
+    }
+
+
+def _top_candidate_reason(fit, profile, matching_count, critical_gaps_count):
+    """One-line justification for the #1 ranked candidate."""
+    parts = []
+    if matching_count:
+        parts.append(f"covers {matching_count} key requirement(s)")
+    if profile.years_of_experience:
+        parts.append(f"{profile.years_of_experience} yr(s) experience")
+    if critical_gaps_count == 0:
+        parts.append("no critical gaps")
+    if profile.seniority_level:
+        parts.append(f"{profile.seniority_level} level")
+    if parts:
+        return "Best match: " + ", ".join(parts) + "."
+    return "Highest overall match score among all candidates."
+
+
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -672,6 +793,8 @@ def position_ranks_view(request):
         for req in (position.required_skills or []):
             req_name, min_rank = _parse_skill_req(req)
             req_skill_map[req_name] = min_rank
+        required_names_lower = set(req_skill_map.keys())
+        optional_names_lower = {_parse_skill_req(s)[0] for s in (position.optional_skills or [])}
 
         candidates = []
         for rank, fit in enumerate(top_fits, 1):
@@ -688,10 +811,6 @@ def position_ranks_view(request):
             for skill in candidate_skills:
                 skill_lower = skill.lower()
                 is_match = False
-
-                # Deterministic level-aware check against this position's requirements.
-                # A skill is green when the candidate's proficiency >= required level.
-                # Same algorithm for every position → consistent highlighting.
                 for req_name, min_rank in req_skill_map.items():
                     if req_name == skill_lower or req_name in skill_lower or skill_lower in req_name:
                         if min_rank == 0:
@@ -701,17 +820,35 @@ def position_ranks_view(request):
                             if candidate_level_str and _level_rank(candidate_level_str) >= min_rank:
                                 is_match = True
                         break
+                highlighted_skills.append({'name': skill, 'is_match': is_match})
 
-                highlighted_skills.append({
-                    'name': skill,
-                    'is_match': is_match,
-                })
+            # --- Decision-support data ---
+            skill_gaps = _compute_skill_gaps(
+                fit.missing_skills, required_names_lower, optional_names_lower,
+            )
+            risks = _compute_risks(profile, position)
+            verdict = _compute_verdict(fit.overall_match, len(skill_gaps['critical']))
+            top_reason = None
+            if rank == 1:
+                top_reason = _top_candidate_reason(
+                    fit, profile,
+                    len(fit.matching_skills or []),
+                    len(skill_gaps['critical']),
+                )
 
             candidates.append({
                 'rank': rank,
                 'fit': fit,
                 'profile': profile,
                 'highlighted_skills': highlighted_skills,
+                'match_label': _match_label(fit.overall_match),
+                'matched_requirements': (fit.matching_skills or [])[:6],
+                'missing_requirements': (fit.missing_skills or [])[:4],
+                'skill_gaps': skill_gaps,
+                'risks': risks,
+                'confidence': _compute_confidence(profile),
+                'verdict': verdict,
+                'top_reason': top_reason,
             })
 
         position_ranks.append({
