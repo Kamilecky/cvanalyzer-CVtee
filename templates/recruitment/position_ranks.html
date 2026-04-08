@@ -179,22 +179,7 @@
             </div>
             {% endif %}
 
-            <!-- ── 6. SKILLS (core highlighted + others muted) ── -->
-            {% if c.highlighted_skills %}
-            <div class="dc-section">
-              <div class="dc-section-label"><i class="bi bi-tools me-1"></i>Skills</div>
-              <div class="mt-1">
-                {% for skill in c.highlighted_skills|slice:":14" %}
-                  <span class="badge {% if skill.is_match %}skill-match{% else %}skill-other{% endif %} me-1 mb-1">
-                    {% if skill.is_match %}<i class="bi bi-check-lg me-1"></i>{% endif %}{{ skill.name }}
-                  </span>
-                {% endfor %}
-                {% if c.highlighted_skills|length > 14 %}
-                  <span class="badge bg-secondary" style="font-size:.7rem;">+{{ c.highlighted_skills|length|add:"-14" }}</span>
-                {% endif %}
-              </div>
-            </div>
-            {% endif %}
+
 
             <!-- ── 7. EXPERIENCE ── -->
             {% if c.profile.companies %}
