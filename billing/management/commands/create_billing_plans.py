@@ -29,8 +29,7 @@ PLANS = [
             'candidate_ranking': True, 'red_flags': True,
             'interview_questions': False, 'market_benchmark': False,
             'requirement_scoring': False, 'priority_processing': False,
-            'sla_flag': False, 'custom_prompts': False,
-            'api_access': False, 'prompt_injection_scan': False,
+            'sla_flag': False, 'prompt_injection_scan': False,
         },
     },
     {
@@ -51,8 +50,7 @@ PLANS = [
             'candidate_ranking': True, 'red_flags': True,
             'interview_questions': False, 'market_benchmark': False,
             'requirement_scoring': False, 'priority_processing': False,
-            'sla_flag': False, 'custom_prompts': False,
-            'api_access': False, 'prompt_injection_scan': False,
+            'sla_flag': False, 'prompt_injection_scan': False,
         },
     },
     {
@@ -73,8 +71,7 @@ PLANS = [
             'candidate_ranking': True, 'red_flags': True,
             'interview_questions': True, 'market_benchmark': True,
             'requirement_scoring': True, 'priority_processing': False,
-            'sla_flag': False, 'custom_prompts': False,
-            'api_access': False, 'prompt_injection_scan': True,
+            'sla_flag': False, 'prompt_injection_scan': True,
         },
     },
     {
@@ -95,8 +92,7 @@ PLANS = [
             'candidate_ranking': True, 'red_flags': True,
             'interview_questions': True, 'market_benchmark': True,
             'requirement_scoring': True, 'priority_processing': True,
-            'sla_flag': True, 'custom_prompts': True,
-            'api_access': True, 'prompt_injection_scan': True,
+            'sla_flag': True, 'prompt_injection_scan': True,
         },
     },
 ]
