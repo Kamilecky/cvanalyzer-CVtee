@@ -33,6 +33,7 @@ urlpatterns = [
     path('candidates/<uuid:profile_id>/selective-status/', views.selective_match_status_api, name='recruitment_selective_match_status'),
     path('candidates/<uuid:profile_id>/auto-match/', views.auto_match_view, name='recruitment_auto_match'),
     path('candidates/<uuid:profile_id>/match-summary/', views.match_summary_view, name='recruitment_match_summary'),
+    path('candidates/<uuid:profile_id>/intelligence/', views.generate_intelligence_profile_view, name='recruitment_generate_intelligence_profile'),
 
     # Position Ranks
     path('position-ranks/', views.position_ranks_view, name='recruitment_position_ranks'),

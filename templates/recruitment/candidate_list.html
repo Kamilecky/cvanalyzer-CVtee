@@ -146,6 +146,7 @@
                                 <th>{% trans "Experience" %}</th>
                                 <th>{% trans "Skills" %}</th>
                                 <th>{% trans "Tags" %}</th>
+                                {% if show_intelligence %}<th>{% trans "Intelligence" %}</th>{% endif %}
                                 <th>{% trans "Created" %}</th>
                                 <th>{% trans "Actions" %}</th>
                             </tr>
@@ -189,6 +190,34 @@
                                             <span class="text-muted">None</span>
                                         {% endif %}
                                     </td>
+                                    {% if show_intelligence %}
+                                    <td class="align-middle">
+                                        {% if profile.intelligence and profile.intelligence.status == 'done' %}
+                                            {# Mini Intelligence badge #}
+                                            <div class="intel-mini-badge intel-mini-{{ profile.intelligence.recommendation }}"
+                                                 data-bs-toggle="tooltip"
+                                                 data-bs-placement="top"
+                                                 title="{% if profile.intelligence.recommendation == 'invite' %}{% trans "Invite to Interview" %}{% elif profile.intelligence.recommendation == 'reject' %}{% trans "Not Recommended" %}{% else %}{% trans "Worth Considering" %}{% endif %} · {% trans "Skill Fit:" %} {{ profile.intelligence.skill_fit.score|default:0 }}%">
+                                                <i class="bi
+                                                    {% if profile.intelligence.recommendation == 'invite' %}bi-check-circle-fill
+                                                    {% elif profile.intelligence.recommendation == 'reject' %}bi-x-circle-fill
+                                                    {% else %}bi-dash-circle-fill{% endif %}"></i>
+                                                <span>{% if profile.intelligence.recommendation == 'invite' %}{% trans "Invite" %}{% elif profile.intelligence.recommendation == 'reject' %}{% trans "Reject" %}{% else %}{% trans "Consider" %}{% endif %}</span>
+                                                <span class="intel-mini-score">{{ profile.intelligence.skill_fit.score|default:0 }}%</span>
+                                            </div>
+                                        {% else %}
+                                            {# No intelligence yet — tooltip hover #}
+                                            <span class="intel-mini-empty"
+                                                  data-bs-toggle="tooltip"
+                                                  data-bs-placement="top"
+                                                  data-bs-html="true"
+                                                  title="{% trans "This candidate doesn't have a Candidate Intelligence report yet. To generate one, go to the candidate's page." %}">
+                                                <i class="bi bi-cpu text-muted"></i>
+                                                <span class="text-muted small">—</span>
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    {% endif %}
                                     <td>{{ profile.created_at|date:"M d, Y" }}</td>
                                     <td>
                                         <a href="{% url 'recruitment_candidate_detail' profile.id %}"
@@ -352,6 +381,11 @@ function openCandidateDeleteModal(btn) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+    // Bootstrap tooltips
+    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function(el) {
+        new bootstrap.Tooltip(el, { trigger: 'hover' });
+    });
+
     // Select All toggle
     const selectAll = document.getElementById('selectAllPositions');
     const checkboxes = document.querySelectorAll('.position-checkbox');

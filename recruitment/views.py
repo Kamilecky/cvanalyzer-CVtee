@@ -470,12 +470,28 @@ def candidate_list_view(request):
         user=request.user, is_active=True,
     ).order_by('-created_at')
 
+    # 5. Attach intelligence (Premium/Enterprise only — single query)
+    show_intelligence = request.user.plan in ('premium', 'enterprise')
+    if show_intelligence and profiles_list:
+        from recruitment.models import CandidateIntelligence
+        profile_ids = [p.id for p in profiles_list]
+        intel_map = {
+            ci.profile_id: ci
+            for ci in CandidateIntelligence.objects.filter(profile_id__in=profile_ids)
+        }
+        for p in profiles_list:
+            p.intelligence = intel_map.get(p.id)
+    else:
+        for p in profiles_list:
+            p.intelligence = None
+
     return render(request, 'recruitment/candidate_list.html', {
         'profiles': profiles_list,
         'query': q,
         'active_positions': active_positions,
         'flagged_profiles': flagged_profiles,
         'flagged_count': len(flagged_profiles),
+        'show_intelligence': show_intelligence,
     })
 
 
@@ -662,10 +678,21 @@ def candidate_detail_view(request, profile_id):
         for fit in fit_results
     )
 
+    # Intelligence layer — Premium/Enterprise only
+    show_intelligence = request.user.plan in ('premium', 'enterprise')
+    intelligence = None
+    if show_intelligence:
+        try:
+            intelligence = profile.intelligence
+        except Exception:
+            intelligence = None
+
     return render(request, 'recruitment/candidate_detail.html', {
         'profile': profile,
         'fit_results': fit_results,
         'all_not_fit': all_not_fit,
+        'intelligence': intelligence,
+        'show_intelligence': show_intelligence,
     })
 
 
@@ -763,6 +790,28 @@ def generate_questions_view(request, fit_id):
         messages.error(request, _('Failed to generate interview questions.'))
 
     return redirect('recruitment_fit_result', fit_id=fit_id)
+
+
+@login_required
+@require_POST
+def generate_intelligence_profile_view(request, profile_id):
+    """Generuje Candidate Intelligence Layer z poziomu strony kandydata (Premium/Enterprise)."""
+    if request.user.plan not in ('premium', 'enterprise'):
+        messages.error(request, _('Candidate Intelligence requires Premium plan.'))
+        return redirect('recruitment_candidate_detail', profile_id=profile_id)
+
+    profile = get_object_or_404(CandidateProfile, id=profile_id, user=request.user, status='done')
+
+    from recruitment.services.intelligence_analyzer import IntelligenceAnalyzer
+    analyzer = IntelligenceAnalyzer()
+    intel = analyzer.analyse(profile)
+
+    if intel.status == 'done':
+        messages.success(request, _('Intelligence analysis complete.'))
+    else:
+        messages.error(request, _('Intelligence analysis failed. Please try again.'))
+
+    return redirect('recruitment_candidate_detail', profile_id=profile_id)
 
 
 @login_required
