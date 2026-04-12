@@ -471,7 +471,7 @@ def candidate_list_view(request):
     ).order_by('-created_at')
 
     # 5. Attach intelligence (Premium/Enterprise only — single query)
-    show_intelligence = request.user.plan in ('premium', 'enterprise')
+    show_intelligence = request.user.has_feature('candidate_intelligence')
     if show_intelligence and profiles_list:
         from recruitment.models import CandidateIntelligence
         profile_ids = [p.id for p in profiles_list]
@@ -690,7 +690,7 @@ def candidate_detail_view(request, profile_id):
     )
 
     # Intelligence layer — Premium/Enterprise only
-    show_intelligence = request.user.plan in ('premium', 'enterprise')
+    show_intelligence = request.user.has_feature('candidate_intelligence')
     intelligence = None
     if show_intelligence:
         try:
@@ -745,7 +745,7 @@ def fit_result_detail_view(request, fit_id):
 
     # Intelligence layer — Premium/Enterprise only
     intelligence = None
-    show_intelligence = request.user.plan in ('premium', 'enterprise')
+    show_intelligence = request.user.has_feature('candidate_intelligence')
     if show_intelligence:
         try:
             intelligence = fit.candidate.intelligence
@@ -807,7 +807,7 @@ def generate_questions_view(request, fit_id):
 @require_POST
 def generate_intelligence_profile_view(request, profile_id):
     """Generuje Candidate Intelligence Layer z poziomu strony kandydata (Premium/Enterprise)."""
-    if request.user.plan not in ('premium', 'enterprise'):
+    if not request.user.has_feature('candidate_intelligence'):
         messages.error(request, _('Candidate Intelligence requires Premium plan.'))
         return redirect('recruitment_candidate_detail', profile_id=profile_id)
 
@@ -829,7 +829,7 @@ def generate_intelligence_profile_view(request, profile_id):
 @require_POST
 def generate_intelligence_view(request, fit_id):
     """Generuje Candidate Intelligence Layer na żądanie (Premium/Enterprise)."""
-    if request.user.plan not in ('premium', 'enterprise'):
+    if not request.user.has_feature('candidate_intelligence'):
         messages.error(request, _('Candidate Intelligence requires Premium plan.'))
         return redirect('recruitment_fit_result', fit_id=fit_id)
 

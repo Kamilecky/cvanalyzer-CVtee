@@ -41,14 +41,8 @@ def _run_profile_extraction(cv_document_id, user_id, language='en'):
 
 
 def _maybe_run_intelligence(profile, user):
-    """Run CandidateIntelligence analysis for Premium/Enterprise users."""
-    from django.conf import settings
-    plan = getattr(user, 'plan', 'free')
-    features = settings.PLAN_FEATURES.get(plan, {})
-    if not features.get('recruitment', False):
-        return
-    # Only for premium and enterprise (free/basic have recruitment but no intelligence)
-    if plan not in ('premium', 'enterprise'):
+    """Run CandidateIntelligence analysis for users with candidate_intelligence feature."""
+    if not user.has_feature('candidate_intelligence'):
         return
     try:
         from recruitment.services.intelligence_analyzer import IntelligenceAnalyzer
