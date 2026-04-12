@@ -765,6 +765,30 @@ def generate_questions_view(request, fit_id):
     return redirect('recruitment_fit_result', fit_id=fit_id)
 
 
+@login_required
+@require_POST
+def generate_intelligence_view(request, fit_id):
+    """Generuje Candidate Intelligence Layer na żądanie (Premium/Enterprise)."""
+    if request.user.plan not in ('premium', 'enterprise'):
+        messages.error(request, _('Candidate Intelligence requires Premium plan.'))
+        return redirect('recruitment_fit_result', fit_id=fit_id)
+
+    fit = get_object_or_404(
+        JobFitResult, id=fit_id, user=request.user, status='done',
+    )
+
+    from recruitment.services.intelligence_analyzer import IntelligenceAnalyzer
+    analyzer = IntelligenceAnalyzer()
+    intel = analyzer.analyse(fit.candidate)
+
+    if intel.status == 'done':
+        messages.success(request, _('Intelligence analysis complete.'))
+    else:
+        messages.error(request, _('Intelligence analysis failed. Please try again.'))
+
+    return redirect('recruitment_fit_result', fit_id=fit_id)
+
+
 # ---------------------------------------------------------------------------
 # Selective Matching
 # ---------------------------------------------------------------------------

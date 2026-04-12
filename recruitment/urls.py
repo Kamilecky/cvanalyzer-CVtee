@@ -47,4 +47,5 @@ urlpatterns = [
     path('fit/<uuid:fit_id>/', views.fit_result_detail_view, name='recruitment_fit_result'),
     path('fit/<uuid:fit_id>/status/', views.fit_status_api, name='recruitment_fit_status'),
     path('fit/<uuid:fit_id>/questions/', views.generate_questions_view, name='recruitment_generate_questions'),
+    path('fit/<uuid:fit_id>/intelligence/', views.generate_intelligence_view, name='recruitment_generate_intelligence'),
 ]
