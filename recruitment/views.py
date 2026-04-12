@@ -703,14 +703,24 @@ def fit_result_detail_view(request, fit_id):
     )
 
     requirement_matches = fit.requirement_matches.all().order_by('-match_percentage')
-
     section_scores = fit.section_scores.all().order_by('-weight', '-score')
+
+    # Intelligence layer — Premium/Enterprise only
+    intelligence = None
+    show_intelligence = request.user.plan in ('premium', 'enterprise')
+    if show_intelligence:
+        try:
+            intelligence = fit.candidate.intelligence
+        except Exception:
+            intelligence = None
 
     return render(request, 'recruitment/fit_result.html', {
         'fit': fit,
         'requirement_matches': requirement_matches,
         'section_scores': section_scores,
         'is_partial': fit.status == 'partial',
+        'intelligence': intelligence,
+        'show_intelligence': show_intelligence,
     })
 
 

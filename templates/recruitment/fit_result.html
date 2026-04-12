@@ -224,6 +224,178 @@
         </div>
     </div>
 
+    <!-- =========================================================
+         CANDIDATE INTELLIGENCE LAYER (Premium / Enterprise)
+         ========================================================= -->
+    {% if show_intelligence %}
+    <div class="intel-section mb-4">
+        <div class="intel-header d-flex align-items-center gap-2 mb-3">
+            <i class="bi bi-cpu intel-icon"></i>
+            <h5 class="mb-0">{% trans "Candidate Intelligence" %}</h5>
+            <span class="badge bg-primary ms-1">Premium</span>
+        </div>
+
+        {% if intelligence and intelligence.status == 'done' %}
+
+        <!-- Recommendation + Confidence -->
+        <div class="row g-3 mb-3">
+            <div class="col-md-6">
+                <div class="intel-card intel-recommendation-card
+                    {% if intelligence.recommendation == 'invite' %}intel-invite
+                    {% elif intelligence.recommendation == 'reject' %}intel-reject
+                    {% else %}intel-consider{% endif %}">
+                    <div class="intel-rec-label">
+                        <i class="bi
+                            {% if intelligence.recommendation == 'invite' %}bi-check-circle-fill
+                            {% elif intelligence.recommendation == 'reject' %}bi-x-circle-fill
+                            {% else %}bi-dash-circle-fill{% endif %}"></i>
+                        {% if intelligence.recommendation == 'invite' %}{% trans "Invite to Interview" %}
+                        {% elif intelligence.recommendation == 'reject' %}{% trans "Not Recommended" %}
+                        {% else %}{% trans "Worth Considering" %}{% endif %}
+                    </div>
+                    {% if intelligence.recommendation_reason %}
+                    <div class="intel-rec-reason">{{ intelligence.recommendation_reason }}</div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="intel-card h-100">
+                    <div class="intel-card-title"><i class="bi bi-shield-check me-1"></i>{% trans "Data Confidence" %}</div>
+                    <div class="intel-confidence-badge intel-confidence-{{ intelligence.confidence }}">
+                        {% if intelligence.confidence == 'high' %}{% trans "High — detailed CV" %}
+                        {% elif intelligence.confidence == 'medium' %}{% trans "Medium — partial data" %}
+                        {% else %}{% trans "Low — sparse CV" %}{% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Skill Fit + Learnability -->
+        <div class="row g-3 mb-3">
+            <!-- Skill Fit -->
+            {% if intelligence.skill_fit %}
+            <div class="col-md-6">
+                <div class="intel-card h-100">
+                    <div class="intel-card-title"><i class="bi bi-tools me-1"></i>{% trans "Skill Fit" %}</div>
+                    <div class="intel-score-row mb-2">
+                        <div class="intel-score-bar-wrap">
+                            <div class="intel-score-bar" style="width: {{ intelligence.skill_fit.score }}%"></div>
+                        </div>
+                        <span class="intel-score-num">{{ intelligence.skill_fit.score }}%</span>
+                    </div>
+                    {% if intelligence.skill_fit.summary %}
+                    <p class="intel-summary mb-2">{{ intelligence.skill_fit.summary }}</p>
+                    {% endif %}
+                    {% if intelligence.skill_fit.strong_skills %}
+                    <div class="intel-chip-group mb-1">
+                        <span class="intel-chip-label">{% trans "Strong:" %}</span>
+                        {% for s in intelligence.skill_fit.strong_skills %}
+                        <span class="intel-chip intel-chip-green">{{ s }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    {% if intelligence.skill_fit.weak_skills %}
+                    <div class="intel-chip-group">
+                        <span class="intel-chip-label">{% trans "Gaps:" %}</span>
+                        {% for s in intelligence.skill_fit.weak_skills %}
+                        <span class="intel-chip intel-chip-red">{{ s }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Learnability -->
+            {% if intelligence.learnability %}
+            <div class="col-md-6">
+                <div class="intel-card h-100">
+                    <div class="intel-card-title"><i class="bi bi-graph-up-arrow me-1"></i>{% trans "Learning Potential" %}</div>
+                    <div class="intel-score-row mb-2">
+                        <div class="intel-score-bar-wrap">
+                            <div class="intel-score-bar intel-score-bar-blue" style="width: {{ intelligence.learnability.score }}%"></div>
+                        </div>
+                        <span class="intel-score-num">{{ intelligence.learnability.score }}%</span>
+                    </div>
+                    {% if intelligence.learnability.signals %}
+                    <ul class="intel-signal-list mb-0">
+                        {% for sig in intelligence.learnability.signals %}
+                        <li><i class="bi bi-arrow-right-short"></i> {{ sig }}</li>
+                        {% endfor %}
+                    </ul>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Career Trajectory + Behavioral Signals -->
+        <div class="row g-3 mb-3">
+            <!-- Career Trajectory -->
+            {% if intelligence.career_trajectory %}
+            <div class="col-md-6">
+                <div class="intel-card h-100">
+                    <div class="intel-card-title"><i class="bi bi-signpost-2 me-1"></i>{% trans "Career Trajectory" %}</div>
+                    <span class="intel-trajectory-badge intel-traj-{{ intelligence.career_trajectory.type }}">
+                        {% if intelligence.career_trajectory.type == 'ascending' %}<i class="bi bi-arrow-up-right me-1"></i>{% trans "Ascending" %}
+                        {% elif intelligence.career_trajectory.type == 'lateral' %}<i class="bi bi-arrow-right me-1"></i>{% trans "Lateral" %}
+                        {% elif intelligence.career_trajectory.type == 'stagnant' %}<i class="bi bi-dash me-1"></i>{% trans "Stagnant" %}
+                        {% else %}<i class="bi bi-star me-1"></i>{% trans "Early Career" %}{% endif %}
+                    </span>
+                    {% if intelligence.career_trajectory.summary %}
+                    <p class="intel-summary mt-2 mb-0">{{ intelligence.career_trajectory.summary }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Behavioral Signals -->
+            {% if intelligence.behavioral_signals %}
+            <div class="col-md-6">
+                <div class="intel-card h-100">
+                    <div class="intel-card-title"><i class="bi bi-person-check me-1"></i>{% trans "Behavioral Signals" %}</div>
+                    <ul class="intel-bsig-list mb-0">
+                        {% for bs in intelligence.behavioral_signals %}
+                        <li class="intel-bsig intel-bsig-{{ bs.type }}">
+                            <i class="bi {% if bs.type == 'positive' %}bi-plus-circle-fill{% elif bs.type == 'negative' %}bi-dash-circle-fill{% else %}bi-circle-fill{% endif %} me-1"></i>
+                            {{ bs.signal }}
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Risk Flags -->
+        {% if intelligence.risk_flags %}
+        <div class="intel-card intel-risk-card mb-3">
+            <div class="intel-card-title"><i class="bi bi-exclamation-triangle-fill me-1 text-warning"></i>{% trans "Risk Flags" %}</div>
+            <ul class="intel-risk-list mb-0">
+                {% for rf in intelligence.risk_flags %}
+                <li class="intel-risk intel-risk-{{ rf.severity }}">
+                    <span class="intel-risk-dot"></span>{{ rf.flag }}
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        {% elif intelligence and intelligence.status == 'failed' %}
+        <div class="alert alert-warning py-2">
+            <i class="bi bi-exclamation-circle me-1"></i>
+            {% trans "Intelligence analysis could not be completed for this candidate." %}
+        </div>
+        {% else %}
+        <div class="alert alert-info py-2">
+            <i class="bi bi-hourglass-split me-1"></i>
+            {% trans "Intelligence analysis is being prepared. Refresh the page in a moment." %}
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+    <!-- end intelligence -->
+
     <!-- HR Summary -->
     {% if fit.candidate.hr_summary %}
     <div class="card mb-4">

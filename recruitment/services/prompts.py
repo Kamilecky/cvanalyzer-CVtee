@@ -202,6 +202,54 @@ Return JSON:
 )
 
 # ---------------------------------------------------------------------------
+# Prompt 7: CANDIDATE INTELLIGENCE LAYER — Premium/Enterprise
+# ---------------------------------------------------------------------------
+CANDIDATE_INTELLIGENCE_PROMPT = """Analyse this candidate profile and produce a structured intelligence report.
+
+CANDIDATE PROFILE:
+{profile_json}
+
+INSTRUCTIONS:
+- skill_fit.score: 0-100, how strong is the candidate's overall skill set.
+- skill_fit.strong_skills: list of 2-5 skills they excel at.
+- skill_fit.weak_skills: list of 0-3 clear gaps or underdeveloped areas.
+- skill_fit.summary: 1 sentence.
+- learnability.score: 0-100, estimated learning potential based on career progression speed, diversity of technologies, number of roles.
+- learnability.signals: list of 2-4 short evidence strings (e.g. "Switched from Java to Python within 1 year").
+- career_trajectory.type: "ascending" | "lateral" | "stagnant" | "early" (ascending=clear progression, lateral=same level moves, stagnant=no growth, early=<3 yrs total).
+- career_trajectory.summary: 1 short sentence.
+- behavioral_signals: 2-5 items, each {{signal: "...", type: "positive"|"negative"|"neutral"}}.
+- risk_flags: 0-3 items ONLY for genuine concerns: {{flag: "...", severity: "high"|"medium"|"low"}}. Omit if none.
+- confidence: "high" if CV is complete and detailed, "medium" if partially filled, "low" if sparse.
+- recommendation: "invite" if strong overall fit, "consider" if mixed, "reject" if major red flags or severe skill gaps.
+- recommendation_reason: 1-2 sentences explaining the recommendation.
+
+Return JSON only:
+{{
+    "skill_fit": {{
+        "score": 0,
+        "strong_skills": [],
+        "weak_skills": [],
+        "summary": ""
+    }},
+    "learnability": {{
+        "score": 0,
+        "signals": []
+    }},
+    "career_trajectory": {{
+        "type": "ascending",
+        "summary": ""
+    }},
+    "behavioral_signals": [
+        {{"signal": "", "type": "positive"}}
+    ],
+    "risk_flags": [],
+    "confidence": "medium",
+    "recommendation": "consider",
+    "recommendation_reason": ""
+}}"""
+
+# ---------------------------------------------------------------------------
 # Prompt 6: SECTION SCORING — per-section CV evaluation against position
 # ---------------------------------------------------------------------------
 SECTION_SCORE_PROMPT = (

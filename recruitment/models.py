@@ -301,6 +301,57 @@ class SectionScore(models.Model):
         return f"{self.get_section_name_display()} → {self.score:.0f}%"
 
 
+class CandidateIntelligence(models.Model):
+    """AI-generated intelligence layer for a candidate profile (Premium/Enterprise)."""
+
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('done', 'Done'),
+        ('failed', 'Failed'),
+    ]
+
+    CONFIDENCE_CHOICES = [
+        ('high', 'High'),
+        ('medium', 'Medium'),
+        ('low', 'Low'),
+    ]
+
+    RECOMMENDATION_CHOICES = [
+        ('invite', 'Invite'),
+        ('consider', 'Consider'),
+        ('reject', 'Reject'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    profile = models.OneToOneField(
+        CandidateProfile, on_delete=models.CASCADE,
+        related_name='intelligence',
+    )
+
+    # AI-generated fields
+    skill_fit = models.JSONField(default=dict, blank=True)
+    learnability = models.JSONField(default=dict, blank=True)
+    career_trajectory = models.JSONField(default=dict, blank=True)
+    behavioral_signals = models.JSONField(default=list, blank=True)
+    risk_flags = models.JSONField(default=list, blank=True)
+
+    confidence = models.CharField(max_length=10, choices=CONFIDENCE_CHOICES, default='medium')
+    recommendation = models.CharField(max_length=10, choices=RECOMMENDATION_CHOICES, default='consider')
+    recommendation_reason = models.TextField(blank=True, default='')
+
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
+    error_message = models.TextField(blank=True, default='')
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'recruitment_candidate_intelligence'
+
+    def __str__(self):
+        return f"Intelligence: {self.profile.name} ({self.recommendation})"
+
+
 class PositionWeightTemplate(models.Model):
     """Konfiguracja wag kryteriów oceny CV dla danego stanowiska (panel HR).
 

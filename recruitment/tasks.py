@@ -31,9 +31,31 @@ def _run_profile_extraction(cv_document_id, user_id, language='en'):
             logger.warning(f"Skipping profile extraction for CV {cv_document_id}: injection_flag is set")
             return
         extractor = ProfileExtractor()
-        extractor.extract_profile(cv_doc, user, language=language)
+        profile = extractor.extract_profile(cv_doc, user, language=language)
+
+        # Trigger intelligence layer for Premium/Enterprise users
+        if profile and profile.status == 'done':
+            _maybe_run_intelligence(profile, user)
     except Exception as e:
         logger.error(f"Profile extraction thread failed: {e}")
+
+
+def _maybe_run_intelligence(profile, user):
+    """Run CandidateIntelligence analysis for Premium/Enterprise users."""
+    from django.conf import settings
+    plan = getattr(user, 'plan', 'free')
+    features = settings.PLAN_FEATURES.get(plan, {})
+    if not features.get('recruitment', False):
+        return
+    # Only for premium and enterprise (free/basic have recruitment but no intelligence)
+    if plan not in ('premium', 'enterprise'):
+        return
+    try:
+        from recruitment.services.intelligence_analyzer import IntelligenceAnalyzer
+        analyzer = IntelligenceAnalyzer()
+        analyzer.analyse(profile)
+    except Exception as e:
+        logger.error(f"Intelligence analysis failed for profile {profile.id}: {e}")
 
 
 def run_position_match_in_thread(fit_result_id):

@@ -2278,3 +2278,225 @@ body {
     background: rgba(245, 158, 11, 0.06);
     border-color: rgba(245, 158, 11, 0.18);
 }
+
+/* ==========================================================================
+   CANDIDATE INTELLIGENCE LAYER — fit_result.html (Premium / Enterprise)
+   ========================================================================== */
+
+.intel-section {
+    background: var(--card-bg, #fff);
+    border: 1px solid var(--border, #e2e8f0);
+    border-radius: 14px;
+    padding: 1.5rem;
+}
+
+.intel-header {
+    border-bottom: 1px solid var(--border, #e2e8f0);
+    padding-bottom: .75rem;
+    margin-bottom: 1rem !important;
+}
+
+.intel-icon {
+    font-size: 1.4rem;
+    color: var(--accent, #3b82f6);
+}
+
+/* --- Generic intel card --- */
+.intel-card {
+    background: var(--surface, #f8fafc);
+    border: 1px solid var(--border, #e2e8f0);
+    border-radius: 10px;
+    padding: 1rem 1.1rem;
+}
+
+.intel-card-title {
+    font-size: .78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--text-muted, #64748b);
+    margin-bottom: .6rem;
+}
+
+/* --- Recommendation card --- */
+.intel-recommendation-card {
+    border-left: 4px solid #94a3b8;
+}
+.intel-invite  { border-left-color: #16a34a; }
+.intel-reject  { border-left-color: #dc2626; }
+.intel-consider{ border-left-color: #d97706; }
+
+.intel-rec-label {
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin-bottom: .4rem;
+}
+.intel-invite  .intel-rec-label { color: #16a34a; }
+.intel-reject  .intel-rec-label { color: #dc2626; }
+.intel-consider .intel-rec-label{ color: #d97706; }
+
+.intel-rec-reason {
+    font-size: .875rem;
+    color: var(--text-secondary, #475569);
+    line-height: 1.5;
+}
+
+/* --- Confidence badge --- */
+.intel-confidence-badge {
+    display: inline-block;
+    padding: .3rem .75rem;
+    border-radius: 6px;
+    font-size: .82rem;
+    font-weight: 600;
+}
+.intel-confidence-high   { background: #dcfce7; color: #166534; }
+.intel-confidence-medium { background: #fef3c7; color: #92400e; }
+.intel-confidence-low    { background: #fee2e2; color: #991b1b; }
+
+/* --- Score bar --- */
+.intel-score-row {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+}
+.intel-score-bar-wrap {
+    flex: 1;
+    height: 8px;
+    background: var(--border, #e2e8f0);
+    border-radius: 4px;
+    overflow: hidden;
+}
+.intel-score-bar {
+    height: 100%;
+    background: #16a34a;
+    border-radius: 4px;
+    transition: width .4s ease;
+}
+.intel-score-bar-blue { background: #3b82f6; }
+.intel-score-num {
+    min-width: 38px;
+    font-weight: 700;
+    font-size: .9rem;
+    text-align: right;
+}
+
+/* --- Summary text --- */
+.intel-summary {
+    font-size: .875rem;
+    color: var(--text-secondary, #475569);
+    line-height: 1.5;
+}
+
+/* --- Chip groups (skills) --- */
+.intel-chip-group {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .3rem;
+}
+.intel-chip-label {
+    font-size: .75rem;
+    font-weight: 600;
+    color: var(--text-muted, #64748b);
+    margin-right: .1rem;
+}
+.intel-chip {
+    display: inline-block;
+    padding: .15rem .55rem;
+    border-radius: 999px;
+    font-size: .78rem;
+    font-weight: 500;
+}
+.intel-chip-green { background: #dcfce7; color: #166534; }
+.intel-chip-red   { background: #fee2e2; color: #991b1b; }
+
+/* --- Learnability signal list --- */
+.intel-signal-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    font-size: .85rem;
+    color: var(--text-secondary, #475569);
+}
+.intel-signal-list li { margin-bottom: .3rem; }
+
+/* --- Trajectory badge --- */
+.intel-trajectory-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: .3rem .8rem;
+    border-radius: 6px;
+    font-size: .85rem;
+    font-weight: 600;
+}
+.intel-traj-ascending { background: #dcfce7; color: #166534; }
+.intel-traj-lateral   { background: #dbeafe; color: #1e40af; }
+.intel-traj-stagnant  { background: #f1f5f9; color: #475569; }
+.intel-traj-early     { background: #ede9fe; color: #5b21b6; }
+
+/* --- Behavioral signals --- */
+.intel-bsig-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    font-size: .85rem;
+}
+.intel-bsig { margin-bottom: .35rem; display: flex; align-items: flex-start; gap: .25rem; }
+.intel-bsig-positive { color: #166534; }
+.intel-bsig-negative { color: #991b1b; }
+.intel-bsig-neutral  { color: var(--text-secondary, #475569); }
+
+/* --- Risk flags --- */
+.intel-risk-card { border-left: 4px solid #d97706; }
+.intel-risk-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    font-size: .875rem;
+}
+.intel-risk {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .3rem 0;
+    border-bottom: 1px solid var(--border, #e2e8f0);
+}
+.intel-risk:last-child { border-bottom: none; }
+.intel-risk-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+.intel-risk-high   .intel-risk-dot { background: #dc2626; }
+.intel-risk-medium .intel-risk-dot { background: #d97706; }
+.intel-risk-low    .intel-risk-dot { background: #64748b; }
+.intel-risk-high   { color: #7f1d1d; }
+.intel-risk-medium { color: #78350f; }
+.intel-risk-low    { color: var(--text-secondary, #475569); }
+
+/* --- Dark mode overrides --- */
+[data-theme="dark"] .intel-section,
+[data-theme="dark"] .intel-card {
+    background: var(--card-bg, #1e293b);
+    border-color: var(--border, #334155);
+}
+[data-theme="dark"] .intel-header { border-color: var(--border, #334155); }
+[data-theme="dark"] .intel-card { background: rgba(255,255,255,.03); }
+[data-theme="dark"] .intel-confidence-high   { background: rgba(22,163,74,.18); color: #4ade80; }
+[data-theme="dark"] .intel-confidence-medium { background: rgba(217,119,6,.18); color: #fbbf24; }
+[data-theme="dark"] .intel-confidence-low    { background: rgba(220,38,38,.18); color: #f87171; }
+[data-theme="dark"] .intel-chip-green { background: rgba(22,163,74,.18); color: #4ade80; }
+[data-theme="dark"] .intel-chip-red   { background: rgba(220,38,38,.18); color: #f87171; }
+[data-theme="dark"] .intel-traj-ascending { background: rgba(22,163,74,.18); color: #4ade80; }
+[data-theme="dark"] .intel-traj-lateral   { background: rgba(59,130,246,.18); color: #93c5fd; }
+[data-theme="dark"] .intel-traj-stagnant  { background: rgba(100,116,139,.18); color: #94a3b8; }
+[data-theme="dark"] .intel-traj-early     { background: rgba(91,33,182,.18); color: #c4b5fd; }
+[data-theme="dark"] .intel-score-bar-wrap { background: rgba(255,255,255,.1); }
+[data-theme="dark"] .intel-rec-reason,
+[data-theme="dark"] .intel-summary,
+[data-theme="dark"] .intel-signal-list,
+[data-theme="dark"] .intel-bsig-neutral { color: #94a3b8; }
+[data-theme="dark"] .intel-risk { border-color: rgba(255,255,255,.06); }
+[data-theme="dark"] .intel-bsig-positive { color: #4ade80; }
+[data-theme="dark"] .intel-bsig-negative { color: #f87171; }

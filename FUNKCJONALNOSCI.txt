@@ -166,8 +166,3 @@ Flow 2: Rekrutacja
 ================================================================================
 🔹 Plan działania na jutro
 
-Zadbaj o spójność informacji w ogłoszeniach o pracę:
-W umiejętnościach wymaganych jest wymieniona każda umiejętność,
-ale w obowiązkach już nie
-Powiedz AI, żeby dopasowując umiejętności kandydata do stanowiska kierował się
-zakładką wymagane i opcjonalne umiejętności
