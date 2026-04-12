@@ -2310,9 +2310,76 @@ body {
     cursor: default;
 }
 
+/* Skill Fit row (below recommendation badge) */
+.intel-mini-fit-score {
+    display: inline-flex;
+    align-items: center;
+    gap: .25rem;
+    font-size: .75rem;
+    font-weight: 600;
+    color: var(--text-secondary, #475569);
+    padding: .15rem .4rem;
+    border-radius: 5px;
+    border: 1px dashed var(--border, #cbd5e1);
+    cursor: pointer;
+    transition: background .15s, border-color .15s;
+}
+.intel-mini-fit-score:hover {
+    background: var(--surface, #f1f5f9);
+    border-color: var(--accent, #3b82f6);
+    color: var(--accent, #3b82f6);
+}
+.intel-mini-fit-score--plain {
+    cursor: default;
+    border-style: solid;
+}
+.intel-mini-fit-score--plain:hover {
+    background: transparent;
+    border-color: var(--border, #cbd5e1);
+    color: var(--text-secondary, #475569);
+}
+.intel-pop-arrow {
+    font-size: .65rem;
+    opacity: .6;
+}
+
+/* Popover list content */
+.intel-pop-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    min-width: 180px;
+}
+.intel-pop-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: .5rem;
+    padding: .2rem 0;
+    border-bottom: 1px solid rgba(0,0,0,.06);
+    font-size: .82rem;
+}
+.intel-pop-list li:last-child { border-bottom: none; }
+.intel-pop-pos {
+    color: #1e293b;
+    flex: 1;
+}
+.intel-pop-score {
+    font-weight: 700;
+    min-width: 34px;
+    text-align: right;
+}
+.intel-pop-high { color: #16a34a; }
+.intel-pop-mid  { color: #d97706; }
+.intel-pop-low  { color: #dc2626; }
+
 [data-theme="dark"] .intel-mini-invite  { background: rgba(22,163,74,.18); color: #4ade80; }
 [data-theme="dark"] .intel-mini-consider{ background: rgba(217,119,6,.18); color: #fbbf24; }
 [data-theme="dark"] .intel-mini-reject  { background: rgba(220,38,38,.18); color: #f87171; }
+[data-theme="dark"] .intel-mini-fit-score { border-color: rgba(255,255,255,.15); }
+[data-theme="dark"] .intel-mini-fit-score:hover { background: rgba(255,255,255,.05); }
+[data-theme="dark"] .intel-pop-pos { color: #e2e8f0; }
+[data-theme="dark"] .intel-pop-list li { border-color: rgba(255,255,255,.06); }
 
 /* ==========================================================================
    CANDIDATE INTELLIGENCE LAYER — fit_result.html (Premium / Enterprise)

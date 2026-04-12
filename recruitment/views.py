@@ -479,11 +479,22 @@ def candidate_list_view(request):
             ci.profile_id: ci
             for ci in CandidateIntelligence.objects.filter(profile_id__in=profile_ids)
         }
+        # Attach fit positions per candidate (for hover popover)
+        fit_map: dict = {}
+        for fit in JobFitResult.objects.filter(
+            candidate_id__in=profile_ids, status='done',
+        ).select_related('position').order_by('candidate_id', '-overall_match'):
+            fit_map.setdefault(fit.candidate_id, []).append({
+                'title': fit.position.title,
+                'score': fit.overall_match,
+            })
         for p in profiles_list:
             p.intelligence = intel_map.get(p.id)
+            p.fit_positions = fit_map.get(p.id, [])
     else:
         for p in profiles_list:
             p.intelligence = None
+            p.fit_positions = []
 
     return render(request, 'recruitment/candidate_list.html', {
         'profiles': profiles_list,
