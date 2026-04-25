@@ -166,3 +166,34 @@ Flow 2: Rekrutacja
 ================================================================================
 🔹 Plan działania na jutro
 
+1. Ochrona przed prompt injection
+Przenieś podstawową ochronę do wszystkich planów — to kwestia bezpieczeństwa,
+ nie feature'u premium. Zaawansowaną ochronę (np. przed ukrytym injection)
+  zostaw w Premium i Firmowym jako wyróżnik.
+
+2. Limity analiz — rozważ korektę
+PlanObecny limitSugestiaDarmowy15zostaw — dobry magnesPodstawowy50→ 100
+Premium300zostawFirmowynieograniczonyzostaw
+50 analiz w Podstawowym to za mało dla realnej rekrutacji w MŚP.
+ Przy 100 klient czuje że "ma zapas" i nie stresuje się limitem — to poprawia retencję.
+
+3. Aktywne stanowiska — też warto podnieść
+PlanObecny limitSugestiaDarmowy3zostawPodstawowy10→ 15Premium50
+zostawFirmowynieograniczonezostaw
+
+4. Usuń funkcje:
+"Doradca kariery" 
+"Przepisywanie AI" 
+
+5. Doprecyzuj co jest w Darmowym
+Twoja lista ma niejednoznaczne formatowanie — nie do końca widać co jest 
+dostępne, a co nie w planie Darmowym. Upewnij się że na stronie cenowej jest 
+to krystalicznie jasne. Klient musi w 5 sekund zrozumieć co dostaje.
+
+
+
+
+Podsumowanie priorytetów
+Najpilniejsze do zmiany to ochrona przed prompt injection (ryzyko reputacyjne)
+i mylące nazwy funkcji (ryzyko przy sprzedaży). Reszta to optymalizacja, 
+którą możesz weryfikować w beta testach.

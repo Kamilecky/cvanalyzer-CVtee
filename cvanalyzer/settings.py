@@ -194,7 +194,7 @@ EMAIL_VERIFICATION_TOKEN_EXPIRY_HOURS = 24
 # ---------------------------------------------------------------------------
 PLAN_LIMITS = {
     'free': 15,
-    'basic': 50,
+    'basic': 100,
     'premium': 300,
     'enterprise': None,   # unlimited
 }
@@ -202,7 +202,7 @@ PLAN_LIMITS = {
 # Limity aktywnych stanowisk pracy
 JOB_POSITION_LIMITS = {
     'free': 3,
-    'basic': 10,
+    'basic': 15,
     'premium': 50,
     'enterprise': None,   # unlimited
 }
@@ -227,10 +227,11 @@ PLAN_FEATURES = {
         'interview_questions': False,
         'market_benchmark': False,
         'requirement_scoring': False,
+        'candidate_intelligence': False,
         'priority_processing': False,
         'sla_flag': False,
-        'prompt_injection_scan': False,
-        'prompt_injection_defence': False,
+        'prompt_injection_scan': True,
+        'prompt_injection_defence': True,
         'hidden_prompt_injection_defence': False,
     },
     'basic': {
@@ -251,10 +252,11 @@ PLAN_FEATURES = {
         'interview_questions': False,
         'market_benchmark': False,
         'requirement_scoring': False,
+        'candidate_intelligence': False,
         'priority_processing': False,
         'sla_flag': False,
-        'prompt_injection_scan': False,
-        'prompt_injection_defence': False,
+        'prompt_injection_scan': True,
+        'prompt_injection_defence': True,
         'hidden_prompt_injection_defence': False,
     },
     'premium': {
@@ -264,10 +266,10 @@ PLAN_FEATURES = {
         'recommendations': True,
         'job_matching': True,
         'pdf_export': True,
-        'ai_rewriting': True,
+        'ai_rewriting': False,
         'skill_gap': True,
         'benchmarking': True,
-        'career_advisor': True,
+        'career_advisor': False,
         'cv_versioning': True,
         'recruitment': True,
         'candidate_ranking': True,
@@ -289,10 +291,10 @@ PLAN_FEATURES = {
         'recommendations': True,
         'job_matching': True,
         'pdf_export': True,
-        'ai_rewriting': True,
+        'ai_rewriting': False,
         'skill_gap': True,
         'benchmarking': True,
-        'career_advisor': True,
+        'career_advisor': False,
         'cv_versioning': True,
         'recruitment': True,
         'candidate_ranking': True,
