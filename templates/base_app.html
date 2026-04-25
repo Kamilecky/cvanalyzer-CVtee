@@ -21,9 +21,11 @@
         <a href="{% url 'cv_upload' %}" class="{% if request.resolver_match.url_name == 'cv_upload' %}active{% endif %}">
             <i class="bi bi-cloud-upload me-1"></i> {% trans "Upload CV" %}
         </a>
+        {% if request.user.plan != 'free' %}
         <a href="{% url 'analysis_history' %}" class="{% if request.resolver_match.url_name == 'analysis_history' %}active{% endif %}">
             <i class="bi bi-clock-history me-1"></i> {% trans "History" %}
         </a>
+        {% endif %}
     </div>
 
     <div class="topbar-right">
@@ -73,9 +75,11 @@
 
     <div class="sidebar-section">
         <div class="sidebar-label">{% trans "Analysis" %}</div>
+        {% if request.user.plan != 'free' %}
         <a href="{% url 'analysis_history' %}" class="sidebar-link {% if request.resolver_match.url_name == 'analysis_history' %}active{% endif %}">
             <span class="icon"><i class="bi bi-clock-history"></i></span> {% trans "Analysis History" %}
         </a>
+        {% endif %}
         <a href="{% url 'cv_list' %}" class="sidebar-link {% if request.resolver_match.url_name == 'cv_list' %}active{% endif %}">
             <span class="icon"><i class="bi bi-folder"></i></span> {% trans "My CVs" %}
         </a>

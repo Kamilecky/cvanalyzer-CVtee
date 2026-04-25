@@ -81,7 +81,9 @@
                         </tbody>
                     </table>
                 </div>
+                {% if request.user.plan != 'free' %}
                 <a href="{% url 'analysis_history' %}" class="btn btn-outline-secondary btn-sm">{% trans "View All History" %}</a>
+                {% endif %}
                 {% else %}
                 <div class="empty-state">
                     <div class="empty-icon"><i class="bi bi-file-earmark-person"></i></div>
@@ -102,9 +104,11 @@
                 <a href="{% url 'cv_upload' %}" class="sidebar-link">
                     <span class="icon"><i class="bi bi-cloud-upload"></i></span> {% trans "Upload CV" %}
                 </a>
+                {% if request.user.plan != 'free' %}
                 <a href="{% url 'analysis_history' %}" class="sidebar-link">
                     <span class="icon"><i class="bi bi-clock-history"></i></span> {% trans "Analysis History" %}
                 </a>
+                {% endif %}
                 <a href="{% url 'cv_list' %}" class="sidebar-link">
                     <span class="icon"><i class="bi bi-folder"></i></span> {% trans "My CVs" %}
                 </a>
